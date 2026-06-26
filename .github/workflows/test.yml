@@ -1,0 +1,55 @@
+name: test
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  lint-install:
+    name: Install smoke test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Verify install.sh syntax
+        run: bash -n install.sh && echo "OK"
+
+      - name: Dry-run install
+        run: |
+          mkdir -p /tmp/test-home/.claude
+          HOME=/tmp/test-home bash install.sh -y
+          # Skill files
+          test -f /tmp/test-home/.claude/skills/solana-auditor-skill/SKILL.md
+          test -f /tmp/test-home/.claude/skills/solana-auditor-skill/skill/01-recon.md
+          # Slash commands
+          test -f /tmp/test-home/.claude/commands/audit.md
+          test -f /tmp/test-home/.claude/commands/audit-quick.md
+          # Rules
+          test -f /tmp/test-home/.claude/rules/audit.rules
+          echo "All files installed correctly"
+
+  integrity:
+    name: Skill integrity + fuzz
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install ripgrep
+        run: sudo apt-get update && sudo apt-get install -y ripgrep
+
+      - name: Install Hypothesis
+        run: pip3 install hypothesis
+
+      - name: Run integrity checks
+        run: |
+          chmod +x tests/test-skill-integrity.sh
+          bash tests/test-skill-integrity.sh
+
+      - name: Run CVSS fuzz tests
+        run: python3 -m pytest tests/fuzz/ -x -q --tb=short
