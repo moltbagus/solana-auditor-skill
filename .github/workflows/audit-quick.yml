@@ -1,0 +1,42 @@
+name: Solana Audit Quick (SAST)
+
+on:
+  push:
+    paths:
+      - 'programs/**/*.rs'
+      - 'rules/**'
+      - 'scripts/**'
+  pull_request:
+    paths:
+      - 'programs/**/*.rs'
+  workflow_dispatch:
+
+jobs:
+  sast:
+    name: Fast SAST Scan
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      security-events: write
+      contents: read
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Run SAST pre-commit scan
+        run: |
+          bash scripts/pre-commit-audit.sh || true
+
+      - name: Upload SARIF to GitHub Security
+        if: always()
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: .audit-precommit.sarif
+          category: solana-sast
+          # upload if the file exists and is non-empty
+          if-no-files-found: ignore

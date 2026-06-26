@@ -12,6 +12,24 @@ Audit a GitHub pull request by fetching the diff, running targeted SAST against 
 - **Diff-only mode** (default): SAST on changed lines from `gh pr diff`
 - **Delta mode** (`--compare`): Cross-reference with base branch audit findings to flag NEW or FIXED vulnerabilities
 
+## Prerequisites
+
+Requires GitHub CLI authentication:
+```bash
+gh auth status
+```
+
+If not authenticated:
+```bash
+gh auth login
+```
+
+If the `gh` CLI is not installed:
+```bash
+brew install gh  # macOS
+# or: https://cli.github.com/
+```
+
 ## Usage
 
 ```

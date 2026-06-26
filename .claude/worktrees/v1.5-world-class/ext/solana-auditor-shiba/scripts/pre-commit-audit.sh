@@ -1,0 +1,1 @@
+../../../scripts/pre-commit-audit.sh

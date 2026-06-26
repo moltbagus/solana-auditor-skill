@@ -1,0 +1,17 @@
+[toolchain]
+anchor_version = "0.31.1"
+
+[features]
+resolution = true
+skip-lint = false
+
+[programs.localnet]
+vault = "VauLTv8XCvFhMtNTSg9qV9u1KKrn3DLzNaX7cSC8K8H"
+token-extensions = "TokExB1oxTqN1S3R4NDoM7dD3F4uLtK8aT9eXaMpLeId"
+
+[registry]
+url = "https://api.apr.dev"
+
+[provider]
+cluster = "Localnet"
+wallet = "~/.config/solana/id.json"

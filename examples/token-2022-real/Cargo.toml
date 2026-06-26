@@ -1,0 +1,23 @@
+[package]
+name = "token-vault"
+version = "0.1.0"
+description = "Real Token-2022 vulnerable program using spl_token_2022 for solana-auditor-skill"
+edition = "2021"
+
+[lib]
+crate-type = ["cdylib", "lib"]
+
+[features]
+no-entrypoint = []
+no-idl = []
+no-log-ix-name = []
+cpi = ["no-entrypoint"]
+default = []
+idl-build = ["anchor-lang/idl-build", "anchor-spl/idl-build"]
+
+[dependencies]
+anchor-lang = { version = "0.31.1", features = ["init-if-needed"] }
+anchor-spl = { version = "0.31.1", features = ["token-2022", "dex"] }
+spl-token-2022 = { version = "6.0", features = ["serde", "extension-transfer-hook", "extension-default-account-state"] }
+spl-transfer-hook = "0.4"
+solana-program = "2.3"

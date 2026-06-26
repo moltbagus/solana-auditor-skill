@@ -1,0 +1,1 @@
+../../../scripts/generate-cpi-graph.sh

@@ -1,0 +1,1 @@
+../../../templates/poc-template-typescript.ts

@@ -2,6 +2,8 @@
 
 **Goal**: Prove or disprove security invariants using automated tools.
 
+> **Note**: QED 2A requires `anchor` + `solana-test-validator` to be installed. In CI (GitHub Actions), formal verification is skipped gracefully. Run `anchor test` locally to exercise the verification patterns.
+
 ## Solana Formal Verification Tools
 
 ### QED 2A (Primary)
@@ -203,6 +205,17 @@ async fn test_signer_auth_required() {
     assert!(result.is_err());
 }
 ```
+
+## Fallback: Anchor Test Verification
+
+Without QED 2A, run the built-in anchor test that demonstrates the invariant patterns:
+
+```bash
+cd examples/sample-vulnerable-program
+anchor test
+```
+
+This exercises the QED-equivalent invariant checks via `anchor test` against the fixture.
 
 ## Next Phase
 After formal verification → load `skill/04-findings-triage.md` to classify findings.

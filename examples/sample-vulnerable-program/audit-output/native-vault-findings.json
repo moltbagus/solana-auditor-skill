@@ -1,0 +1,88 @@
+{
+  "findings": [
+    {
+      "id": "VULN-N01",
+      "title": "Clock sysvar deserialised from account data — spoofable",
+      "severity": "CRITICAL",
+      "cvss": 9.1,
+      "cvss_vector": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H",
+      "cwe": "CWE-347",
+      "location": {
+        "file": "programs/native-vault/src/lib.rs",
+        "line": 149,
+        "function": "withdraw"
+      },
+      "description": "The withdraw instruction calls `Clock::from_account_info(clock_account)` instead of the safe `Clock::get()?`. The caller supplies the `clock_account` via the accounts array — an attacker can pass a faked Clock account whose data deserialises to any slot, epoch, or timestamp values they choose. Any time-gated or slot-gated logic in the program (e.g., timelocks, epoch-based cooldown windows, stale-price guards) is bypassed entirely.",
+      "impact": "Time/clock spoofing. Attacker bypasses all slot- and timestamp-dependent checks, including timelock-release windows, epoch-gated withdrawals, and staleness guards. Enables immediate execution of gated operations that should be delayed.",
+      "recommendation": "Replace `Clock::from_account_info(clock_account)` with `Clock::get()?`. The `Clock` sysvar is always provided by the Solana runtime in the sysvar cache — no account needs to be passed or deserialised from user-supplied data. If a clock account must be accepted (e.g., for CPI compatibility), validate its pubkey against `solana_program::sysvar::clock::ID` before deserialising.",
+      "poc_status": "pending",
+      "rule_caught": "Rule 36 — Sysvar Spoofing (Pinocchio)",
+      "status": "Open"
+    },
+    {
+      "id": "VULN-N02",
+      "title": "Missing signer verification on authority account",
+      "severity": "CRITICAL",
+      "cvss": 9.8,
+      "cvss_vector": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H",
+      "cwe": "CWE-306",
+      "location": {
+        "file": "programs/native-vault/src/lib.rs",
+        "line": 163,
+        "function": "withdraw"
+      },
+      "description": "The withdraw instruction checks that the authority pubkey matches `vault_state.authority` but does NOT call `is_signer` on the authority account. An attacker who controls an account whose key equals the stored authority (e.g., in testing or custodial setups where the authority keypair also pays transaction fees) can sign and submit a withdraw instruction. The pubkey check alone is insufficient — Solana transactions can include any account in the accounts array regardless of who signed.",
+      "impact": "Unauthorized withdrawal. Any transaction that includes an account matching the vault's authority pubkey — regardless of which keypair signed the transaction — can drain the vault. In single-signer test setups the attacker controls both the fee-payer and the authority account, trivially satisfying the pubkey check.",
+      "recommendation": "Add an explicit signer check immediately before the pubkey check: `if !authority.is_signer { msg!(\"withdraw: authority must sign\"); return Err(ProgramError::MissingRequiredSignature); }`. The pubkey check and the signer check are independent — both are required.",
+      "poc_status": "pending",
+      "rule_caught": "Rule 45 — Missing Signer Verification (Pinocchio)",
+      "status": "Open"
+    },
+    {
+      "id": "VULN-N03",
+      "title": "Unchecked u64 addition in deposit — arithmetic overflow",
+      "severity": "HIGH",
+      "cvss": 7.1,
+      "cvss_vector": "CVSS:3.1/AV:N/AC:L/PR:L/UI:N/S:U/C:L/I:H/A:N",
+      "cwe": "CWE-190",
+      "location": {
+        "file": "programs/native-vault/src/lib.rs",
+        "line": 112,
+        "function": "deposit"
+      },
+      "description": "The deposit instruction computes `vault_state.total_deposits = vault_state.total_deposits + amount` using Rust's unchecked `+` operator on `u64`. In release builds, integer overflow on `u64` wraps silently. An attacker who knows or estimates the current `total_deposits` can choose an `amount` such that `total_deposits + amount` wraps past `u64::MAX` back to a low value. The wrapped balance is recorded, and subsequent withdrawals can drain funds against the inflated intermediate balance.",
+      "impact": "Integer overflow in deposit accounting. A wrapped `total_deposits` no longer reflects actual deposits. By depositing strategically sized amounts across multiple transactions, an attacker can cause the balance to wrap multiple times and extract more than was deposited.",
+      "recommendation": "Use `checked_add` and propagate the overflow error: `vault_state.total_deposits = vault_state.total_deposits.checked_add(amount).ok_or(ProgramError::ArithmeticOverflow)?;`. Apply the same pattern to all arithmetic operations on user-supplied amounts (`checked_sub`, `checked_mul`). In debug builds, Rust panics on overflow; in release builds it wraps — always use checked arithmetic for security-sensitive operations.",
+      "poc_status": "pending",
+      "rule_caught": "Rule 43 — Unchecked Arithmetic (Pinocchio)",
+      "status": "Open"
+    },
+    {
+      "id": "VULN-N04",
+      "title": "Non-canonical bump stored in vault state",
+      "severity": "MEDIUM",
+      "cvss": 6.5,
+      "cvss_vector": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:L/I:L/A:N",
+      "cwe": "CWE-330",
+      "location": {
+        "file": "programs/native-vault/src/lib.rs",
+        "line": 70,
+        "function": "initialize"
+      },
+      "description": "The initialize instruction accepts `bump: u8` as an instruction parameter and stores it directly in `VaultState.bump`. The correct pattern uses `Pubkey::find_program_address(seeds, program_id)` which returns the canonical bump — the first bump value (0..=255) that produces a valid PDA address. Storing a non-canonical bump (e.g., 255 passed directly) allows an attacker who finds a different valid bump/seed combination to derive a colliding PDA, potentially bypassing ownership checks that rely on the bump for PDA derivation.",
+      "impact": "PDA collision risk. If the stored bump is not the canonical bump returned by `find_program_address`, the vault's PDA may be derivable from alternative seed/bump pairs. Programs that use the stored bump to re-derive the PDA for access control may be bypassed by deriving the vault with the canonical seeds and the attacker's colliding bump.",
+      "recommendation": "In `initialize`, call `Pubkey::find_program_address(seeds, program_id)` and store the returned bump (the canonical one). Reject any caller-supplied bump — the bump is an implementation detail that must be derived, not provided by the caller. If the vault PDA must be initialised from a known address, verify the bump returned by `find_program_address` matches the one used to create the address before storing it.",
+      "poc_status": "pending",
+      "rule_caught": "Rule 42 — Non-Canonical Bump (Pinocchio)",
+      "status": "Open"
+    }
+  ],
+  "summary": {
+    "critical": 2,
+    "high": 1,
+    "medium": 1,
+    "low": 0,
+    "info": 0,
+    "total": 4
+  }
+}

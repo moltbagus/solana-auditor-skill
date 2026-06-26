@@ -1,0 +1,31 @@
+{
+  "findings": [
+    {
+      "id": "VULN-17",
+      "title": "Missing Token-2022 extension validation before transfer operations",
+      "severity": "HIGH",
+      "cvss": 7.6,
+      "cvss_vector": "CVSS:3.1/AV:N/AC:L/PR:L/UI:N/S:U/C:H/I:L/A:L",
+      "cwe": "CWE-345",
+      "location": {
+        "file": "src/lib.rs",
+        "line": 20,
+        "function": "vault_withdraw"
+      },
+      "description": "The vault_withdraw instruction uses `spl_token_2022::transfer_checked` for a real Token-2022 transfer but performs zero validation of the mint's extension state before executing the transfer. Specifically, it does not verify: (1) whether the mint has a `default_account_state` extension that FROZEN accounts, (2) whether the mint has a `transfer_hook` extension that requires custom CPI routing, or (3) whether the mint has `non_transferable` enabled. Token-2022 mints can have any combination of extensions that fundamentally alter transfer semantics. Calling `transfer_checked` without pre-flight extension validation can result in silent failures, bypassed security checks, or unexpected state changes.",
+      "impact": "Transfer semantics bypass. If the mint has a transfer_hook extension, the hook's validation logic is bypassed — the transfer proceeds without the hook's checks. If the mint has a frozen default state, accounts may be in an invalid state. If the mint is non-transferable, tokens that should never leave the holder's wallet enter the vault's control. Over time, this enables value extraction from edge cases that should have been blocked.",
+      "recommendation": "Before any Token-2022 transfer, read the mint's extension data using `StateWithExtensions::<Mint>::unpack(&mint.data.borrow())` and validate: (1) check for `ExtensionType::DefaultAccountState` and verify accounts are not frozen, (2) check for `ExtensionType::TransferHook` and route to the hook's program instead of direct `transfer_checked`, (3) check for `ExtensionType::NonTransferable` and reject vault operations if present. Use the extension validation pattern from the Token-2022 SDK.",
+      "poc_status": "pending",
+      "rule_caught": "Rule 5 — Token Operations (Token-2022 extension validation)",
+      "status": "Open"
+    }
+  ],
+  "summary": {
+    "critical": 0,
+    "high": 1,
+    "medium": 0,
+    "low": 0,
+    "info": 0,
+    "total": 1
+  }
+}

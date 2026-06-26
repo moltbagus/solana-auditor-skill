@@ -1,0 +1,1 @@
+../../../templates/poc-template-manual.md

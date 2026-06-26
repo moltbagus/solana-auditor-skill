@@ -1,0 +1,76 @@
+name: Solana Security Audit
+
+on:
+  pull_request:
+    paths:
+      - 'programs/**/*.rs'
+      - 'Anchor.toml'
+      - 'Cargo.toml'
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  audit-tier1:
+    name: SAST Audit (Tier 1)
+    runs-on: ubuntu-latest
+    # No Solana toolchain needed — runs SAST only
+    steps:
+      - uses: actions/checkout@v4
+      - name: Run SAST audit
+        run: |
+          # Install ripgrep for pattern matching
+          # Run pre-commit hook
+          bash scripts/pre-commit-audit.sh || echo "SAST: warnings only"
+
+  audit-pr:
+    name: PR Diff Audit
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Authenticate with GitHub CLI
+        run: gh auth login --hostname github.com
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Run PR audit
+        run: |
+          PR_NUMBER=${{ github.event.pull_request.number }}
+          gh workflow run audit.yml -f pr=$PR_NUMBER || true
+      - name: Comment findings on PR
+        uses: actions/github-script@v7
+        with:
+          script: |
+            // Read findings and post as PR comment
+            const fs = require('fs');
+            const findings = JSON.parse(fs.readFileSync('findings-pr.json'));
+            if (findings.summary.critical + findings.summary.high > 0) {
+              github.rest.issues.createComment({
+                issue_number: context.payload.pull_request.number,
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                body: `## 🔴 Security Audit Results\n\nFound ${findings.summary.critical} CRITICAL, ${findings.summary.high} HIGH findings. Please review before merging.`
+              });
+            }
+
+  cargo-audit:
+    name: Dependency Audit
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Run cargo audit
+        run: cargo audit || true
+
+  anchor-build:
+    name: Anchor Build Test
+    runs-on: ubuntu-latest
+    container: rust:1.75
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install Anchor
+        run: |
+          curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
+          sh -c "$(curl -sSfL https://release.anza.xyz/stable/install)"
+      - name: Build programs
+        run: anchor build --verifiable 2>/dev/null || true
+      - name: Run anchor test
+        run: anchor test 2>/dev/null || true

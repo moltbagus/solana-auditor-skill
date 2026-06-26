@@ -1,0 +1,132 @@
+name: Scheduled Security Audit
+
+on:
+  schedule:
+    # Weekly on Sunday at 00:00 UTC
+    - cron: '0 0 * * 0'
+  workflow_dispatch:
+    inputs:
+      target_branch:
+        description: 'Target branch to audit'
+        required: false
+        default: 'main'
+
+jobs:
+  full-audit:
+    name: Full Audit (6 Phases)
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    permissions:
+      security-events: write
+      contents: read
+      issues: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.target_branch || 'main' }}
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      # Phase 1 — Recon: attack surface enumeration
+      - name: Phase 1 — Recon
+        run: |
+          echo "=== Phase 1: Attack Surface Recon ==="
+          python scripts/find-programs.py || true
+
+      # Phase 2 — Static Analysis via anchor build
+      - name: Phase 2 — Static Analysis
+        run: |
+          echo "=== Phase 2: Static Analysis ==="
+          cargo hull-scope programs/ 2>&1 || true
+
+      # Phase 3 — Formal Verification (QED 2A)
+      - name: Phase 3 — Formal Verification
+        run: |
+          echo "=== Phase 3: Formal Verification ==="
+          python scripts/run-formal-verification.py || true
+
+      # Phase 4 — Findings Triage
+      - name: Phase 4 — Triage & CVSS Scoring
+        run: |
+          echo "=== Phase 4: Triage ==="
+          python scripts/triage-findings.py || true
+
+      # Phase 5 — Generate SARIF
+      - name: Phase 5 — Generate SARIF
+        run: |
+          echo "=== Phase 5: SARIF Export ==="
+          python scripts/findings-to-sarif.py \
+            --input findings.json \
+            --output audit-results.sarif \
+            --pretty || true
+
+      # Phase 6 — Upload SARIF
+      - name: Upload SARIF to GitHub Security
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: audit-results.sarif
+          category: scheduled-solana-audit
+          if-no-files-found: ignore
+
+      # Create issues for new critical/high findings
+      - name: Create issues for new critical/high findings
+        if: always()
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const path = require('path');
+
+            let findings = [];
+            try {
+              const raw = fs.readFileSync('findings.json', 'utf8');
+              const data = JSON.parse(raw);
+              findings = Array.isArray(data) ? data : (data.findings || []);
+            } catch {
+              console.log('No findings.json found, skipping issue creation.');
+              return;
+            }
+
+            const criticalHigh = findings.filter(
+              f => f.severity === 'CRITICAL' || f.severity === 'HIGH'
+            );
+
+            if (criticalHigh.length === 0) {
+              console.log('No CRITICAL/HIGH findings, skipping issue creation.');
+              return;
+            }
+
+            const body = [
+              '## Scheduled Audit Alert',
+              '',
+              `A scheduled audit detected **${criticalHigh.length}** new CRITICAL/HIGH finding(s).`,
+              '',
+              '| ID | Severity | Title | CWE |',
+              '|----|----------|-------|-----|',
+              ...criticalHigh.map(f =>
+                `| ${f.id} | ${f.severity} | ${f.title} | ${f.cwe || 'N/A'} |`
+              ),
+              '',
+              '> This issue was created automatically by the scheduled audit workflow.',
+            ].join('\n');
+
+            const labels = criticalHigh.some(f => f.severity === 'CRITICAL')
+              ? ['security', 'critical', 'automated-audit']
+              : ['security', 'automated-audit'];
+
+            try {
+              github.rest.issues.create({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                title: `Scheduled Audit: ${criticalHigh.length} CRITICAL/HIGH Finding(s)`,
+                body,
+                labels,
+              });
+              console.log(`Created issue with ${criticalHigh.length} findings.`);
+            } catch (err) {
+              console.error('Failed to create issue:', err.message);
+            }

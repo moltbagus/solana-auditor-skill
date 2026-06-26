@@ -1,0 +1,133 @@
+name: test
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+# Cancel in-progress runs when a newer commit lands on the same ref.
+# Saves CI minutes on stale PR pushes.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  lint-python:
+    name: Python lint (flake8 + black)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install flake8
+        run: pip3 install flake8
+
+      - name: Check black formatting
+        run: |
+          pip3 install black
+          black --check tests/ 2>&1
+
+      - name: Run flake8
+        run: |
+          flake8 tests/ 2>&1
+
+  skill-integrity:
+    name: Skill integrity tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install ripgrep
+        # ripgrep is NOT preinstalled on github actions ubuntu-latest;
+        # the binary name is also `rg`. Apt installs to /usr/bin/rg.
+        run: sudo apt-get update && sudo apt-get install -y ripgrep
+
+      - name: Install Hypothesis (property-based testing)
+        run: pip3 install hypothesis
+
+      - name: Run property-based (fuzz) tests
+        run: python3 -m pytest tests/fuzz/ -x --tb=short -q
+
+      - name: Run markdown integrity checks
+        run: |
+          chmod +x tests/test-skill-integrity.sh
+          bash tests/test-skill-integrity.sh
+
+  anchor-build:
+    name: Anchor build + test (example fixture)
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Cache cargo
+        uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: |
+            examples/sample-vulnerable-program/programs/vault -> target
+
+      - name: Install Solana CLI
+        # Pinned to v4.0.2 (the version that successfully builds anchor 0.31.1
+        # in this workflow). `stable` rolls forward and may break the build.
+        run: |
+          sh -c "$(curl -sSfL https://release.anza.xyz/v4.0.2/install)"
+          echo "$HOME/.local/share/solana/install/active_release/bin" >> $GITHUB_PATH
+
+      - name: Install Anchor CLI
+        run: |
+          cargo install --git https://github.com/coral-xyz/anchor --tag v0.31.1 anchor-cli --locked
+
+      - name: Verify toolchain
+        run: |
+          rustc --version
+          cargo --version
+          solana --version
+          anchor --version
+
+      - name: Build + verify example program
+        working-directory: examples/sample-vulnerable-program/programs/vault
+        # cargo check is the cheapest compile-clean check; `anchor build` produces
+        # target/deploy/<prog>.so locally with the SBF toolchain (see README §Local toolchain setup).
+        run: |
+          cargo check 2>&1 | tail -10
+          if [ ! -d "target" ]; then
+            echo "Build target/ directory missing — cargo check failed"
+            exit 1
+          fi
+          echo "Compile-clean: vault program compiles against anchor 0.31.1"
+
+  lint-install:
+    name: Install script smoke test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Verify install.sh syntax
+        run: bash -n install.sh && echo "install.sh syntax OK"
+
+      - name: Dry-run install.sh
+        run: |
+          mkdir -p /tmp/install-test/.claude
+          HOME=/tmp/install-test bash install.sh -y
+          # Skill files at the registered skill path
+          test -f /tmp/install-test/.claude/skills/solana-auditor-shiba/SKILL.md
+          test -f /tmp/install-test/.claude/skills/solana-auditor-shiba/00-terminology.md
+          test -f /tmp/install-test/.claude/skills/solana-auditor-shiba/06-remediation.md
+          # NOT at the wrong path
+          test ! -f /tmp/install-test/.claude/skills/skill/SKILL.md
+          # Slash commands
+          test -f /tmp/install-test/.claude/commands/audit.md
+          test -f /tmp/install-test/.claude/commands/audit-quick.md
+          test -f /tmp/install-test/.claude/commands/audit-report.md
+          test -f /tmp/install-test/.claude/commands/audit-poc.md
+          test -f /tmp/install-test/.claude/commands/audit-findings.md
+          # Path-scoped rules
+          test -f /tmp/install-test/.claude/rules/audit.rules
+          # PoC templates
+          test -f /tmp/install-test/.claude/templates/solana-auditor-shiba/poc-template-anchor.rs
+          test -f /tmp/install-test/.claude/templates/solana-auditor-shiba/poc-template-typescript.ts
+          test -f /tmp/install-test/.claude/templates/solana-auditor-shiba/poc-template-manual.md
+          echo "All expected files installed"

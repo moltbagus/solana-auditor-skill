@@ -1,0 +1,1 @@
+../../../scripts/findings-to-sarif.py

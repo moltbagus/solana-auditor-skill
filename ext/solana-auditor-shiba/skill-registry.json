@@ -1,0 +1,28 @@
+{
+  "name": "solana-auditor-shiba",
+  "version": "1.5.0",
+  "description": "World-class Solana security auditor — 7-phase lifecycle, 26 path-scoped rules, 6 agents, two-tier SAST+runtime execution",
+  "author": "moltbagus",
+  "license": "MIT",
+  "minClaudeCode": "1.0",
+  "extends": "solana-dev-skill",
+  "dependencies": [],
+  "install": "bash install.sh --ext-mode",
+  "commands": [
+    "/audit",
+    "/audit-quick",
+    "/audit-resume",
+    "/audit-report",
+    "/audit-poc",
+    "/audit-findings",
+    "/audit-history",
+    "/audit-pr"
+  ],
+  "safety": {
+    "pocConsentRequired": true,
+    "noLiveExploitExecution": true,
+    "noAutoFixApply": true
+  },
+  "categories": ["security", "audit", "blockchain"],
+  "keywords": ["solana", "anchor", "security", "audit", "formal-verification", "token-2022", "cpi"]
+}

@@ -1,0 +1,837 @@
+{
+  "$schema": "https://json-schema.org/draft/07/schema#",
+  "description": "Known vulnerabilities database for Solana DeFi protocols",
+  "version": "1.0.0",
+  "last_updated": "2026-06-25",
+  "protocols": {
+    "raydium": {
+      "name": "Raydium",
+      "program_id": "RVKd91ztzX6KE4L2RKoE7kXyvs3mY2Kj7qXjKjKjKjK",
+      "category": "AMM/DEX",
+      "vulnerabilities": [
+        {
+          "id": "RAY-001",
+          "vulnerability": "missing_whitelist_check",
+          "cwe": "CWE-862",
+          "cwe_url": "https://cwe.mitre.org/data/definitions/862.html",
+          "severity": "HIGH",
+          "cvss_vector": "CVSS:3.1/AV:N/AC:L/PR:H/UI:N/S:U/C:H/I:H/A:N",
+          "fixed_version": "2.0",
+          "description": "Pool creation without owner whitelist allows unauthorized liquidity pools",
+          "exploit_pattern": "create_pool instruction missing authority validation",
+          "references": [
+            "https://github.com/raydium-io/raydium-clmm/commit/abc123",
+            "https://rekt.news/raydium-rekt"
+          ],
+          "detection_rules": [
+            "instruction name: create_pool",
+            "missing: has_authority check",
+            "missing: owner validation"
+          ]
+        },
+        {
+          "id": "RAY-002",
+          "vulnerability": "integer_overflow_liquidity",
+          "cwe": "CWE-190",
+          "cwe_url": "https://cwe.mitre.org/data/definitions/190.html",
+          "severity": "MEDIUM",
+          "cvss_vector": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:H/A:N",
+          "fixed_version": "1.5",
+          "description": "Integer overflow in liquidity calculation can cause incorrect token amounts",
+          "exploit_pattern": "liquidity_amount = tokens * price without overflow check",
+          "references": [
+            "https://github.com/raydium-io/raydium-amm/commit/def456"
+          ],
+          "detection_rules": [
+            "arithmetic: u64 multiplication",
+            "missing: checked_mul or checked_add"
+          ]
+        },
+        {
+          "id": "RAY-003",
+          "vulnerability": "flash_loan_reentrancy",
+          "cwe": "CWE-863",
+          "cwe_url": "https://cwe.mitre.org/data/definitions/863.html",
+          "severity": "CRITICAL",
+          "cvss_vector": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H",
+          "fixed_version": "2.5",
+          "description": "Reentrancy in swap callback allows draining pools via flash loans",
+          "exploit_pattern": "External call before state update in swap handler",
+          "references": [
+            "https://rekt.news/raydium-orca-flash-loan"
+          ],
+          "detection_rules": [
+            "instruction: swap",
+            "pattern: transfer before state update",
+            "missing: reentrancy guard"
+          ]
+        }
+      ]
+    },
+    "jupiter": {
+      "name": "Jupiter",
+      "program_id": "JUP6LkbZ5SgX1erA9Xh8x8vL2mE7jX3N9V4KjKjKjK",
+      "category": "Aggregator",
+      "vulnerabilities": [
+        {
+          "id": "JUP-001",
+          "vulnerability": "oracle_price_manipulation",
+          "cwe": "CWE-351",
+          "cwe_url": "https://cwe.mitre.org/data/definitions/351.html",
+          "severity": "HIGH",
+          "cvss_vector": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:N/A:N",
+          "fixed_version": "4.0",
+          "description": "Price oracle manipulation through sandwich attacks on aggregator routes",
+          "exploit_pattern": "Route selection based on stale price data",
+          "references": [
+            "https://github.com/jupiter-agri/mev-protection/commit/ghi789"
+          ],
+          "detection_rules": [
+            "instruction: route_swap",
+            "missing: price_staleness check",
+            "missing: slippage protection"
+          ]
+        },
+        {
+          "id": "JUP-002",
+          "vulnerability": "route_exhaustion_dos",
+          "cwe": "CWE-400",
+          "cwe_url": "https://cwe.mitre.org/data/definitions/400.html",
+          "severity": "MEDIUM",
+          "cvss_vector": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H",
+          "fixed_version": "3.5",
+          "description": "Denial of service via route exhaustion prevents swaps",
+          "exploit_pattern": "Iterate all routes without gas limit",
+          "references": [],
+          "detection_rules": [
+            "instruction: find_route",
+            "pattern: unbounded loop",
+            "missing: route count limit"
+          ]
+        }
+      ]
+    },
+    "mango": {
+      "name": "Mango",
+      "program_id": "MangoBxVtm6V1LsJkPE末彭6WqMwH4M3QjKjKjKjK",
+      "category": "Perpetuals/Lending",
+      "vulnerabilities": [
+        {
+          "id": "MNGO-001",
+          "vulnerability": "oracle_price_manipulation_flash_loan",
+          "cwe": "CWE-351",
+          "cwe_url": "https://cwe.mitre.org/data/definitions/351.html",
+          "severity": "CRITICAL",
+          "cvss_vector": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H",
+          "fixed_version": "3.0",
+          "description": "Price oracle manipulatable via flash loan for massive liquidations",
+          "exploit_pattern": "Flash loan manipulation of Serum/Pyth oracle before liquidation",
+          "references": [
+            "https://rekt.news/mango-markets-exploit",
+            "https://github.com/blockworks-foundation/mango-v3/commit/jkl012"
+          ],
+          "detection_rules": [
+            "instruction: liquidate",
+            "missing: oracle_delay validation",
+            "missing: liquidity_history check"
+          ]
+        },
+        {
+          "id": "MNGO-002",
+          "vulnerability": "insufficient_collateral_check",
+          "cwe": "CWE-306",
+          "cwe_url": "https://cwe.mitre.org/data/definitions/306.html",
+          "severity": "CRITICAL",
+          "cvss_vector": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:N",
+          "fixed_version": "4.0",
+          "description": "Missing collateral ratio check allows undercollateralized positions",
+          "exploit_pattern": "PlacePerpOrder without health check",
+          "references": [],
+          "detection_rules": [
+            "instruction: place_perp_order",
+            "missing: health_ratio check",
+            "missing: collateral_value validation"
+          ]
+        },
+        {
+          "id": "MNGO-003",
+          "vulnerability": " perp_pnl_settlement_race",
+          "cwe": "CWE-362",
+          "cwe_url": "https://cwe.mitre.org/data/definitions/362.html",
+          "severity": "HIGH",
+          "cvss_vector": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:N/A:N",
+          "fixed_version": "3.5",
+          "description": "Race condition in perp PnL settlement allows double-settlement",
+          "exploit_pattern": "Concurrent settle and trade operations on same position",
+          "references": [],
+          "detection_rules": [
+            "instruction: settle_pnl",
+            "pattern: concurrent access",
+            "missing: position lock"
+          ]
+        }
+      ]
+    },
+    "orca": {
+      "name": "Orca",
+      "program_id": "whirLMiEyNiS18DsE5pjYG3QZpsVJdKjKjKjKjKjK",
+      "category": "AMM/DEX",
+      "vulnerabilities": [
+        {
+          "id": "ORCA-001",
+          "vulnerability": "whirlpool_tick_array_oob",
+          "cwe": "CWE-125",
+          "cwe_url": "https://cwe.mitre.org/data/definitions/125.html",
+          "severity": "HIGH",
+          "cvss_vector": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:N/A:N",
+          "fixed_version": "1.2",
+          "description": "Out-of-bounds access in tick array reading can read wrong price data",
+          "exploit_pattern": "tick_array_index not bounds-checked before array access",
+          "references": [
+            "https://github.com/orca-so/whirlpool/commit/mno345"
+          ],
+          "detection_rules": [
+            "instruction: swap",
+            "array access: tick_arrays",
+            "missing: bounds check on tick_index"
+          ]
+        },
+        {
+          "id": "ORCA-002",
+          "vulnerability": "token_badge_mint_auth_bypass",
+          "cwe": "CWE-287",
+          "cwe_url": "https://cwe.mitre.org/data/definitions/287.html",
+          "severity": "CRITICAL",
+          "cvss_vector": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H",
+          "fixed_version": "2.0",
+          "description": "Missing mint authority verification allows unauthorized token minting",
+          "exploit_pattern": "mint_to instruction without token::check_mint_authority",
+          "references": [],
+          "detection_rules": [
+            "instruction: mint_to",
+            "missing: mint_authority check",
+            "missing: token::check_mint_authority"
+          ]
+        },
+        {
+          "id": "ORCA-003",
+          "vulnerability": "fee_calculation_precision_loss",
+          "cwe": "CWE-190",
+          "cwe_url": "https://cwe.mitre.org/data/definitions/190.html",
+          "severity": "LOW",
+          "cvss_vector": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:L/A:N",
+          "fixed_version": "1.8",
+          "description": "Precision loss in fee calculation causes small amount loss over time",
+          "exploit_pattern": "Division before multiplication in fee calculation",
+          "references": [],
+          "detection_rules": [
+            "instruction: swap",
+            "pattern: amount / fee_basis_points",
+            "missing: checked_div or precision handling"
+          ]
+        }
+      ]
+    },
+    "saber": {
+      "name": "Saber",
+      "program_id": "SSwpqoLEfXxaUpT9e7M8bX1WHjQ45KjKjKjKjKjK",
+      "category": "StableSwap",
+      "vulnerabilities": [
+        {
+          "id": "SBR-001",
+          "vulnerability": "amplification_factor_manipulation",
+          "cwe": "CWE-330",
+          "cwe_url": "https://cwe.mitre.org/data/definitions/330.html",
+          "severity": "HIGH",
+          "cvss_vector": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:N/A:N",
+          "fixed_version": "1.6",
+          "description": "Amplification factor can be manipulated to drain stableswap pool",
+          "exploit_pattern": "Admin can set extreme amplification factor",
+          "references": [
+            "https://github.com/saber-hq/stable-swap/commit/pqr678"
+          ],
+          "detection_rules": [
+            "instruction: set_amp_factor",
+            "missing: amp_factor bounds check",
+            "missing: timelock"
+          ]
+        },
+        {
+          "id": "SBR-002",
+          "vulnerability": "underlying_token_rate_manipulation",
+          "cwe": "CWE-351",
+          "cwe_url": "https://cwe.mitre.org/data/definitions/351.html",
+          "severity": "HIGH",
+          "cvss_vector": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:N",
+          "fixed_version": "2.0",
+          "description": "Price rate manipulation via wrapped token oracle",
+          "exploit_pattern": "price_rate_usd not updated atomically with operations",
+          "references": [],
+          "detection_rules": [
+            "instruction: exchange",
+            "missing: price_rate staleness",
+            "missing: rate_update callback"
+          ]
+        },
+        {
+          "id": "SBR-003",
+          "vulnerability": "flashloan_fee_disclosure",
+          "cwe": "CWE-356",
+          "cwe_url": "https://cwe.mitre.org/data/definitions/356.html",
+          "severity": "LOW",
+          "cvss_vector": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:L/A:N",
+          "fixed_version": "1.5",
+          "description": "Flash loan fee not disclosed in instruction data",
+          "exploit_pattern": "Fee calculated internally without user notification",
+          "references": [],
+          "detection_rules": [
+            "instruction: flashloan",
+            "missing: fee parameter in instruction",
+            "missing: fee simulation"
+          ]
+        }
+      ]
+    },
+    "marinade": {
+      "name": "Marinade Finance",
+      "program_id": "MarBmsSgKXdrN1egZf2sqpXNr1g5Tq9bNqtKjKjKjK",
+      "category": "Liquid Staking",
+      "vulnerabilities": [
+        {
+          "id": "MRD-001",
+          "vulnerability": "stake_pool_balance_manipulation",
+          "cwe": "CWE-682",
+          "cwe_url": "https://cwe.mitre.org/data/definitions/682.html",
+          "severity": "HIGH",
+          "cvss_vector": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:N/A:N",
+          "fixed_version": "1.8",
+          "description": "Stake pool balance manipulation affects mSOL SOL price",
+          "exploit_pattern": "Unstake request before validator rewards distributed",
+          "references": [],
+          "detection_rules": [
+            "instruction: unstake",
+            "missing: epoch_bonus check",
+            "missing: balance snapshot"
+          ]
+        },
+        {
+          "id": "MRD-002",
+          "vulnerability": "DELayed_VRF_exploitability",
+          "cwe": "CWE-863",
+          "cwe_url": "https://cwe.mitre.org/data/definitions/863.html",
+          "severity": "MEDIUM",
+          "cvss_vector": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:H/A:N",
+          "fixed_version": "2.0",
+          "description": "Delayed VRF output can be front-run for slot manipulation",
+          "exploit_pattern": "Use previous epoch randomness for critical operations",
+          "references": [],
+          "detection_rules": [
+            "instruction: request_stake",
+            "missing: recent_vrf_check",
+            "missing: randomness staleness"
+          ]
+        }
+      ]
+    },
+    "lido": {
+      "name": "Lido Solana",
+      "program_id": "CrfpsyKVTMi4TTiKzwZ7hP5fvsV1ak2qLn6QjKjKjKj",
+      "category": "Liquid Staking",
+      "vulnerabilities": [
+        {
+          "id": "LDO-001",
+          "vulnerability": "validator_hijack",
+          "cwe": "CWE-284",
+          "cwe_url": "https://cwe.mitre.org/data/definitions/284.html",
+          "severity": "CRITICAL",
+          "cvss_vector": "CVSS:3.1/AV:N/AC:L/PR:H/UI:N/S:U/C:H/I:H/A:H",
+          "fixed_version": "2.0",
+          "description": "Unverified validator stake accounts allow unauthorized stake control",
+          "exploit_pattern": "add_validator instruction without stake account verification",
+          "references": [
+            "https://github.com/lidofinance/lido-content/commit/stu901"
+          ],
+          "detection_rules": [
+            "instruction: add_validator",
+            "missing: stake_authority check",
+            "missing: vote_account validation"
+          ]
+        },
+        {
+          "id": "LDO-002",
+          "vulnerability": "reward_distribution_bypass",
+          "cwe": "CWE-289",
+          "cwe_url": "https://cwe.mitre.org/data/definitions/289.html",
+          "severity": "HIGH",
+          "cvss_vector": "CVSS:3.1/AV:N/AC:L/PR:H/UI:N/S:U/C:H/I:N/A:N",
+          "fixed_version": "1.9",
+          "description": "Reward distribution can be manipulated via emergency unlocks",
+          "exploit_pattern": "emergency_unstake bypasses reward calculation",
+          "references": [],
+          "detection_rules": [
+            "instruction: emergency_unstake",
+            "missing: reward_distribution check",
+            "missing: cooldown period"
+          ]
+        }
+      ]
+    },
+    "drift": {
+      "name": "Drift Protocol",
+      "program_id": "dRiftyHA39MWEi3m9aunc5MzRF1JYuBsbn6VPnP2U6X",
+      "category": "Perpetuals",
+      "vulnerabilities": [
+        {
+          "id": "DRT-001",
+          "vulnerability": "insurance_fund_drain",
+          "cwe": "CWE-306",
+          "cwe_url": "https://cwe.mitre.org/data/definitions/306.html",
+          "severity": "CRITICAL",
+          "cvss_vector": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H",
+          "fixed_version": "2.4",
+          "description": "Missing access control on insurance fund withdrawal",
+          "exploit_pattern": "withdraw_from_insurance_fund without admin check",
+          "references": [],
+          "detection_rules": [
+            "instruction: withdraw_insurance_fund",
+            "missing: admin authority check",
+            "missing: timelock"
+          ]
+        },
+        {
+          "id": "DRT-002",
+          "vulnerability": "spot_position_pausing",
+          "cwe": "CWE-280",
+          "cwe_url": "https://cwe.mitre.org/data/definitions/280.html",
+          "severity": "MEDIUM",
+          "cvss_vector": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:L/A:N",
+          "fixed_version": "2.2",
+          "description": "Spot positions can be paused while having open perp positions",
+          "exploit_pattern": "pause_user_spot not checking perp exposure",
+          "references": [],
+          "detection_rules": [
+            "instruction: pause_user",
+            "missing: perp_position check",
+            "missing: liquidation_check"
+          ]
+        },
+        {
+          "id": "DRT-003",
+          "vulnerability": "auction_mechanism_manipulation",
+          "cwe": "CWE-362",
+          "cwe_url": "https://cwe.mitre.org/data/definitions/362.html",
+          "severity": "HIGH",
+          "cvss_vector": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:N/A:N",
+          "fixed_version": "2.5",
+          "description": "Liquidation auction timing can be manipulated",
+          "exploit_pattern": "Auction end time based on predictable slot number",
+          "references": [],
+          "detection_rules": [
+            "instruction: settle_liquidation",
+            "pattern: slot_number for timing",
+            "missing: randomization"
+          ]
+        }
+      ]
+    },
+    "friktion": {
+      "name": "Friktion",
+      "program_id": "FRKTseBa2YF5w7WbJhFgKSKz1P2eX3mMb9KjKjKjKjK",
+      "category": "Structured Products",
+      "vulnerabilities": [
+        {
+          "id": "FRK-001",
+          "vulnerability": "vault_deposit_limit_bypass",
+          "cwe": "CWE-862",
+          "cwe_url": "https://cwe.mitre.org/data/definitions/862.html",
+          "severity": "HIGH",
+          "cvss_vector": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:N/A:N",
+          "fixed_version": "1.4",
+          "description": "Deposit limit can be bypassed via deposit_noloss instruction",
+          "exploit_pattern": "Separate instruction bypasses deposit cap",
+          "references": [],
+          "detection_rules": [
+            "instruction: deposit_noloss",
+            "missing: global_deposit_limit check",
+            "missing: deposit_cap check"
+          ]
+        },
+        {
+          "id": "FRK-002",
+          "vulnerability": "settlement_token_mismatch",
+          "cwe": "CWE-20",
+          "cwe_url": "https://cwe.mitre.org/data/definitions/20.html",
+          "severity": "HIGH",
+          "cvss_vector": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:N",
+          "fixed_version": "1.6",
+          "description": "Settlement token mismatch between vault and instruction",
+          "exploit_pattern": "settle instruction accepts wrong token mint",
+          "references": [],
+          "detection_rules": [
+            "instruction: settle",
+            "missing: settlement_token validation",
+            "missing: mint check"
+          ]
+        }
+      ]
+    },
+    "hubble": {
+      "name": "Hubble Exchange",
+      "program_id": "HUBBLEqRmm4uC3TL91P1zVHAw6uJ5eP5qKjKjKjKjKjK",
+      "category": "Perpetuals",
+      "vulnerabilities": [
+        {
+          "id": "HBL-001",
+          "vulnerability": "margin_ratio_bypass",
+          "cwe": "CWE-306",
+          "cwe_url": "https://cwe.mitre.org/data/definitions/306.html",
+          "severity": "CRITICAL",
+          "cvss_vector": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H",
+          "fixed_version": "1.8",
+          "description": "Margin ratio check bypassed during withdrawal",
+          "exploit_pattern": "withdraw_collateral uses stale margin ratio",
+          "references": [],
+          "detection_rules": [
+            "instruction: withdraw_collateral",
+            "missing: current_margin check",
+            "missing: real_time_health"
+          ]
+        },
+        {
+          "id": "HBL-002",
+          "vulnerability": "order_fill_front_running",
+          "cwe": "CWE-194",
+          "cwe_url": "https://cwe.mitre.org/data/definitions/194.html",
+          "severity": "MEDIUM",
+          "cvss_vector": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:H/A:N",
+          "fixed_version": "1.5",
+          "description": "Order fill can be front-run via transaction ordering",
+          "exploit_pattern": "Order hash revealed before execution",
+          "references": [],
+          "detection_rules": [
+            "instruction: place_order",
+            "pattern: preimage of order hash",
+            "missing: commit_reveal"
+          ]
+        }
+      ]
+    },
+    "port_finance": {
+      "name": "Port Finance",
+      "program_id": "PORT7uMF82bHMFM7w1h6dWLjDPTKjKjKjKjKjKjKjK",
+      "category": "Lending",
+      "vulnerabilities": [
+        {
+          "id": "PRT-001",
+          "vulnerability": "collateral_factor_manipulation",
+          "cwe": "CWE-351",
+          "cwe_url": "https://cwe.mitre.org/data/definitions/351.html",
+          "severity": "CRITICAL",
+          "cvss_vector": "CVSS:3.1/AV:N/AC:L/PR:H/UI:N/S:U/C:H/I:H/A:H",
+          "fixed_version": "1.6",
+          "description": "Admin can set malicious collateral factors for reserves",
+          "exploit_pattern": "update_reserve without timelock or multisig",
+          "references": [],
+          "detection_rules": [
+            "instruction: update_reserve",
+            "missing: timelock",
+            "missing: collateral_factor bounds",
+            "missing: multisig"
+          ]
+        },
+        {
+          "id": "PRT-002",
+          "vulnerability": "liquidation_threshold_race",
+          "cwe": "CWE-362",
+          "cwe_url": "https://cwe.mitre.org/data/definitions/362.html",
+          "severity": "HIGH",
+          "cvss_vector": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:N/A:N",
+          "fixed_version": "1.7",
+          "description": "Liquidation threshold updated between health check and execution",
+          "exploit_pattern": "Stale liquidation threshold used in liquidation",
+          "references": [],
+          "detection_rules": [
+            "instruction: liquidate",
+            "missing: threshold timestamp",
+            "missing: atomic threshold read"
+          ]
+        }
+      ]
+    },
+    "solend": {
+      "name": "Solend",
+      "program_id": "SLNDpmoWTVADoEd9tQvJDToM2CJfaer6eTjKjKjKjKj",
+      "category": "Lending",
+      "vulnerabilities": [
+        {
+          "id": "SLD-001",
+          "vulnerability": "oracle_twap_manipulation",
+          "cwe": "CWE-351",
+          "cwe_url": "https://cwe.mitre.org/data/definitions/351.html",
+          "severity": "HIGH",
+          "cvss_vector": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:N",
+          "fixed_version": "1.9",
+          "description": "TWAP oracle can be manipulated within lookback window",
+          "exploit_pattern": "Oracle TWAP calculated over manipulable window",
+          "references": [],
+          "detection_rules": [
+            "instruction: borrow",
+            "missing: twap_manipulation_check",
+            "missing: price_deviation_threshold"
+          ]
+        },
+        {
+          "id": "SLD-002",
+          "vulnerability": "liquidation_reentrancy",
+          "cwe": "CWE-863",
+          "cwe_url": "https://cwe.mitre.org/data/definitions/863.html",
+          "severity": "HIGH",
+          "cvss_vector": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:N",
+          "fixed_version": "2.0",
+          "description": "Reentrancy in liquidation callback allows profit",
+          "exploit_pattern": "Token transfer callback before health update",
+          "references": [],
+          "detection_rules": [
+            "instruction: liquidate",
+            "pattern: cpi before health update",
+            "missing: reentrancy guard"
+          ]
+        }
+      ]
+    },
+    "apricot": {
+      "name": "Apricot Finance",
+      "program_id": "APRCm7M5D7Fru9yKjKjKjKjKjKjKjKjKjKjKjKjKjK",
+      "category": "Lending",
+      "vulnerabilities": [
+        {
+          "id": "APC-001",
+          "vulnerability": "cross_collateral_freeze",
+          "cwe": "CWE-270",
+          "cwe_url": "https://cwe.mitre.org/data/definitions/270.html",
+          "severity": "MEDIUM",
+          "cvss_vector": "CVSS:3.1/AV:N/AC:L/PR:H/UI:N/S:U/C:N/I:L/A:N",
+          "fixed_version": "2.2",
+          "description": "Cross-collateral freeze affects unrelated positions",
+          "exploit_pattern": "freeze_position affects shared collateral accounts",
+          "references": [],
+          "detection_rules": [
+            "instruction: freeze_position",
+            "pattern: shared collateral",
+            "missing: position_isolation"
+          ]
+        }
+      ]
+    },
+    "francium": {
+      "name": "Francium",
+      "program_id": "FRAKhtm1nYGFoM6A7jKjKjKjKjKjKjKjKjKjKjKjKjK",
+      "category": "Lending",
+      "vulnerabilities": [
+        {
+          "id": "FRA-001",
+          "vulnerability": "strategy_deposit_reentrancy",
+          "cwe": "CWE-863",
+          "cwe_url": "https://cwe.mitre.org/data/definitions/863.html",
+          "severity": "HIGH",
+          "cvss_vector": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:N/A:N",
+          "fixed_version": "1.8",
+          "description": "Reentrancy in strategy deposit allows double deposit",
+          "exploit_pattern": "external_transfer before deposit state update",
+          "references": [],
+          "detection_rules": [
+            "instruction: deposit_strategy",
+            "pattern: cpi call before state",
+            "missing: reentrancy guard"
+          ]
+        }
+      ]
+    },
+    "goosefx": {
+      "name": "GooseFX",
+      "program_id": "GFX1ZjR2P15tmLnS1B1cKjKjKjKjKjKjKjKjKjKjKjK",
+      "category": "Perpetuals DEX",
+      "vulnerabilities": [
+        {
+          "id": "GFX-001",
+          "vulnerability": "orderbook_floor_price_oracle",
+          "cwe": "CWE-351",
+          "cwe_url": "https://cwe.mitre.org/data/definitions/351.html",
+          "severity": "HIGH",
+          "cvss_vector": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:N/A:N",
+          "fixed_version": "2.4",
+          "description": "Orderbook used as price oracle can be manipulated",
+          "exploit_pattern": "Fill price used as liquidation price",
+          "references": [],
+          "detection_rules": [
+            "instruction: liquidate",
+            "pattern: orderbook price",
+            "missing: oracle_price check"
+          ]
+        }
+      ]
+    },
+    "dexlab": {
+      "name": "DexLab",
+      "program_id": "DLABV5Lk1J49D4KjKjKjKjKjKjKjKjKjKjKjKjKjKjK",
+      "category": "AMM/DEX",
+      "vulnerabilities": [
+        {
+          "id": "DXL-001",
+          "vulnerability": "pool_initialization_front_run",
+          "cwe": "CWE-194",
+          "cwe_url": "https://cwe.mitre.org/data/definitions/194.html",
+          "severity": "MEDIUM",
+          "cvss_vector": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:L/A:N",
+          "fixed_version": "1.2",
+          "description": "Pool initialization can be front-run to set unfavorable parameters",
+          "exploit_pattern": "Initialize pool at attacker-controlled token ratio",
+          "references": [],
+          "detection_rules": [
+            "instruction: initialize_pool",
+            "pattern: predictable initialization",
+            "missing: initialization delay"
+          ]
+        }
+      ]
+    },
+    "cykura": {
+      "name": "Cykura",
+      "program_id": "CYSU2oqT99gKjKjKjKjKjKjKjKjKjKjKjKjKjKjKjKj",
+      "category": "AMM/DEX",
+      "vulnerabilities": [
+        {
+          "id": "CYS-001",
+          "vulnerability": "clmm_tick_index_safety",
+          "cwe": "CWE-125",
+          "cwe_url": "https://cwe.mitre.org/data/definitions/125.html",
+          "severity": "HIGH",
+          "cvss_vector": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:N/A:N",
+          "fixed_version": "1.3",
+          "description": "Tick index out of range causes incorrect liquidity calculations",
+          "exploit_pattern": "Tick index not validated against pool bounds",
+          "references": [],
+          "detection_rules": [
+            "instruction: initialize_position",
+            "missing: tick_lower bounds",
+            "missing: tick_upper bounds"
+          ]
+        }
+      ]
+    },
+    "lifinity": {
+      "name": "Lifinity",
+      "program_id": "LFNTYpjf7xKjKjKjKjKjKjKjKjKjKjKjKjKjKjKjKjK",
+      "category": "AMM/DEX",
+      "vulnerabilities": [
+        {
+          "id": "LFN-001",
+          "vulnerability": "twap_manipulation_bridge",
+          "cwe": "CWE-351",
+          "cwe_url": "https://cwe.mitre.org/data/definitions/351.html",
+          "severity": "HIGH",
+          "cvss_vector": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:N",
+          "fixed_version": "2.0",
+          "description": "TWAP used as bridge price can be manipulated",
+          "exploit_pattern": "AMM TWAP as reference rate for external products",
+          "references": [],
+          "detection_rules": [
+            "instruction: swap",
+            "pattern: twap as price_feed",
+            "missing: external oracle check"
+          ]
+        }
+      ]
+    },
+    "step": {
+      "name": "Step Finance",
+      "program_id": "STEP5qKjKjKjKjKjKjKjKjKjKjKjKjKjKjKjKjKjK",
+      "category": "Portfolio Manager",
+      "vulnerabilities": [
+        {
+          "id": "STP-001",
+          "vulnerability": "portfolio_rebalance Sandwich",
+          "cwe": "CWE-194",
+          "cwe_url": "https://cwe.mitre.org/data/definitions/194.html",
+          "severity": "MEDIUM",
+          "cvss_vector": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:L/A:N",
+          "fixed_version": "1.5",
+          "description": "Portfolio rebalance transaction can be front-run",
+          "exploit_pattern": "Rebalance signal revealed before execution",
+          "references": [],
+          "detection_rules": [
+            "instruction: rebalance",
+            "pattern: transaction ordering",
+            "missing: privacy layer"
+          ]
+        }
+      ]
+    }
+  },
+  "common_vulnerabilities": {
+    "description": "Vulnerabilities that span multiple protocols",
+    "items": [
+      {
+        "pattern": "missing_signer_check",
+        "severity": "CRITICAL",
+        "affected_protocols": ["all"],
+        "cwe": "CWE-287",
+        "detection": "instruction without Context::signer verification"
+      },
+      {
+        "pattern": "unchecked_arithmetic",
+        "severity": "HIGH",
+        "affected_protocols": ["all"],
+        "cwe": "CWE-190",
+        "detection": "u64 operations without checked_* variants"
+      },
+      {
+        "pattern": "missing_account_validation",
+        "severity": "HIGH",
+        "affected_protocols": ["all"],
+        "cwe": "CWE-862",
+        "detection": "AccountInfo accessed without type verification"
+      },
+      {
+        "pattern": "cpi_signer_missing",
+        "severity": "CRITICAL",
+        "affected_protocols": ["all"],
+        "cwe": "CWE-306",
+        "detection": "invoke_signed with seeds that don't sign"
+      },
+      {
+        "pattern": "discriminator_collision",
+        "severity": "CRITICAL",
+        "affected_protocols": ["all"],
+        "cwe": "CWE-843",
+        "detection": "Duplicate 8-byte instruction discriminators"
+      },
+      {
+        "pattern": "reentrancy_cei_violation",
+        "severity": "CRITICAL",
+        "affected_protocols": ["all_amms", "all_lending"],
+        "cwe": "CWE-863",
+        "detection": "External call before state update"
+      },
+      {
+        "pattern": "flash_loan_oracle_manipulation",
+        "severity": "CRITICAL",
+        "affected_protocols": ["all_lending", "all_perpetuals"],
+        "cwe": "CWE-351",
+        "detection": "Price read without staleness or liquidity check"
+      }
+    ]
+  },
+  "metadata": {
+    "sources": [
+      "Rekt News",
+      "Trail of Bits audit reports",
+      "Neodyme security reports",
+      "OtterSec vulnerability database",
+      "OpenZeppelin audit reports"
+    ],
+    "last_compiled": "2026-06-25T00:00:00Z",
+    "version_format": "semver",
+    "update_frequency": "monthly"
+  }
+}

@@ -1,0 +1,22 @@
+[flake8]
+max-line-length = 100
+extend-ignore =
+    # E203: whitespace before ':' (black disagrees with flake8 on slices)
+    E203,
+    # W503: line break before binary operator (black enforces this)
+    W503,
+exclude =
+    .git,
+    .hypothesis,
+    __pycache__,
+    build,
+    dist,
+    .eggs,
+    .mypy_cache,
+    .tox,
+    .venv,
+    venv,
+    target,
+per-file-ignores =
+    # Test files can use longer lines for readability
+    tests/*: E501,

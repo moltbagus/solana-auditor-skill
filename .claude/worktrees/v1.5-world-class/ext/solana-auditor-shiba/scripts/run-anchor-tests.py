@@ -1,0 +1,1 @@
+../../../scripts/run-anchor-tests.py

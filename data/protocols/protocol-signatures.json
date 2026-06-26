@@ -1,0 +1,121 @@
+{
+  "$schema": "https://json-schema.org/draft/07/schema#",
+  "description": "Protocol signatures for fingerprinting Solana DeFi programs",
+  "version": "1.0.0",
+  "protocols": {
+    "raydium": {
+      "program_id": "RVKd91ztzX6KE4L2RKoE7kXyvs3mY2Kj7qXjKjKjKjK",
+      "category": "AMM/DEX",
+      "instructions": ["swap", "add_liquidity", "remove_liquidity", "create_pool", "initialize_pool", "staking", "deposit", "stake", "claim_rewards", "withdraw_stake"],
+      "keywords": ["raydium", "amm", "liquidity_pool", "clmm"]
+    },
+    "jupiter": {
+      "program_id": "JUP6LkbZ5SgX1erA9Xh8x8vL2mE7jX3N9V4KjKjKjK",
+      "category": "Aggregator",
+      "instructions": ["route_swap", "swap", "quote", "get_quote", "aggregated_swap", "direct_swap", "memoized_swap"],
+      "keywords": ["jupiter", "aggregator", "route", "token_swap"]
+    },
+    "mango": {
+      "program_id": "MangoBxVtm6V1LsJkPE末彭6WqMwH4M3QjKjKjKjK",
+      "category": "Perpetuals/Lending",
+      "instructions": ["liquidate", "deposit", "withdraw", "borrow", "place_perp_order", "settle_pnl", "mango_account", "cancel_perp_order", "place_spot_order"],
+      "keywords": ["mango", "perp", "perpetual", "spot", "margin", "trading"]
+    },
+    "orca": {
+      "program_id": "whirLMiEyNiS18DsE5pjYG3QZpsVJdKjKjKjKjKjK",
+      "category": "AMM/DEX",
+      "instructions": ["swap", "initialize_tick_array", "open_position", "increase_liquidity", "decrease_liquidity", "close_position", "initialize_pool", "initialize_config"],
+      "keywords": ["orca", "whirlpool", "clmm", "tick_array"]
+    },
+    "saber": {
+      "program_id": "SSwpqoLEfXxaUpT9e7M8bX1WHjQ45KjKjKjKjKjK",
+      "category": "StableSwap",
+      "instructions": ["swap", "add_liquidity", "remove_liquidity", "exchange", "initialize", "wrap", "unwrap"],
+      "keywords": ["saber", "stable_swap", "stablecoin", "peg"]
+    },
+    "marinade": {
+      "program_id": "MarBmsSgKXdrN1egZf2sqpXNr1g5Tq9bNqtKjKjKjK",
+      "category": "Liquid Staking",
+      "instructions": ["unstake", "claim", "mint_stake", "add_validator", "remove_validator", "emergency_unstake", "delayed_unstake", "liquid_unstake"],
+      "keywords": ["marinade", "liquid_stake", "msol", "validator"]
+    },
+    "lido": {
+      "program_id": "CrfpsyKVTMi4TTiKzwZ7hP5fvsV1ak2qLn6QjKjKjKj",
+      "category": "Liquid Staking",
+      "instructions": ["stake", "unstake", "claim", "add_validator", "deactivate_stake", "withdraw_stake", "submit_stake_account"],
+      "keywords": ["lido", "stsol", "liquid_stake", "solana_stake"]
+    },
+    "drift": {
+      "program_id": "dRiftyHA39MWEi3m9aunc5MzRF1JYuBsbn6VPnP2U6X",
+      "category": "Perpetuals",
+      "instructions": ["liquidate", "open_position", "close_position", "settle_pnl", "funding_payment", "update_funding", "deposit", "withdraw", "initialize_user"],
+      "keywords": ["drift", "perp", "perpetual", "insurance_fund"]
+    },
+    "friktion": {
+      "program_id": "FRKTseBa2YF5w7WbJhFgKSKz1P2eX3mMb9KjKjKjK",
+      "category": "Structured Products",
+      "instructions": ["deposit", "withdraw", "claim", "settle", "deposit_vault", "rebalance", "claim_vault_pnl", "initialize_vault"],
+      "keywords": ["friktion", "vault", "structured", "options", "volatility"]
+    },
+    "hubble": {
+      "program_id": "HUBBLEqRmm4uC3TL91P1zVHAw6uJ5eP5qKjKjKjKjK",
+      "category": "Perpetuals",
+      "instructions": ["liquidate", "open_position", "close_position", "deposit_collateral", "withdraw_collateral", "place_order", "cancel_order"],
+      "keywords": ["hubble", "exchange", "perp", "margin"]
+    },
+    "port_finance": {
+      "program_id": "PORT7uMF82bHMFM7w1h6dWLjDPTKjKjKjKjKjKjK",
+      "category": "Lending",
+      "instructions": ["liquidate", "deposit", "withdraw", "borrow", "init_reserve", "refresh_reserve", "update_reserve", "flash_borrow"],
+      "keywords": ["port", "lend", "reserve", "collateral", "flash_loan"]
+    },
+    "solend": {
+      "program_id": "SLNDpmoWTVADoEd9tQvJDToM2CJfaer6eTjKjKjKjKjK",
+      "category": "Lending",
+      "instructions": ["liquidate", "deposit", "withdraw", "borrow", "refresh_reserve", "init_reserve", "update_reserve", "deposit_reserve_liquidity"],
+      "keywords": ["solend", "lend", "reserve", "obligation"]
+    },
+    "apricot": {
+      "program_id": "APRCm7M5D7Fru9yKjKjKjKjKjKjKjKjKjKjKjKjKjK",
+      "category": "Lending",
+      "instructions": ["liquidate", "deposit", "withdraw", "borrow", "liquidate_multi", "freeze_position", "unfreeze_position"],
+      "keywords": ["apricot", "lend", "cross_collateral", "multi"]
+    },
+    "francium": {
+      "program_id": "FRAKhtm1nYGFoM6A7jKjKjKjKjKjKjKjKjKjKjKjKjK",
+      "category": "Lending",
+      "instructions": ["liquidate", "deposit", "withdraw", "borrow", "deposit_strategy", "liquidate_strategy", "withdraw_strategy", "harvest_strategy"],
+      "keywords": ["francium", "strategy", "lend", "yield"]
+    },
+    "goosefx": {
+      "program_id": "GFX1ZjR2P15tmLnS1B1cKjKjKjKjKjKjKjKjKjKjKjK",
+      "category": "Perpetuals DEX",
+      "instructions": ["liquidate", "place_order", "cancel_order", "fill_order", "orderbook", "place_perp_order", "settle_fees"],
+      "keywords": ["goosefx", "gfx", "orderbook", "perp", "trading"]
+    },
+    "dexlab": {
+      "program_id": "DLABV5Lk1J49D4KjKjKjKjKjKjKjKjKjKjKjKjKjKjK",
+      "category": "AMM/DEX",
+      "instructions": ["swap", "add_liquidity", "remove_liquidity", "create_pool", "initialize_pool", "swap_direct"],
+      "keywords": ["dexlab", "token_swap", "amm"]
+    },
+    "cykura": {
+      "program_id": "CYSU2oqT99gKjKjKjKjKjKjKjKjKjKjKjKjKjKjKjKj",
+      "category": "AMM/DEX",
+      "instructions": ["swap", "initialize_position", "increase_liquidity", "decrease_liquidity", "close_position", "initialize_pool", "initialize_tick_array"],
+      "keywords": ["cykura", "clmm", "concentrated", "tick"]
+    },
+    "lifinity": {
+      "program_id": "LFNTYpjf7xKjKjKjKjKjKjKjKjKjKjKjKjKjKjKjKjK",
+      "category": "AMM/DEX",
+      "instructions": ["swap", "add_liquidity", "remove_liquidity", "rebalance", "update_fees", "set_price_offset"],
+      "keywords": ["lifinity", "v2", "amm", "rebalance"]
+    },
+    "step": {
+      "program_id": "STEP5qKjKjKjKjKjKjKjKjKjKjKjKjKjKjKjKjKjK",
+      "category": "Portfolio Manager",
+      "instructions": ["rebalance", "deposit", "withdraw", "swap", "claim", "harvest", "update_allocation"],
+      "keywords": ["step", "finance", "portfolio", "rebalance"]
+    }
+  }
+}

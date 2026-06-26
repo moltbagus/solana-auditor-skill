@@ -1,0 +1,65 @@
+{
+  "findings": [
+    {
+      "id": "KAM-001",
+      "title": "Token2022 transfer fee not deducted from deposit amount — systematic undercollateralization",
+      "severity": "CRITICAL",
+      "cvss": 9.1,
+      "cvss_vector": "CVSS:3.1/AV:N/AC:L/PR:L/UI:N/S:U/C:H/I:H/A:H",
+      "cwe": "CWE-345",
+      "location": {
+        "file": "programs/klend/src/state/reserve.rs",
+        "line": 405,
+        "function": "compute_depositable_amount_and_minted_collateral"
+      },
+      "description": "When a user deposits Token2022 tokens with transfer fees into a reserve, the program records the full user-supplied `liquidity_amount` as the deposited amount without accounting for the transfer fee. Token2022 tokens with `transfer_fee` extension deduct the fee at transfer time: the reserve receives `amount - fee`, but the collateral minted is calculated from the full `amount`. This causes the program's internal liability ledger (cToken minting) to exceed the actual token balance held by the reserve.",
+      "impact": "Systematic undercollateralization of all Token2022 reserves with transfer fees. Over time, the gap between recorded deposit value and actual token holdings grows, enabling borrows that exceed true collateral value. A large borrow or liquidation against an inflated reserve can drain it below the recorded liability, harming subsequent depositors and borrowers.",
+      "recommendation": "Use `token_interface::accessor::amount()` to read the actual token balance delta after the `transfer_checked` CPI in `deposit_reserve_liquidity_transfer`, then use the received amount (not the requested amount) for collateral calculation. Alternatively, read the Token2022 mint's `TransferFeeConfig` extension pre-transfer and compute the post-fee amount before minting collateral.",
+      "poc_status": "pending",
+      "rule_caught": "Rule 5 — Token Operations (Token-2022 transfer fee)",
+      "status": "Open",
+      "audit_context": {
+        "repo": "kamino-finance/klend",
+        "version": "v1.23.0",
+        "commit": "23b9f2b545",
+        "audited_at": "2026-06-25",
+        "related_exploit": "Aug 2024 Kamino Finance hack ($4.7M, TokenExtensions overflow)",
+        "note": "Structurally similar pattern; specific attack vector may differ from Aug 2024 exploit"
+      }
+    },
+    {
+      "id": "KAM-002",
+      "title": "[RESOLVED] U256 BigFraction overflow in health factor calculation",
+      "severity": "RESOLVED",
+      "cvss": null,
+      "cvss_vector": null,
+      "cwe": "CWE-190",
+      "location": {
+        "file": "programs/klend/src/utils/fraction.rs",
+        "line": null,
+        "function": "all arithmetic operations"
+      },
+      "description": "The on-chain fraction module has been rewritten. The old `BigFraction` U256 struct is replaced by `fixed::types::U68F60`. All multiplication operations now use `checked_mul()` with `?` error propagation. The `pow_fraction` function (lines 42-48) uses `checked_mul` throughout.",
+      "impact": "Previously, unguarded U256 multiplication in release mode could silently wrap, causing incorrect health factor and LTV calculations. This has been fixed.",
+      "recommendation": "N/A — resolved. The on-chain program now uses `fixed::types::U68F60` with checked arithmetic.",
+      "poc_status": "not_applicable",
+      "rule_caught": "Rule 6 — Arithmetic Overflow",
+      "status": "Fixed",
+      "audit_context": {
+        "repo": "kamino-finance/klend",
+        "version": "v1.23.0",
+        "commit": "23b9f2b545",
+        "audited_at": "2026-06-25",
+        "fix_evidence": "fraction.rs line 42-48: checked_mul with ? propagation throughout"
+      }
+    }
+  ],
+  "summary": {
+    "critical_open": 1,
+    "high_resolved": 0,
+    "medium_resolved": 0,
+    "low_resolved": 0,
+    "fixed": 1,
+    "total": 2
+  }
+}

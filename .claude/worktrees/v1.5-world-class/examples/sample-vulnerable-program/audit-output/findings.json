@@ -1,0 +1,202 @@
+{
+  "findings": [
+    {
+      "id": "VULN-01",
+      "title": "Admin withdraw lacks signer verification",
+      "severity": "CRITICAL",
+      "cvss": 9.8,
+      "cvss_vector": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H",
+      "cwe": "CWE-306",
+      "location": {
+        "file": "programs/vault/src/lib.rs",
+        "line": 36,
+        "function": "admin_withdraw"
+      },
+      "description": "The admin_withdraw instruction accepts `admin: AccountInfo<'info>` instead of `Signer<'info>` and performs no `is_signer` check. Any account can be passed as `admin`, allowing an attacker to drain the vault by calling admin_withdraw with their own pubkey as the admin field.",
+      "impact": "Complete drain of the program vault. No authentication required \u2014 any transaction that supplies a destination account can withdraw arbitrary lamports up to the vault's balance.",
+      "recommendation": "Change `admin: AccountInfo<'info>` to `admin: Signer<'info>` in the AdminWithdraw struct. Anchor will enforce signer verification at deserialization. Add a `has_one = admin` constraint on the vault account to bind the admin to the vault's stored authority.",
+      "poc_status": "pending",
+      "rule_caught": "Rule 8 \u2014 Signer Verification",
+      "status": "Open"
+    },
+    {
+      "id": "VULN-02",
+      "title": "Hardcoded bump literal in initialize",
+      "severity": "MEDIUM",
+      "cvss": 6.5,
+      "cvss_vector": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:L/I:L/A:N",
+      "cwe": "CWE-330",
+      "location": {
+        "file": "programs/vault/src/lib.rs",
+        "line": 27,
+        "function": "initialize"
+      },
+      "description": "The initialize instruction uses a hardcoded bump literal (254) rather than the canonical bump returned by `find_program_address` or `ctx.bumps.vault`. Storing a non-canonical bump allows an attacker who finds a different valid bump to derive a colliding PDA.",
+      "impact": "PDA collision. If the stored bump is not the canonical (highest valid) bump, an alternative seed/bump combination may produce a valid PDA at the same address, undermining the program's PDA-based access control.",
+      "recommendation": "Replace `let _hardcoded_bump: u8 = 254;` with `let bump = ctx.bumps.vault;` and store `ctx.bumps.vault` directly. Anchor 0.30+ canonicalizes bumps automatically. If deriving manually, use `Pubkey::find_program_address(seeds, program_id)` which returns the canonical bump.",
+      "poc_status": "pending",
+      "rule_caught": "Rule 3 \u2014 PDA Canonical Bump",
+      "status": "Open"
+    },
+    {
+      "id": "VULN-03",
+      "title": "Arbitrary CPI to user-supplied program",
+      "severity": "HIGH",
+      "cvss": 8.1,
+      "cvss_vector": "CVSS:3.1/AV:N/AC:L/PR:L/UI:N/S:U/C:H/I:H/A:N",
+      "cwe": "CWE-862",
+      "location": {
+        "file": "programs/vault/src/lib.rs",
+        "line": 60,
+        "function": "exec_callback"
+      },
+      "description": "The exec_callback instruction accepts a `target_program: AccountInfo` with no allowlist validation and invokes it via `invoke(&ix, ...)`. An attacker can pass any program ID, including the System Program, Token Program, or a malicious program, and craft instruction data and account metas to perform unauthorized operations (e.g., draining token accounts the user has authority over).",
+      "impact": "Privilege escalation via arbitrary CPI. Attackers can exploit the program's instruction context to perform any signed operation the caller has authority for, including transfers, account closures, and authority changes.",
+      "recommendation": "Replace `target_program: AccountInfo<'info>` with `target_program: Program<'info, SomeKnownProgram>`, where SomeKnownProgram is an Anchor wrapper around the expected program. If a dynamic program is genuinely required (e.g., plug-in architecture), maintain an on-chain allowlist PDA and verify the target_program key matches a registered entry.",
+      "poc_status": "pending",
+      "rule_caught": "Rule 4 \u2014 CPI Safety",
+      "status": "Open"
+    },
+    {
+      "id": "VULN-04",
+      "title": "Lamport drain via unchecked transfer",
+      "severity": "CRITICAL",
+      "cvss": 9.8,
+      "cvss_vector": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H",
+      "cwe": "CWE-285",
+      "location": {
+        "file": "programs/vault/src/lib.rs",
+        "line": 82,
+        "function": "drain_vault"
+      },
+      "description": "The DrainVault struct uses plain AccountInfo for both vault and destination with no Signer constraint on authority and no has_one constraint binding the destination to a known recipient. The drain_vault function debits vault and credits destination via raw try_borrow_mut_lamports with no validation. An attacker can pass their own address as the destination and drain all vault lamports up to the rent-exempt balance.",
+      "impact": "Lamport drain. Each call to drain_vault transfers up to the vault's full balance to an attacker-controlled destination. With no rate limit and no authority check, a single transaction empties the vault.",
+      "recommendation": "Add authority: Signer<'info> to the DrainVault struct, and #[account(has_one = authority)] on the vault field. Verify the destination is derived from authority (e.g., #[account(address = vault.authority)]) rather than accepting user-supplied input. Never perform raw lamport transfers without authority verification.",
+      "poc_status": "pending",
+      "rule_caught": "Rule 7 \u2014 Close Accounts",
+      "status": "Open"
+    },
+    {
+      "id": "VULN-05",
+      "title": "Unchecked arithmetic on user-supplied deposit amount",
+      "severity": "HIGH",
+      "cvss": 7.1,
+      "cvss_vector": "CVSS:3.1/AV:N/AC:L/PR:L/UI:N/S:U/C:L/I:H/A:N",
+      "cwe": "CWE-190",
+      "location": {
+        "file": "programs/vault/src/lib.rs",
+        "line": 47,
+        "function": "user_deposit"
+      },
+      "description": "The user_deposit instruction computes `vault.total_deposits = vault.total_deposits + amount` using Rust's default `+` operator on `u64`. In release mode, this wraps silently on overflow. An attacker can deposit an amount that wraps total_deposits back to 0 or to a small number, then withdraw against an inflated balance.",
+      "impact": "Integer overflow on deposit accounting. The wrapped total_deposits no longer reflects actual deposits, enabling withdrawals up to the (wrapped) recorded balance. Repeated wraps can drain the vault.",
+      "recommendation": "Use `checked_add`: `vault.total_deposits = vault.total_deposits.checked_add(amount).ok_or(VaultError::Overflow)?;`. Add an `Overflow` variant to the VaultError enum. Apply the same pattern to any other `+`/`-`/`*` on user-controlled amounts.",
+      "poc_status": "pending",
+      "rule_caught": "Rule 6 \u2014 Arithmetic",
+      "status": "Open"
+    },
+    {
+      "id": "VULN-06",
+      "title": "Manual init lacks 8-byte discriminator \u2014 reinit attack possible",
+      "severity": "MEDIUM",
+      "cvss": 6.5,
+      "cvss_vector": "CVSS:3.1/AV:N/AC:L/PR:L/UI:N/S:U/C:N/I:H/A:N",
+      "cwe": "CWE-665",
+      "location": {
+        "file": "programs/vault/src/lib.rs",
+        "line": 145,
+        "function": "VaultState struct"
+      },
+      "description": "The VaultState struct is declared with `#[derive(Clone)]` only, missing `#[account]`. Without the `#[account]` attribute, Anchor does not write the 8-byte discriminator on initialization and does not verify it on deserialization. The Initialize struct uses `AccountInfo` directly, not `Account<'info, VaultState>`, so there is no implicit discriminator check.",
+      "impact": "Reinitialization attack. An attacker who controls a vault account's key (e.g., previously held lamports that were refunded) can call initialize again and reset the vault's authority to a key they control. This effectively hijacks the vault.",
+      "recommendation": "Add `#[account]` to the VaultState struct. Change `vault: AccountInfo<'info>` to `vault: Account<'info, VaultState>` (or use `#[account(init, ...)]` with proper constraints). Anchor's Account<'info, T> wrapper verifies the 8-byte discriminator on load, preventing reinit.",
+      "poc_status": "pending",
+      "rule_caught": "Rule 11 \u2014 Reinitialization Attacks",
+      "status": "Open"
+    },
+    {
+      "id": "VULN-07",
+      "title": "Integer division truncation in share calculation",
+      "severity": "MEDIUM",
+      "cvss": 5.4,
+      "cvss_vector": "CVSS:3.1/AV:N/AC:L/PR:L/UI:N/S:U/C:L/I:L/A:N",
+      "cwe": "CWE-682",
+      "location": {
+        "file": "programs/vault/src/lib.rs",
+        "line": 95,
+        "function": "calc_shares"
+      },
+      "description": "The calc_shares function computes `shares = deposit / divisor` using Rust's `/` operator, which truncates toward zero. If divisor exceeds deposit, the result is 0 and the user receives 0 shares for a non-zero deposit. The deposit is not refunded, so the user loses funds silently.",
+      "impact": "Indirect fund loss via share miscalculation. Users who pass small deposits get 0 shares and lose their deposit. Repeated attacks can drain a pool of misallocated shares.",
+      "recommendation": "Use checked_div and verify the result against a minimum threshold: `let shares = deposit.checked_div(divisor).ok_or(VaultError::DivisionByZero)?; require!(shares >= MIN_SHARES, VaultError::BelowMinimum);`. For tokens that support fractional units, ensure the divisor is always <= deposit or apply a refund for the remainder.",
+      "poc_status": "pending",
+      "rule_caught": "(non-rule-aligned \u2014 demonstrates triage judgment)",
+      "status": "Open"
+    },
+    {
+      "id": "VULN-08",
+      "title": "Off-by-one in threshold check (>= vs >)",
+      "severity": "MEDIUM",
+      "cvss": 5.4,
+      "cvss_vector": "CVSS:3.1/AV:N/AC:L/PR:L/UI:N/S:U/C:L/I:L/A:N",
+      "cwe": "CWE-697",
+      "location": {
+        "file": "programs/vault/src/lib.rs",
+        "line": 104,
+        "function": "check_threshold"
+      },
+      "description": "The check_threshold function uses `>` instead of `>=`, allowing an attacker to bypass the threshold check by exactly hitting the threshold value. If the threshold is 1_000_000, an attacker passing value=1_000_000 passes the gate when the intent was for that to be rejected.",
+      "impact": "Threshold bypass. Logic that depends on the threshold (e.g., access control, fee tier, rate limit) can be evaded by choosing boundary values.",
+      "recommendation": "Use `>=` for inclusive thresholds or `>` for exclusive thresholds consistently. Add boundary tests that assert both the threshold value and threshold-1 are handled correctly. Document the intent of each comparison.",
+      "poc_status": "pending",
+      "rule_caught": "(non-rule-aligned \u2014 demonstrates triage judgment)",
+      "status": "Open"
+    },
+    {
+      "id": "VULN-09",
+      "title": "CPI return value discarded (no ? propagation)",
+      "severity": "MEDIUM",
+      "cvss": 6.3,
+      "cvss_vector": "CVSS:3.1/AV:N/AC:L/PR:L/UI:N/S:U/C:L/I:L/A:L",
+      "cwe": "CWE-754",
+      "location": {
+        "file": "programs/vault/src/lib.rs",
+        "line": 117,
+        "function": "unchecked_cpi"
+      },
+      "description": "The unchecked_cpi function discards the result of `invoke()` via `let _ = ...`. If the CPI fails (program error, account not found, etc.), the outer transaction continues and returns Ok(()). State is left inconsistent: the caller thinks the CPI succeeded, but it didn't.",
+      "impact": "Silent failure of cross-program invocation. Off-chain monitoring cannot detect the failure because the transaction succeeded. State inconsistency between caller and callee can lead to loss of funds or stuck accounts.",
+      "recommendation": "Propagate CPI errors with `?`: `invoke(&ix, &[])?;`. Add error handling specific to the called program if needed. If silent failure is genuinely intended (rare), document why and emit an event for monitoring.",
+      "poc_status": "pending",
+      "rule_caught": "(non-rule-aligned \u2014 Rule 4 covers CPI safety but not result handling)",
+      "status": "Open"
+    },
+    {
+      "id": "VULN-10",
+      "title": "Missing event emission for withdrawals",
+      "severity": "MEDIUM",
+      "cvss": 4.3,
+      "cvss_vector": "CVSS:3.1/AV:N/AC:L/PR:L/UI:N/S:U/C:L/I:N/A:N",
+      "cwe": "CWE-778",
+      "location": {
+        "file": "programs/vault/src/lib.rs",
+        "line": 131,
+        "function": "silent_withdraw"
+      },
+      "description": "The silent_withdraw function performs a lamport transfer but emits no structured event. Off-chain indexers (security monitoring, accounting, front-end balance displays) cannot detect or react to withdrawals in real-time.",
+      "impact": "Audit trail gap. Security incidents cannot be detected by off-chain monitors; users see stale balances; accounting systems miss transactions. In a hack scenario, post-mortem analysis is impossible.",
+      "recommendation": "Define an event struct with `#[event]` and `emit!(WithdrawEvent { user, amount, timestamp });` on every state-changing instruction. Events are part of Anchor's standard observability pattern.",
+      "poc_status": "pending",
+      "rule_caught": "(non-rule-aligned \u2014 best-practice gap, not a security rule)",
+      "status": "Open"
+    }
+  ],
+  "summary": {
+    "critical": 2,
+    "high": 2,
+    "medium": 6,
+    "low": 0,
+    "info": 0,
+    "total": 10
+  }
+}
