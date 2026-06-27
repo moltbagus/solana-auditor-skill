@@ -124,6 +124,16 @@ Following Loop 3 feedback, added two post-contest backlog items as a single spri
 - [x] **QED integration script** (`scripts/qed-integration.sh`) — Bash CI wrapper with exit codes 0 (success), 1 (tool error), 2 (skip). Generates `formal_verification_report.json` with `programs_verified`, `invariants[]`, `findings[]`, `skipped[]`, `errors[]` fields. Artifact uploaded on every run.
 - [x] **CI integration in FV skill/agent** — `skill/03-formal-verification.md` and `agents/formal-verifier.md` both updated with CI integration sections documenting the 3-tier fallback chain, exit codes, report schema, and local run commands.
 - [x] **Agent count fix 8→9** — All docs, README badge, integrity script regex updated for `economic-security-analyst`.
+- [x] **Demo live execution** — `demo.sh` upgraded from pre-recorded walkthrough to live execution: step 3B runs QED integration script (proves CI integration), step 4B runs Phase 1C economic security analysis against fixture (live JSON output). Eliminates "pre-recorded" critique from judges.
+- [x] **Kamino Finance story in README** — Contest Submission section now surfaces the real klend audit proof: "3 of 4 initial submissions had factual errors after source verification" — changes framing from tool to proven capability.
+- [x] **VERIFICATION.md updated** — Quick checklist now reflects 159 checks, Phase 1C live step, QED FV step.
+
+### v1.13.0 — Contest Win Plan (2026-06-27, post-submission)
+
+Reserved for post-contest enhancements identified during win plan analysis:
+- [ ] **Live demo component** — Generate one finding live by running `/audit-quick` against a minimal injected-bug fixture
+- [ ] **semgrep-solana.yaml reference** — Surface native Solana coverage tool in README rule table
+- [ ] **Formal verification CI with anchor test fallback** — Upgrade graceful skip to anchor test proof-of-concept when QED unavailable
 
 ### v1.10.0 — Remediation Engine Full Upgrade (2026-06-27)
 

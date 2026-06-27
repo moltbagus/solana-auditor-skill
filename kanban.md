@@ -118,6 +118,13 @@ audit-report/submissions/MATH-003-3-immunefi-submission.md  (MEDIUM, CVSS 6.5 �
 
 ---
 
+### Sprint 10 — Contest Win Plan (Done: 2026-06-27)
+- [x] README.md: Fix 47→159 integrity count, add Kamino Finance story to Contest section
+- [x] demo.sh: Add step 3B (QED 2A live), step 4B (Phase 1C economic analysis live)
+- [x] README.md: Rename Rules 46-50 to "Agent Safety (Audit Governance)", clarify 45+5 count
+- [x] VERIFICATION.md: Update checklist to 159 checks, add Phase 1C and QED FV steps
+- [x] PRD.md: Add v1.13.0 post-contest backlog section
+
 ### Sprint 9 — Architecture Review + Report Enhancement (Done: 2026-06-27)
 - [x] Phase 7 architecture review module — `skill/07-architecture-review.md`
 - [x] Architecture-reviewer agent — `agents/architecture-reviewer.md`, 8-step flow
