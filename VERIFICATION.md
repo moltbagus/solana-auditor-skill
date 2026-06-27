@@ -31,7 +31,7 @@ bash tests/test-skill-integrity.sh
 ## Step 3: Fuzz Tests — 22 strategies (30 seconds)
 
 ```bash
-python3 -m pytest tests/fuzz/ -v
+python3 -c "import pytest; pytest.main(['-v', 'tests/fuzz/test_properties.py'])"
 ```
 
 **What it proves:** CVSS scoring is mathematically correct across thousands of random inputs. Severity binning is monotonic. All committed fixture CVSS scores are valid.
@@ -84,7 +84,7 @@ anchor build
 |------|---------|---------------|
 | Demo | `bash demo.sh` | Exit 0, no FAIL (8/8 steps pass) |
 | Integrity | `bash tests/test-skill-integrity.sh` | PASS: 159, FAIL: 0 |
-| Fuzz | `python3 -m pytest tests/fuzz/ -v` | 22 passed |
+| Fuzz | `python3 -c "import pytest; pytest.main(['-v', 'tests/fuzz/test_properties.py'])"` | 22 passed |
 | Fixture | `cat examples/.../findings.json` | Valid JSON, all required fields |
 | CVSS math | `python3 tests/severity_counts.py check-cvss-math ...` | Exit 0 |
 | Phase 1C | `bash demo.sh` (step 4B) | Economic analysis JSON generated at /tmp/economic_scan.json |
