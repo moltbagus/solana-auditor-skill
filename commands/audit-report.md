@@ -14,6 +14,7 @@ Take existing findings and produce a final structured report. **No new analysis 
 /audit-report <findings-json> --output <path>
 /audit-report <findings-json> --format json   # JSON-only, normalized schema
 /audit-report <findings-json> --format sarif  # SARIF 2.1.0 for GitHub Code Scanning
+/audit-report <findings-json> --html          # Markdown report + HTML dashboard
 ```
 
 Default output: `<findings-dir>/AUDIT_REPORT.md`.
@@ -96,6 +97,21 @@ Or pipe findings through stdin:
 python3 scripts/export-sarif.py --output results.sarif
 ```
 
+## HTML Export
+
+After generating findings.json and AUDIT_REPORT.md, optionally call:
+
+```
+python3 scripts/dashboard.py <findings-path> <output-dir>/dashboard.html
+```
+
+Add a `--html` flag to the audit-report command that triggers this automatically after the markdown report is written.
+
+If `--html` is passed:
+1. Determine findings path from audit output dir (findings.json)
+2. Run `python3 scripts/dashboard.py findings.json <output-dir>/dashboard.html`
+3. Report the dashboard path in the final summary
+
 ## Post-write
 
 1. Print path to generated report.
@@ -103,6 +119,7 @@ python3 scripts/export-sarif.py --output results.sarif
 3. Print severity summary table inline.
 4. Ask: "Generate PoCs? Run `/audit-poc <finding-id>`."
 5. Do NOT auto-open the report.
+6. If `--html` was passed, print the dashboard path after the report path.
 
 ## Rules
 

@@ -55,7 +55,7 @@ echo ""
 # =========================================================================
 # Step 1: Verify project structure
 # =========================================================================
-echo -e "${BLUE}[1/6]${NC} Verifying project structure..."
+echo -e "${BLUE}[1/7]${NC} Verifying project structure..."
 
 DIRS="skill agents commands rules templates tests examples scripts"
 for d in $DIRS; do
@@ -90,7 +90,7 @@ echo ""
 # =========================================================================
 # Step 2: Run integrity checks
 # =========================================================================
-echo -e "${BLUE}[2/6]${NC} Running integrity checks..."
+echo -e "${BLUE}[2/7]${NC} Running integrity checks..."
 INTEGRITY_OUT=$(bash tests/test-skill-integrity.sh 2>&1) || true
 INTEGRITY_EXIT=$?
 IG_PASS=$(echo "$INTEGRITY_OUT" | rg "PASS:\s*([0-9]+)" -r '$1' || echo 0)
@@ -105,7 +105,7 @@ echo ""
 # =========================================================================
 # Step 3: Run property-based tests
 # =========================================================================
-echo -e "${BLUE}[3/6]${NC} Running property-based (fuzz) tests..."
+echo -e "${BLUE}[3/7]${NC} Running property-based (fuzz) tests..."
 if python3 -m pytest tests/fuzz/ -x -v --hypothesis-show-statistics 2>&1 || true; then
     ok "All property-based tests pass"
 else
@@ -116,7 +116,7 @@ echo ""
 # =========================================================================
 # Step 4: Show example fixture
 # =========================================================================
-echo -e "${BLUE}[4/6]${NC} Examining example vulnerable program..."
+echo -e "${BLUE}[4/7]${NC} Examining example vulnerable program..."
 
 EXAMPLE_SRC="examples/sample-vulnerable-program/programs/vault/src/lib.rs"
 EXAMPLE_FINDINGS="examples/sample-vulnerable-program/audit-output/findings.json"
@@ -156,7 +156,7 @@ echo ""
 # =========================================================================
 # Step 5: Remediation demo — show fix workflow and CVSS reduction
 # =========================================================================
-echo -e "${BLUE}[5/6]${NC} Demonstrating remediation fix workflow..."
+echo -e "${BLUE}[5/7]${NC} Demonstrating remediation fix workflow..."
 
 FIXTURE="examples/sample-vulnerable-program"
 FIXED_VAULT="$FIXTURE/fixed/programs/vault/src/lib.rs"
@@ -363,7 +363,17 @@ echo ""
 # =========================================================================
 # Step 6: Summary for judges
 # =========================================================================
-echo -e "${BLUE}[6/6]${NC} Contest readiness summary..."
+echo -e "${BLUE}[6/7]${NC} Generating HTML audit dashboard..."
+DASHBOARD_HTML="/tmp/demo_audit_dashboard.html"
+if python3 scripts/dashboard.py examples/sample-vulnerable-program/audit-output/findings.json "$DASHBOARD_HTML" 2>&1; then
+    ok "HTML dashboard generated at $DASHBOARD_HTML"
+    echo -e "  ${GREEN}✓${NC} Open in browser: ${CYAN}open $DASHBOARD_HTML${NC}"
+else
+    fail "HTML dashboard generation failed"
+fi
+
+echo ""
+echo -e "${BLUE}[7/7]${NC} Contest readiness summary..."
 
 echo ""
 DEMO_VERSION=$(git describe --tags 2>/dev/null | sed 's/v//' || echo "1.8.0")
@@ -395,6 +405,7 @@ echo "  cat README.md                          # Full documentation"
 echo "  cat examples/sample-vulnerable-program/programs/vault/src/lib.rs  # See vulnerable program"
 echo "  cat examples/sample-vulnerable-program/REMEDIATION_FIXES.md      # See all fixes"
 echo "  cat examples/sample-vulnerable-program/FIX_VERIFICATION.md       # Verify fixes"
+echo "  open /tmp/demo_audit_dashboard.html   # Browse HTML dashboard of findings"
 echo "  bash install.sh -y                     # Install the skill"
 echo ""
 
