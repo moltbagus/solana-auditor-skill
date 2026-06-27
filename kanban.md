@@ -1,7 +1,7 @@
 # Kanban — Solana Auditor Skill
 
 > **Project Kanban Board**
-> _Superteam Brasil Solana Skills Contest — v1.10.0_
+> _Superteam Brasil Solana Skills Contest — v1.11.0_
 > Last updated: 2026-06-27
 
 ---
@@ -107,6 +107,13 @@ audit-report/submissions/MATH-003-3-immunefi-submission.md  (MEDIUM, CVSS 6.5 �
 
 ---
 
+### Sprint 9 — Architecture Review + Report Enhancement (Done: 2026-06-27)
+- [x] Phase 7 architecture review module — `skill/07-architecture-review.md`
+- [x] Architecture-reviewer agent — `agents/architecture-reviewer.md`, 8-step flow
+- [x] Report template enhanced — Executive Summary, Methodology Trace, Finding Distribution sections
+- [x] Integrity checks 38–40 — Phase 7 presence, architecture-reviewer agent, report template sections
+- [x] PRD, spec, kanban, learnings updated to v1.11.0
+
 ### Sprint 8 — Remediation Engine Full Upgrade (Done: 2026-06-27)
 - [x] Phase 6 Root Cause Analysis Layer — structured `root_cause` field (5 categories)
 - [x] Fix difficulty rating per finding — `trivial`, `moderate`, `complex`
@@ -188,8 +195,8 @@ audit-report/submissions/MATH-003-3-immunefi-submission.md  (MEDIUM, CVSS 6.5 �
 | 1 | Remediation Engine — Root Cause Analysis Layer | CONTEST-CRITICAL | MEDIUM | HIGH | Done v1.10.0 |
 | 2 | Exploit Simulation Framework — Structured PoC Metadata | CONTEST-CRITICAL | MEDIUM | HIGH | Done v1.9.0 |
 | 3 | Threat Modeling Module (STRIDE) | HIGH | MEDIUM | HIGH | Done v1.9.0 |
-| 4 | Architecture Review Module | HIGH | MEDIUM | HIGH | Pending |
-| 5 | Report Generator Enhancement (3 missing sections) | HIGH | LOW | HIGH | Pending |
+| 4 | Architecture Review Module | HIGH | MEDIUM | HIGH | Done v1.11.0 |
+| 5 | Report Generator Enhancement (3 missing sections) | HIGH | LOW | HIGH | Done v1.11.0 |
 
 Full details: `docs/superpowers/specs/2026-06-27-gap-analysis.md` and `docs/superpowers/specs/2026-06-27-priority-backlog.md`
 
@@ -197,26 +204,33 @@ Full details: `docs/superpowers/specs/2026-06-27-gap-analysis.md` and `docs/supe
 
 ## Velocity Tracking (FINAL)
 
-| Metric | v1.0 | v1.3 | v1.4 FINAL | v1.8.1 | v1.9.0 | v1.10.0 | Target |
-|--------|------|------|------------|--------|--------|---------|--------|
-| Integrity checks | 18 | 49 | **62** | **154** | **154** | **158** | 62+ |
-| VULN tags | 10 | 16 | **17** | 17 | 17 | 17 | 17 |
-| Property-based tests | 0 | 19 | **19** | **22** | **22** | 22 | 15+ |
-| Fixtures | 1 | 2 | **3** | 3 | 3 | 3 | 3 |
-| Rules | 12 | 12 | **17** | **50** | **50** | 50 | 15+ |
-| Commands | 5 | 5 | **6** | **9** | **9** | 9 | 6 |
-| Languages | 1 | 2 | **2** | 2 | 2 | 2 | 2 |
-| PoC walkthroughs | 0 | 0 | **3** | 3 | 3 | 3 | 3 |
-| Formal verification | 0 | 0 | **5 patterns** | **5 patterns** | **5 patterns** | **5 patterns** | 5+ |
-| SARIF export | No | No | **Yes** | **Yes** | **Yes** | **Yes** | Yes |
-| Lock file / resume | No | No | **Yes** | **Yes** | **Yes** | **Yes** | Yes |
-| HTML dashboard | No | No | No | **Yes** | **Yes** | **Yes** | Yes |
-| Commands frontmatter | No | No | No | **Yes** | **Yes** | **Yes** | Yes |
-| Threat Modeling (STRIDE) | No | No | No | No | **Yes** | **Yes** | Yes |
-| Exploit Sim Framework | No | No | No | No | **Yes** | **Yes** | Yes |
-| Threat modeler agent | No | No | No | No | **7 agents** | **7 agents** | 6+ |
-| PoC metadata files | No | No | No | No | **3** | **3** | 3 |
-| Root cause analysis | No | No | No | No | No | **Yes** | Yes |
-| Regression test gen | No | No | No | No | No | **Yes** | Yes |
-| Fix difficulty rating | No | No | No | No | No | **Yes** | Yes |
-| Remediation priority order | No | No | No | No | No | **Yes** | Yes |
+| Metric | v1.0 | v1.3 | v1.4 FINAL | v1.8.1 | v1.9.0 | v1.10.0 | v1.11.0 | Target |
+|--------|------|------|------------|--------|--------|---------|--------|--------|
+| Integrity checks | 18 | 49 | **62** | **154** | **154** | **158** | **161** | 62+ |
+| VULN tags | 10 | 16 | **17** | 17 | 17 | 17 | 17 | 17 |
+| Property-based tests | 0 | 19 | **19** | **22** | **22** | 22 | 22 | 15+ |
+| Fixtures | 1 | 2 | **3** | 3 | 3 | 3 | 3 | 3 |
+| Rules | 12 | 12 | **17** | **50** | **50** | 50 | 50 | 15+ |
+| Commands | 5 | 5 | **6** | **9** | **9** | 9 | 9 | 6 |
+| Phases | 6 | 6 | **6** | **6** | **7** | **7** | **8** | 6+ |
+| Agents | 4 | 4 | **4** | **4** | **7** | **7** | **8** | 6+ |
+| Languages | 1 | 2 | **2** | 2 | 2 | 2 | 2 | 2 |
+| PoC walkthroughs | 0 | 0 | **3** | 3 | 3 | 3 | 3 | 3 |
+| Formal verification | 0 | 0 | **5 patterns** | **5 patterns** | **5 patterns** | **5 patterns** | **5 patterns** | 5+ |
+| SARIF export | No | No | **Yes** | **Yes** | **Yes** | **Yes** | **Yes** | Yes |
+| Lock file / resume | No | No | **Yes** | **Yes** | **Yes** | **Yes** | **Yes** | Yes |
+| HTML dashboard | No | No | No | **Yes** | **Yes** | **Yes** | **Yes** | Yes |
+| Commands frontmatter | No | No | No | **Yes** | **Yes** | **Yes** | **Yes** | Yes |
+| Threat Modeling (STRIDE) | No | No | No | No | **Yes** | **Yes** | **Yes** | Yes |
+| Exploit Sim Framework | No | No | No | No | **Yes** | **Yes** | **Yes** | Yes |
+| Threat modeler agent | No | No | No | No | **Yes** | **Yes** | **Yes** | 6+ |
+| PoC metadata files | No | No | No | No | **3** | **3** | **3** | 3 |
+| Root cause analysis | No | No | No | No | No | **Yes** | **Yes** | Yes |
+| Regression test gen | No | No | No | No | No | **Yes** | **Yes** | Yes |
+| Fix difficulty rating | No | No | No | No | No | **Yes** | **Yes** | Yes |
+| Remediation priority order | No | No | No | No | No | **Yes** | **Yes** | Yes |
+| Architecture Review (Phase 7) | No | No | No | No | No | No | **Yes** | Yes |
+| Architecture-reviewer agent | No | No | No | No | No | No | **Yes** | Yes |
+| Report: Executive Summary | No | No | No | No | No | No | **Yes** | Yes |
+| Report: Methodology Trace | No | No | No | No | No | No | **Yes** | Yes |
+| Report: Finding Distribution | No | No | No | No | No | No | **Yes** | Yes |

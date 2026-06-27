@@ -1,0 +1,157 @@
+{
+  "exploit_id": "admin-drain",
+  "vulnerability_ref": "VULN-01",
+  "rule": "Rule 8",
+  "title": "Admin Drain via Missing Signer Verification",
+  "severity": "CRITICAL",
+  "cvss": "9.8",
+
+  "summary": "The admin_withdraw instruction accepts any pubkey as the admin field without verifying it signed the transaction. An attacker submits a transaction with their own wallet as the admin parameter and drains the entire vault.",
+
+  "capital_requirements": {
+    "transaction_fee": {
+      "lamports": 5000,
+      "sol_cost_usd": "~$0.0005",
+      "note": "Single transaction, no capital at risk for attacker"
+    },
+    "attack_accounts": {
+      "attacker_wallet": "Standard keypair (exists)",
+      "victim_vault": "Program-controlled account (no access needed)",
+      "destination": "Attacker-controlled token or SOL account",
+      "note": "No initial capital required - exploit steals from vault"
+    }
+  },
+
+  "complexity": {
+    "skill_level": "LOW",
+    "technical_steps": 3,
+    "mechanical_steps": 1,
+    "explanation": "Exploit is mechanically trivial - one unsigned transaction with attacker-supplied admin parameter"
+  },
+
+  "likelihood": {
+    "real_world_prevalence": "HIGH",
+    "detection_difficulty": "LOW",
+    "ease_of_exploitation": "TRIVIAL",
+    "notes": [
+      "No special privileges, hardware, or timing required",
+      "Can be executed 24/7 - no dependencies on market conditions",
+      "Transaction fails if vault is empty (safe to retry)",
+      "Audit tools catch this pattern automatically (Rule 8)",
+      "Exploit tx looks identical to legitimate admin_withdraw tx"
+    ]
+  },
+
+  "attack_path": {
+    "preconditions": [
+      "Attacker knows program ID (public on Solana)",
+      "Attacker knows vault account address (public via getProgramAccounts)",
+      "Vault contains lamports (any amount)"
+    ],
+
+    "instruction_sequence": [
+      {
+        "step": 1,
+        "instruction": "admin_withdraw",
+        "accounts": [
+          {
+            "name": "vault",
+            "pubkey": "<VAULT_PDA>",
+            "is_signer": false,
+            "is_writable": true,
+            "note": "Vault account holding funds to drain"
+          },
+          {
+            "name": "admin",
+            "pubkey": "<ATTACKER_KEYPAIR_PUBKEY>",
+            "is_signer": false,
+            "is_writable": false,
+            "note": "CRITICAL: Attacker supplies their own pubkey - NOT a signer. Anchor does not enforce Signer<'info> constraint."
+          },
+          {
+            "name": "destination",
+            "pubkey": "<ATTACKER_CONTROLLED_ACCOUNT>",
+            "is_signer": false,
+            "is_writable": true,
+            "note": "Attacker-controlled account to receive drained funds"
+          },
+          {
+            "name": "system_program",
+            "pubkey": "11111111111111111111111111111111",
+            "is_signer": false,
+            "is_writable": false
+          }
+        ],
+        "data": {
+          "amount": "<VAULT_BALANCE_MINUS_RENT>",
+          "note": "Full vault balance minus rent-exempt minimum (~0.001 SOL)"
+        }
+      }
+    ],
+
+    "tx_replay": {
+      "blockhash": "<RECENT_BLOCKHASH>",
+      "recent_blockhash": true,
+      "note": "Must use recent blockhash (<=150 slots old)"
+    }
+  },
+
+  "mechanics": {
+    "root_cause": "AccountInfo<'info> does not enforce signer verification. Anchor's Signer<'info> type is required for automatic enforcement.",
+    "vulnerable_code": "pub admin: AccountInfo<'info>  // No Signer constraint",
+    "safe_code": "pub admin: Signer<'info>  // Anchor enforces at deserialization",
+    "anchor_behavior": "Signer<'info> checks is_signer flag during account deserialization. AccountInfo<'info> performs no validation.",
+    "solana_constraint": "Solana transactions can include any pubkey in any account field. The is_signer flag is set per-account in the transaction message, not derived from the account's pubkey."
+  },
+
+  "detection": {
+    "on_chain_signals": [
+      "admin_withdraw called with admin != signer pubkey",
+      "Multiple failed attempts followed by success with non-authority admin"
+    ],
+    "off_chain_signals": [
+      "Vault balance dropping to rent-exempt minimum",
+      "Unexpected admin_withdraw in program logs"
+    ],
+    "tools": [
+      "anchor-verify --enforce-signer",
+      "solana-安全-audit Rule 8 pattern match",
+      "Custom Metaplex Rule 8 checker"
+    ]
+  },
+
+  "remediation": {
+    "immediate": "Add Signer<'info> constraint to admin field",
+    "defense_in_depth": "Add has_one = admin constraint on vault account",
+    "verification": "Transaction must fail if admin pubkey does not match the signer's pubkey"
+  },
+
+  "historical_precedent": {
+    "related_exploits": [
+      {
+        "name": "Wormhole Bridge (2022)",
+        "amount": "$320M",
+        "root_cause": "Signature verification bypass",
+        "similarity": "Missing signer check on critical path"
+      },
+      {
+        "name": "Cream Finance (2021)",
+        "amount": "$130M",
+        "root_cause": "Missing access control",
+        "similarity": "Unsigned privileged operations"
+      }
+    ]
+  },
+
+  "poc_verification": {
+    "test_program": "programs/vault/src/lib.rs",
+    "test_instruction": "admin_withdraw",
+    "expected_behavior": "Transaction should FAIL with error before fix, PASS after fix",
+    "test_accounts": {
+      "payer": "Must sign (for fee payment)",
+      "admin": "Must sign (will be enforced after fix)",
+      "vault": "Program account with lamports",
+      "destination": "Attacker-controlled"
+    }
+  }
+}

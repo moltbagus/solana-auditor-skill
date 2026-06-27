@@ -20,7 +20,7 @@ cp -r ext/solana-auditor-shiba ~/.claude/skills/ext/
 
 - **7-phase audit lifecycle** — recon, SAST, runtime verification, formal verification, triage, report, remediation
 - **26 path-scoped security rules** — auto-activate on file open (Anchor, Token-2022, CPI, PDA, reentrancy, flash loans, etc.)
-- **6 specialist agents** — orchestrator, auditor, formal-verifier, report-writer, cross-program-agent, auditor-agent
+- **7 specialist agents** — orchestrator, auditor, formal-verifier, report-writer, cross-program-agent, threat-modeler, safety-guard
 - **Two-tier execution** — TIER1 (SAST-only, no toolchain required) and TIER2 (full anchor test + fuzzing)
 - **8 slash commands** — `/audit`, `/audit-quick`, `/audit-resume`, `/audit-report`, `/audit-poc`, `/audit-findings`, `/audit-history`, `/audit-pr`
 - **Pre-commit hook** — blocks commits on HIGH+ findings

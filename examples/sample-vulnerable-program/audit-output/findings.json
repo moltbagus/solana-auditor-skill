@@ -17,7 +17,9 @@
       "recommendation": "Change `admin: AccountInfo<'info>` to `admin: Signer<'info>` in the AdminWithdraw struct. Anchor will enforce signer verification at deserialization. Add a `has_one = admin` constraint on the vault account to bind the admin to the vault's stored authority.",
       "poc_status": "pending",
       "rule_caught": "Rule 8 \u2014 Signer Verification",
-      "status": "Open"
+      "status": "Open",
+      "root_cause": "The admin field was declared as AccountInfo instead of Signer. Anchor's deserializer accepts any AccountInfo regardless of whether it signed the transaction. No is_signer gate exists.",
+      "regression_test": "#[tokio::test]\nasync fn test_admin_withdraw_requires_signer() {\n    let malicious_tx = Transaction::new_signed_with_payer(\n        &[instruction::admin_withdraw(&program_id, &context_accounts, vault.lamports - rent_exempt)],\n        Some(&payer.pubkey()),\n        &[&payer],  // Only payer signs \u2014 admin does NOT sign\n        recent_blockhash,\n    );\n    let result = program.rpc().process_transaction(&malicious_tx).await;\n    assert!(result.is_err());  // Must fail with NotSigner\n}"
     },
     {
       "id": "VULN-02",
@@ -36,7 +38,9 @@
       "recommendation": "Replace `let _hardcoded_bump: u8 = 254;` with `let bump = ctx.bumps.vault;` and store `ctx.bumps.vault` directly. Anchor 0.30+ canonicalizes bumps automatically. If deriving manually, use `Pubkey::find_program_address(seeds, program_id)` which returns the canonical bump.",
       "poc_status": "pending",
       "rule_caught": "Rule 3 \u2014 PDA Canonical Bump",
-      "status": "Open"
+      "status": "Open",
+      "root_cause": "A non-canonical bump value was hardcoded instead of using the canonical bump from ctx.bumps or find_program_address. Any valid bump produces a PDA, so a non-canonical bump creates collision risk.",
+      "regression_test": "#[test]\nfn test_hardcoded_bump_collision() {\n    // Attacker finds alternative bump producing same PDA\n    let canonical_bump = Pubkey::find_program_address(&[b\"vault\", user.as_ref()], &program_id).1;\n    let attacker_bump = (0u8..255).find(|&b| {\n        Pubkey::create_program_address(&[b\"vault\", user.as_ref(), &[b]], &program_id).is_ok()\n    }).unwrap();\n    assert_ne!(canonical_bump, attacker_bump, \"non-canonical bump must differ from canonical\");\n}"
     },
     {
       "id": "VULN-03",
@@ -55,7 +59,9 @@
       "recommendation": "Replace `target_program: AccountInfo<'info>` with `target_program: Program<'info, SomeKnownProgram>`, where SomeKnownProgram is an Anchor wrapper around the expected program. If a dynamic program is genuinely required (e.g., plug-in architecture), maintain an on-chain allowlist PDA and verify the target_program key matches a registered entry.",
       "poc_status": "pending",
       "rule_caught": "Rule 4 \u2014 CPI Safety",
-      "status": "Open"
+      "status": "Open",
+      "root_cause": "The target program ID was accepted as a user-supplied AccountInfo without validation against an allowlist. Any program ID can be invoked, enabling arbitrary CPI to attacker-chosen programs.",
+      "regression_test": "#[tokio::test]\nasync fn test_cpi_rejects_unauthorized_program() {\n    let malicious_tx = Transaction::new_signed_with_payer(\n        &[instruction::exec_callback(&program_id, &[], &malicious_program.pubkey())],\n        Some(&user.pubkey()),\n        &[&user],\n        recent_blockhash,\n    );\n    let result = program.rpc().process_transaction(&malicious_tx).await;\n    assert!(result.is_err());  // Must fail with UnauthorizedProgram\n}"
     },
     {
       "id": "VULN-04",
@@ -74,7 +80,9 @@
       "recommendation": "Add authority: Signer<'info> to the DrainVault struct, and #[account(has_one = authority)] on the vault field. Verify the destination is derived from authority (e.g., #[account(address = vault.authority)]) rather than accepting user-supplied input. Never perform raw lamport transfers without authority verification.",
       "poc_status": "pending",
       "rule_caught": "Rule 7 \u2014 Close Accounts",
-      "status": "Open"
+      "status": "Open",
+      "root_cause": "The close target was user-supplied via AccountInfo without authority binding. An attacker can pass their own address as the close destination, receiving the account's lamports.",
+      "regression_test": "#[tokio::test]\nasync fn test_drain_vault_requires_authority() {\n    let drain_tx = Transaction::new_signed_with_payer(\n        &[instruction::drain_vault(&program_id, &vault_pda, &attacker.pubkey())],\n        Some(&attacker.pubkey()),\n        &[&attacker],  // No authority signer\n        recent_blockhash,\n    );\n    let result = program.rpc().process_transaction(&drain_tx).await;\n    assert!(result.is_err());  // Must fail \u2014 no authority signer\n}"
     },
     {
       "id": "VULN-05",
@@ -93,7 +101,9 @@
       "recommendation": "Use `checked_add`: `vault.total_deposits = vault.total_deposits.checked_add(amount).ok_or(VaultError::Overflow)?;`. Add an `Overflow` variant to the VaultError enum. Apply the same pattern to any other `+`/`-`/`*` on user-controlled amounts.",
       "poc_status": "pending",
       "rule_caught": "Rule 6 \u2014 Arithmetic",
-      "status": "Open"
+      "status": "Open",
+      "root_cause": "Arithmetic operations used default wrapping semantics (+, -, *, /) on u64 amounts. In Solana release mode, wrapping silently wraps on overflow, corrupting accounting state.",
+      "regression_test": "#[test]\nfn test_overflow_returns_error() {\n    let max = u64::MAX;\n    let result = max.checked_add(1);\n    assert!(result.is_none(), \"checked_add must return None on overflow\");\n    let wrapped = max.wrapping_add(1);\n    assert_eq!(wrapped, 0, \"wrapping_add silently wraps \u2014 use checked_add\");\n}"
     },
     {
       "id": "VULN-06",
@@ -112,7 +122,9 @@
       "recommendation": "Add `#[account]` to the VaultState struct. Change `vault: AccountInfo<'info>` to `vault: Account<'info, VaultState>` (or use `#[account(init, ...)]` with proper constraints). Anchor's Account<'info, T> wrapper verifies the 8-byte discriminator on load, preventing reinit.",
       "poc_status": "pending",
       "rule_caught": "Rule 11 \u2014 Reinitialization Attacks",
-      "status": "Open"
+      "status": "Open",
+      "root_cause": "Initialize wrote account fields without checking the 8-byte Anchor discriminator. A closed (zeroed) account re-funded to rent-exemption is indistinguishable from a freshly-initialized account.",
+      "regression_test": "#[tokio::test]\nasync fn test_initialize_rejects_reinit() {\n    program.rpc().process_transaction(&init_tx).await.unwrap();\n    program.rpc().process_transaction(&close_tx).await.unwrap();\n    program.rpc().process_transaction(&refund_tx).await.unwrap();\n    let result = program.rpc().process_transaction(&init_tx).await;\n    assert!(result.is_err());  // Must fail with AlreadyInitialized\n}"
     },
     {
       "id": "VULN-07",
@@ -131,7 +143,8 @@
       "recommendation": "Use checked_div and verify the result against a minimum threshold: `let shares = deposit.checked_div(divisor).ok_or(VaultError::DivisionByZero)?; require!(shares >= MIN_SHARES, VaultError::BelowMinimum);`. For tokens that support fractional units, ensure the divisor is always <= deposit or apply a refund for the remainder.",
       "poc_status": "pending",
       "rule_caught": "(non-rule-aligned \u2014 demonstrates triage judgment)",
-      "status": "Open"
+      "status": "Open",
+      "root_cause": "The calc_shares function used Rust's / operator on integer amounts without checked_div. Integer division in Rust truncates toward zero; when divisor exceeds deposit, the result rounds to 0 and the user receives zero shares while the protocol credits the full deposit amount."
     },
     {
       "id": "VULN-08",
@@ -150,7 +163,8 @@
       "recommendation": "Use `>=` for inclusive thresholds or `>` for exclusive thresholds consistently. Add boundary tests that assert both the threshold value and threshold-1 are handled correctly. Document the intent of each comparison.",
       "poc_status": "pending",
       "rule_caught": "(non-rule-aligned \u2014 demonstrates triage judgment)",
-      "status": "Open"
+      "status": "Open",
+      "root_cause": "The check_threshold function used > instead of >=, allowing an attacker to bypass the threshold exactly at the boundary value. This is an off-by-one logic error: the boundary condition is included in the attack surface when it should be excluded."
     },
     {
       "id": "VULN-09",
@@ -169,7 +183,8 @@
       "recommendation": "Propagate CPI errors with `?`: `invoke(&ix, &[])?;`. Add error handling specific to the called program if needed. If silent failure is genuinely intended (rare), document why and emit an event for monitoring.",
       "poc_status": "pending",
       "rule_caught": "(non-rule-aligned \u2014 Rule 4 covers CPI safety but not result handling)",
-      "status": "Open"
+      "status": "Open",
+      "root_cause": "The unchecked_cpi function discarded the Result of invoke() via let _ = ... instead of propagating with ?. When the inner CPI fails (wrong program, bad accounts, insufficient funds), the outer transaction returns Ok(()) and state changes persist without the CPI's intended effect."
     },
     {
       "id": "VULN-10",
@@ -188,7 +203,8 @@
       "recommendation": "Define an event struct with `#[event]` and `emit!(WithdrawEvent { user, amount, timestamp });` on every state-changing instruction. Events are part of Anchor's standard observability pattern.",
       "poc_status": "pending",
       "rule_caught": "(non-rule-aligned \u2014 best-practice gap, not a security rule)",
-      "status": "Open"
+      "status": "Open",
+      "root_cause": "The silent_withdraw function performed a lamport transfer without emitting a structured Anchor event. Off-chain indexers, security monitors, and accounting systems cannot detect or react to the withdrawal, creating a blind spot in operational monitoring."
     }
   ],
   "summary": {

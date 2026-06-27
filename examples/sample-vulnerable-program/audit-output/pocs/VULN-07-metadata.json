@@ -1,0 +1,71 @@
+{
+  "$schema": "https://solana-auditor-skill/schemas/exploit-metadata-v1.json",
+  "poc_id": "VULN-07",
+  "title": "Integer division truncation in share calculation",
+  "severity": "MEDIUM",
+  "cvss": 5.4,
+  "cvss_vector": "CVSS:3.1/AV:N/AC:L/PR:L/UI:N/S:U/C:L/I:L/A:N",
+  "cwe": [
+    "CWE-682"
+  ],
+  "rule_ids": [],
+  "exploit_class": "privilege-escalation",
+  "attack_surface": {
+    "entry_point": "calc_shares",
+    "instruction_index": 95,
+    "accounts_required": [
+      "user"
+    ],
+    "cpi_calls": 0
+  },
+  "attacker_model": {
+    "position": "none",
+    "capital": "none",
+    "privilege": "none"
+  },
+  "preconditions": [
+    "Attacker can submit transactions to the program"
+  ],
+  "steps": [
+    {
+      "step": 1,
+      "action": "Invoke calc_shares() instruction",
+      "tx_required": true
+    },
+    {
+      "step": 2,
+      "action": "Supply malicious/missing account parameters as defined by the vulnerability",
+      "tx_required": true
+    },
+    {
+      "step": 3,
+      "action": "Transaction confirms — vulnerability exploited",
+      "tx_required": true
+    }
+  ],
+  "post_conditions": {
+    "funds_transferred": "attacker-controlled account",
+    "state_corrupted": true,
+    "authority_modified": "may be overwritten depending on vulnerability"
+  },
+  "impact": {
+    "funds_at_risk_sol": "limited (individual accounts)",
+    "users_affected": "attacker only",
+    "protocol_insolvency": false,
+    "recovery_path": "standard upgrade path"
+  },
+  "remediation": {
+    "fix_tier": "B",
+    "confidence": 0.7,
+    "cvss_after": 4.3,
+    "cvss_reduction": 1.1,
+    "files_to_modify": [
+      "programs/vault/src/lib.rs"
+    ],
+    "verification_test": "tests/poc-VULN-07-fixed.rs",
+    "fix_type": "validation_check"
+  },
+  "poc_status": "pending",
+  "poc_author": "solana-auditor-skill",
+  "generated_at": "2026-06-27T05:40:01.571376+00:00"
+}

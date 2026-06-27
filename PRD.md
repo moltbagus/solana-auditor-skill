@@ -1,7 +1,7 @@
 # PRD — Solana Auditor Skill
 
 > **Product Requirements Document**
-> _Superteam Brasil Solana Skills Contest — v1.10.0_
+> _Superteam Brasil Solana Skills Contest — v1.11.0_
 > Last updated: 2026-06-27
 
 ---
@@ -26,7 +26,7 @@ Transform Claude Code into the **gold-standard Solana security auditor** — a r
 - [x] 6-phase audit lifecycle (Recon → Remediation)
 - [x] 9 slash commands (`/audit`, `/audit-quick`, `/audit-resume`, `/audit-report`, `/audit-poc`, `/audit-findings`, `/audit-resume`, and more)
 - [x] 50 path-scoped rules (auto-activate on file patterns)
-- [x] 6 specialist agents (orchestrator, auditor, formal-verifier, report-writer, cross-program, safety-guard)
+- [x] 7 specialist agents (orchestrator, auditor, formal-verifier, report-writer, cross-program, safety-guard, threat-modeler)
 - [x] Dual example fixtures: vault (10 bugs) + token-extensions (6 bugs)
 - [x] CVSS 3.1 scoring with math verification
 - [x] 62 integrity checks (all passing)
@@ -103,6 +103,18 @@ Transform Claude Code into the **gold-standard Solana security auditor** — a r
 - [ ] Native qed-solana CI integration (dependency of QED 2A)
 - [ ] Economic Security module (standalone DeFi attack analysis)
 - [ ] Architecture Review module (standalone component analysis)
+
+### v1.11.0 — Architecture Review + Report Enhancement (2026-06-27)
+
+Following Loop 3 feedback, added two post-contest backlog items as a single sprint.
+
+- [x] **Architecture Review Module** (`skill/07-architecture-review.md` + `agents/architecture-reviewer.md`) — Standalone component analysis phase using attack surface decomposition: entry point enumeration, trust boundary mapping, component dependency graph, and data flow analysis. Maps findings to architectural layers (instruction dispatch, account validation, state management, CPI interface, token operations).
+- [x] **Report Generator Enhancement** — Three missing sections added to `AUDIT_REPORT.md` template: (1) **Executive Summary** with severity-at-a-glance table and risk posture statement, (2) **Methodology Trace** cross-referencing each phase to its output artifact, (3) **Finding Distribution** with severity breakdown table and CVSS vector summary per finding.
+- [x] **Architecture-reviewer agent** — 8-step analysis flow: entry point enumeration, trust boundary mapping, component dependency graph, data flow analysis, architectural hotspot identification, architectural weakness assessment, mitigation recommendations, architecture findings export.
+- [x] **Phase 7 procedure** (`skill/07-architecture-review.md`) — Phase 7 standalone procedure document covering all 8 analysis steps.
+- [x] **Report template** (`templates/report-template.md`) — Updated with Executive Summary, Methodology Trace, Finding Distribution sections.
+- [x] **Integrity checks 38–40** — Phase 7 presence check, architecture-reviewer agent check, report template section checks.
+- [x] **SDD docs updated** — PRD.md, spec.md, kanban.md, learnings.md updated to v1.11.0.
 
 ### v1.10.0 — Remediation Engine Full Upgrade (2026-06-27)
 

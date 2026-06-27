@@ -1,7 +1,7 @@
 # Spec — Solana Auditor Skill
 
 > **Technical Specification**
-> _Version 1.10.0 — Remediation Engine Full Upgrade_
+> _Version 1.11.0 — Architecture Review + Report Enhancement_
 > Last updated: 2026-06-27
 
 ---
@@ -76,8 +76,8 @@ Phase 2B Runtime ──► CPI Surface Graph ──► Cross-Program Analysis
 | Tier | Mode | Phases | Use Case |
 |------|------|--------|----------|
 | **Tier 1** | SAST-only | 0, 1, 2, 2A, 4, 5, 6 | Quick audit, no toolchain required |
-| **Tier 2** | Full runtime | 0, 1, 2, 2A, 2B, 3, 4, 5, 6 | Comprehensive audit with validator |
-| **Tier 3** | Full + exploit sim | 0, 1, 2, 2A, 2B, 3, 4, 5, 6, PoC | Comprehensive + structured exploit metadata |
+| **Tier 2** | Full + arch review | 0, 1, 2, 2A, 2B, 3, 4, 5, 6, **7** | Comprehensive + component analysis |
+| **Tier 3** | Full + exploit sim | 0, 1, 2, 2A, 2B, 3, 4, 5, 6, **7**, PoC | Comprehensive + component analysis + exploit metadata |
 
 Tier 1 runs without Solana toolchain. Tier 2 enables:
 - Runtime verification via Solana test validator
@@ -112,7 +112,7 @@ Tier 1 runs without Solana toolchain. Tier 2 enables:
 }
 ```
 
-### 2.3 Agent Roster (6 specialists)
+### 2.3 Agent Roster (8 specialists)
 
 | Agent | Role | Primary Phase |
 |-------|------|---------------|
@@ -123,6 +123,7 @@ Tier 1 runs without Solana toolchain. Tier 2 enables:
 | report-writer | Structured findings → report | 5 |
 | cross-program | CPI surface graph, cross-program analysis | 2B |
 | safety-guard | Agent safety guardrails, prevents harmful ops | 0 |
+| architecture-reviewer | Component analysis, trust boundaries, data flow | 7 |
 
 ---
 
@@ -339,6 +340,54 @@ Same as previously documented.
 
 ---
 
+## 6. Phase 7: Architecture Review
+
+### 6.1 Purpose
+
+Phase 7 performs standalone component analysis after Phase 2B (Runtime Verification) and before Phase 4 (Findings Triage). It decomposes the program into architectural layers and identifies systemic weaknesses that individual findings may not surface.
+
+### 6.2 Architecture-Reviewer Agent Flow
+
+1. **Enumerate entry points** — All `process_instruction` handlers and their access paths
+2. **Map trust boundaries** — External programs, user accounts, PDAs, system accounts
+3. **Build component dependency graph** — Instruction dispatch, account validation, state management, CPI interface, token operations
+4. **Trace data flows** — Per-entry-point data flow from input to storage
+5. **Identify architectural hotspots** — Components with high coupling, shared state, or privileged access
+6. **Assess architectural weaknesses** — Patterns that are individually correct but compose into systemic risk
+7. **Recommend mitigations** — Layer-level fixes that address multiple findings at once
+8. **Export architecture_findings.json** — Structured architectural findings
+
+### 6.3 Architecture Findings Schema
+
+```json
+{
+  "architecture_findings": [
+    {
+      "id": "ARCH-01",
+      "severity": "HIGH | MEDIUM | LOW",
+      "layer": "instruction_dispatch | account_validation | state_management | cpi_interface | token_operations",
+      "title": "<arch-title>",
+      "components": ["<component-1>", "<component-2>"],
+      "description": "<architectural-analysis>",
+      "impact": "<systemic-impact>",
+      "recommendation": "<layer-level-fix>",
+      "related_findings": ["VULN-01"],
+      "mitigation_effort": "trivial | moderate | complex"
+    }
+  ]
+}
+```
+
+### 6.4 Three Missing Report Sections
+
+The audit report template now includes three sections previously absent from v1.10.0:
+
+1. **Executive Summary** — Severity-at-a-glance table (CRITICAL/HIGH/MEDIUM/LOW/INFO counts) + risk posture statement (Critical/High/Medium/Low/Informational based on highest severity and total count).
+2. **Methodology Trace** — Per-phase table mapping each phase to its output artifact and key findings, enabling judges to trace the audit methodology from input to conclusion.
+3. **Finding Distribution** — Severity breakdown table with per-finding CVSS vector and CWE reference, plus per-layer distribution (instruction dispatch, account validation, state management, CPI interface, token operations).
+
+---
+
 ## 4. Integrity Check Specification
 
 ### 4.1 Current Checks (93+ PASS points, 33+ named categories)
@@ -382,6 +431,9 @@ Same as previously documented.
 | 35 | Phase 6 difficulty rating | 3 | findings.json entries have difficulty field |
 | 36 | Regression test path presence | 3 | findings.json entries have regression_test_path field |
 | 37 | Remediation priority ordering | 3 | CRITICAL > HIGH > MEDIUM > LOW > INFO within each tier |
+| 38 | Phase 7 architecture review presence | 3 | skill/07-architecture-review.md exists + YAML frontmatter |
+| 39 | Architecture-reviewer agent presence | 3 | agents/architecture-reviewer.md exists + YAML frontmatter |
+| 40 | Report template enhanced sections | 4 | Executive Summary, Methodology Trace, Finding Distribution present |
 
 ### 4.2 Verification Methods
 

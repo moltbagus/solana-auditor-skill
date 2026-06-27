@@ -12,12 +12,14 @@
         "line": 140,
         "function": "hook_withdraw"
       },
-      "description": "The hook_withdraw instruction uses the TransferHook extension from the mint to route a transfer via CPI to the hook's program. However, it performs no validation of the hook_program_id before routing to it. An attacker can deploy a malicious Token-2022 mint whose TransferHook extension points to an attacker-controlled program. When the vault calls hook_withdraw, it CPI's into the attacker's program, which can return success without performing any real transfer, re-enter the vault to drain additional funds, or manipulate vault state arbitrarily. This requires no privileged access — only the ability to create a Token-2022 mint and deposit tokens.",
+      "description": "The hook_withdraw instruction uses the TransferHook extension from the mint to route a transfer via CPI to the hook's program. However, it performs no validation of the hook_program_id before routing to it. An attacker can deploy a malicious Token-2022 mint whose TransferHook extension points to an attacker-controlled program. When the vault calls hook_withdraw, it CPI's into the attacker's program, which can return success without performing any real transfer, re-enter the vault to drain additional funds, or manipulate vault state arbitrarily. This requires no privileged access \u2014 only the ability to create a Token-2022 mint and deposit tokens.",
       "impact": "Complete vault drain. An attacker who can create or influence the mint used in the vault can drain all funds by providing a malicious transfer-hook program. The hook can approve any withdrawal, re-enter the vault during the CPI, and recursively drain tokens. There is no authentication on the hook CPI target.",
       "recommendation": "Validate hook_program_id against an explicit allowlist of trusted transfer-hook programs before issuing any CPI. Alternatively, verify that the mint itself is in a trusted set (e.g., by checking the mint's address or an on-chain registry) before loading and routing to its hook. Add a reentrancy guard to prevent callback attacks from the hook program. Consider disabling hook routing entirely unless the mint and hook are both operator-controlled.",
       "poc_status": "pending",
-      "rule_caught": "Rule 27 — Token-2022 Transfer Hook CPI Routing",
-      "status": "Open"
+      "rule_caught": "Rule 27 \u2014 Token-2022 Transfer Hook CPI Routing",
+      "status": "Open",
+      "root_cause": "The hook_withdraw instruction used the TransferHook extension's hook_program_id as the target of a CPI without validating it against an allowlist. Since the mint account can be attacker-controlled (or a malicious mint with TransferHook pointing to the attacker's program), the protocol blindly CPI-calls whatever program the mint specifies. This is a form of arbitrary program execution from the protocol's context.",
+      "regression_test": "#[tokio::test]\nasync fn test_transfer_hook_rejects_unknown_program() {\n    // Mint with TransferHook pointing to attacker-controlled program\n    let malicious_mint = setup_mint_with_transfer_hook(&malicious_program.pubkey());\n    let exploit_tx = Transaction::new_signed_with_payer(\n        &[hook_withdraw_ix(&program_id, &malicious_mint, amount)],\n        Some(&user.pubkey()),\n        &[&user],\n        recent_blockhash,\n    );\n    let result = program.rpc().process_transaction(&exploit_tx).await;\n    assert!(result.is_err());  // Must reject unknown hook_program_id\n}"
     },
     {
       "id": "VULN-17",
@@ -32,11 +34,12 @@
         "function": "vault_withdraw"
       },
       "description": "The vault_withdraw instruction uses `spl_token_2022::transfer_checked` for a real Token-2022 transfer but performs zero validation of the mint's extension state before executing the transfer. Specifically, it does not verify: (1) whether the mint has a `default_account_state` extension that FROZEN accounts, (2) whether the mint has a `transfer_hook` extension that requires custom CPI routing, or (3) whether the mint has `non_transferable` enabled. Token-2022 mints can have any combination of extensions that fundamentally alter transfer semantics. Calling `transfer_checked` without pre-flight extension validation can result in silent failures, bypassed security checks, or unexpected state changes.",
-      "impact": "Transfer semantics bypass. If the mint has a transfer_hook extension, the hook's validation logic is bypassed — the transfer proceeds without the hook's checks. If the mint has a frozen default state, accounts may be in an invalid state. If the mint is non-transferable, tokens that should never leave the holder's wallet enter the vault's control. Over time, this enables value extraction from edge cases that should have been blocked.",
+      "impact": "Transfer semantics bypass. If the mint has a transfer_hook extension, the hook's validation logic is bypassed \u2014 the transfer proceeds without the hook's checks. If the mint has a frozen default state, accounts may be in an invalid state. If the mint is non-transferable, tokens that should never leave the holder's wallet enter the vault's control. Over time, this enables value extraction from edge cases that should have been blocked.",
       "recommendation": "Before any Token-2022 transfer, read the mint's extension data using `StateWithExtensions::<Mint>::unpack(&mint.data.borrow())` and validate: (1) check for `ExtensionType::DefaultAccountState` and verify accounts are not frozen, (2) check for `ExtensionType::TransferHook` and route to the hook's program instead of direct `transfer_checked`, (3) check for `ExtensionType::NonTransferable` and reject vault operations if present. Use the extension validation pattern from the Token-2022 SDK.",
       "poc_status": "pending",
-      "rule_caught": "Rule 5 — Token Operations (Token-2022 extension validation)",
-      "status": "Open"
+      "rule_caught": "Rule 5 \u2014 Token Operations (Token-2022 extension validation)",
+      "status": "Open",
+      "root_cause": "Token program distinction was absent. The code assumed SPL Token behavior without checking whether the mint/token program was SPL or Token-2022, causing incompatibility or silent failures."
     }
   ],
   "summary": {

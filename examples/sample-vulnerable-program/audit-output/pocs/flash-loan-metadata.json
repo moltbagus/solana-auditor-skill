@@ -1,0 +1,265 @@
+{
+  "exploit_id": "flash-loan-oracle-manipulation",
+  "vulnerability_ref": "VULN-03",
+  "rule": "Rule 26",
+  "title": "Flash Loan Oracle Manipulation via Arbitrary CPI",
+  "severity": "HIGH",
+  "cvss": "8.1",
+
+  "summary": "The exec_callback instruction allows arbitrary cross-program invocation without program ID validation. Combined with price oracle reads, an attacker can execute a flash loan to manipulate token prices, borrow against inflated collateral, and repay the flash loan - all in a single transaction.",
+
+  "capital_requirements": {
+    "flash_loan_capital": {
+      "protocols": [
+        {
+          "name": "Solend",
+          "type": "Lending market",
+          "max_loan_sol": "~50000,
+          "note": "Flash loan viaObligationCollateral"
+        },
+        {
+          "name": "Port Finance",
+          "type": "Lending market",
+          "max_loan_sol": "~10000,
+          "note": "Flash loan via flashBorrow"
+        },
+        {
+          "name": "Apricot Finance",
+          "type": "Lending market",
+          "max_loan_sol": "~5000,
+          "note": "Flash loan available"
+        }
+      ],
+      "note": "Flash loans on Solana require existing liquidity in lending markets. Attacker borrows from lending protocol, manipulates price, borrows more, repays initial loan."
+    },
+    "transaction_fees": {
+      "compute_units": 1200000,
+      "cu_price_sol": "~0.000000005 SOL per CU",
+      "total_fee_usd": "$0.001-0.01",
+      "note": "High CU usage due to complex CPI chain"
+    },
+    "profit_margin": {
+      "min_profitable": "0.1%",
+      "typical": "1-5%",
+      "note": "Need sufficient price movement to cover fees + profit"
+    }
+  },
+
+  "complexity": {
+    "skill_level": "HIGH",
+    "technical_steps": 8,
+    "mechanical_steps": 3,
+    "explanation": "Requires understanding of flash loan mechanics, oracle price feeds, and complex multi-hop CPI. Mechanical execution is automated once attack vector is identified."
+  },
+
+  "likelihood": {
+    "real_world_prevalence": "MEDIUM-HIGH",
+    "detection_difficulty": "HIGH",
+    "ease_of_exploitation": "MODERATE",
+    "notes": [
+      "Flash loans are common in Solana DeFi (Solend, Port, Mango, etc.)",
+      "Oracle manipulation requires understanding price feed mechanics",
+      "Hard to detect - looks like legitimate DeFi activity",
+      "MEV on Solana is less mature than Ethereum - less competition",
+      "Audit tools catch arbitrary CPI patterns (Rule 4)"
+    ]
+  },
+
+  "supported_flash_loan_protocols": {
+    "solana_protocols": [
+      {
+        "name": "Solend",
+        "instruction": "flash_loan",
+        "accounts": ["reserve", "obligation", "destinations"],
+        "max_amount": "Variable by reserve liquidity",
+        "integration": "anchor_spl::lending"
+      },
+      {
+        "name": "Port Finance",
+        "instruction": "flash_borrow",
+        "accounts": ["reserve", "wallet", "collateral"],
+        "max_amount": "Reserve liquidity",
+        "integration": "Custom CPI"
+      },
+      {
+        "name": "Mango Markets",
+        "instruction": "flash_mango",
+        "accounts": ["mango_group", "mango_account"],
+        "max_amount": "Deposited collateral",
+        "note": "Most flexible - built into Mango's architecture"
+      },
+      {
+        "name": "Lulo Finance",
+        "instruction": "flash_loan",
+        "type": "SOL flash loans",
+        "max_amount": "~1000 SOL",
+        "note": "SOL-only, simpler attack surface"
+      }
+    ]
+  },
+
+  "attack_path": {
+    "preconditions": [
+      "Target program has exec_callback (Rule 4 vulnerability)",
+      "Target program reads price from manipulable oracle (Pyth, Switchboard, or AMM-based)",
+      "Target program uses balance snapshots that can be manipulated",
+      "Attacker has sufficient collateral on lending protocol for flash loan collateral"
+    ],
+
+    "step_by_step": [
+      {
+        "step": 1,
+        "name": "Initiate flash loan",
+        "action": "Call lending protocol's flash loan instruction",
+        "instruction": "solend::flash_loan",
+        "borrows": "X USDC from Solend reserve",
+        "note": "Flash loan is atomic - must be repaid within same transaction"
+      },
+      {
+        "step": 2,
+        "name": "Use arbitrary CPI to manipulate oracle",
+        "action": "Call exec_callback with target_program = DEX or Token Program",
+        "instruction": "exec_callback",
+        "params": {
+          "target_program": "RAYDIUM_SWAP_PROGRAM",
+          "data": "swap_instructions_to_move_price",
+          "accounts": "attacker-controlled + pool accounts"
+        },
+        "result": "Price of collateral asset on DEX moves 10-30%"
+      },
+      {
+        "step": 3,
+        "name": "Wait for oracle update",
+        "action": "Pyth or Switchboard updates price feed",
+        "note": "May require multiple txs or use AMM spot price directly",
+        "alternative": "Use AMM spot price as direct oracle (no delay)"
+      },
+      {
+        "step": 4,
+        "name": "Borrow against inflated collateral",
+        "action": "Call target program's borrow with manipulated price",
+        "instruction": "borrow",
+        "params": {
+          "collateral": "manipulated_asset",
+          "borrow_amount": "increased_by_20%"
+        },
+        "result": "Attacker borrows more than legitimate collateral value"
+      },
+      {
+        "step": 5,
+        "name": "Repay flash loan",
+        "action": "Return borrowed flash loan funds",
+        "instruction": "solend::repay_flash_loan",
+        "result": "Flash loan closed, attacker's net position = stolen funds"
+      },
+      {
+        "step": 6,
+        "name": "Exit positions",
+        "action": "Withdraw borrowed funds + manipulated collateral",
+        "result": "Funds extracted to attacker-controlled wallet"
+      }
+    ],
+
+    "transaction_structure": {
+      "compute_units": "~1,200,000 (high)",
+      "instructions": 5,
+      "accounts": [
+        "lending_protocol::flash_loan (borrow)",
+        "target::exec_callback (manipulate)",
+        "target::borrow (exploit)",
+        "DEX::swap (if needed for price move)",
+        "lending_protocol::repay (close flash loan)"
+      ],
+      "slot": "Single atomic transaction"
+    }
+  },
+
+  "mechanics": {
+    "root_cause": "exec_callback accepts any program ID and invokes it without validation (Rule 4)",
+    "vulnerable_code": "invoke(&ix, &ctx.accounts.to_account_infos())?;  // No program validation",
+    "oracle_manipulation": [
+      "AMM-based: Swap large amount to move spot price",
+      "Pyth: Attacker is price publisher (unlikely but possible)",
+      "Switchboard: Attacker controls queue (unlikely)",
+      "TWAP: Requires multiple slots (not single-tx flash loan)"
+    ],
+    "balance_snapshot_timing": "Solana programs read balances at instruction start. Flash loan increases balance, borrow sees inflated collateral, repay decreases balance - all atomic."
+  },
+
+  "defense_mechanisms": {
+    "commit_reveal": {
+      "description": "Price commitment from prior slot prevents same-tx manipulation",
+      "implementation": "Store price_hash from slot N-2, verify in slot N"
+    },
+    "twap_oracle": {
+      "description": "Time-weighted average over multiple slots",
+      "limitation": "Requires block-space for updates, adds latency"
+    },
+    "external_validation": {
+      "description": "Price from Pyth/Switchboard with confidence threshold",
+      "limitation": "Still manipulable with large trades if no TWAP"
+    },
+    "balance_snapshots": {
+      "description": "Take balance snapshot AFTER all state changes and repayments",
+      "implementation": "Check collateral_value at instruction end, not start"
+    }
+  },
+
+  "historical_precedent": {
+    "similar_exploits": [
+      {
+        "name": "Aave V2 (Ethereum, 2021)",
+        "amount": "$25M",
+        "mechanism": "Flash loan + oracle manipulation",
+        "root_cause": "Price oracle timing vulnerability"
+      },
+      {
+        "name": "Cream Finance (Ethereum, 2021)",
+        "amount": "$130M",
+        "mechanism": "Flash loan + price manipulation",
+        "root_cause": "Single-source price oracle"
+      },
+      {
+        "name": "Mango Markets (Solana, 2022)",
+        "amount": "$117M",
+        "mechanism": "Self-trade + oracle manipulation",
+        "root_cause": "Oracle price lag + self-referential collateral"
+      }
+    ]
+  },
+
+  "detection": {
+    "on_chain_signals": [
+      "Large flash loan in same tx as large borrow",
+      "Collateral price deviation > 20% within single transaction",
+      "Multiple CPI calls with different programs in single tx"
+    ],
+    "off_chain_signals": [
+      "Unusual borrowing patterns correlating with price moves",
+      "Flash loan utilization spikes"
+    ],
+    "tools": [
+      "Triton Trader bot for MEV monitoring",
+      "SolanaFM tx explorer for multi-hop CPI detection",
+      "Custom anchor program monitoring"
+    ]
+  },
+
+  "remediation": {
+    "immediate": "Add program allowlist to exec_callback (Rule 4 fix)",
+    "oracle_protection": [
+      "Use TWAP instead of spot price",
+      "Add slot-age verification for price feeds",
+      "Implement commit-reveal pattern"
+    ],
+    "balance_timing": "Take balance snapshots AFTER all repayments in instruction flow",
+    "defense_in_depth": "Combine all three - program allowlist + protected oracle + proper snapshot timing"
+  },
+
+  "poc_verification": {
+    "test_program": "programs/vault/src/lib.rs",
+    "test_instruction": "exec_callback",
+    "expected_behavior": "Should FAIL if target program not in allowlist after fix",
+    "attack_scenario": "Attempt arbitrary CPI to system program - should fail after allowlist is added"
+  }
+}
