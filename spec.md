@@ -1,7 +1,7 @@
 # Spec — Solana Auditor Skill
 
 > **Technical Specification**
-> _Version 1.8.1 — Dashboard + Exploit Simulation_
+> _Version 1.9.0 — Threat Modeling + Exploit Simulation Framework_
 > Last updated: 2026-06-27
 
 ---
@@ -71,12 +71,13 @@ Phase 2B Runtime ──► CPI Surface Graph ──► Cross-Program Analysis
                                               + methodology-trace.md
 ```
 
-### 1.3 Two-Tier Execution Model
+### 1.3 Three-Tier Execution Model
 
 | Tier | Mode | Phases | Use Case |
 |------|------|--------|----------|
-| **Tier 1** | SAST-only | 0, 1, 2, 4, 5, 6 | Quick audit, no toolchain required |
-| **Tier 2** | Full runtime | 0, 1, 2, 2B, 3, 4, 5, 6 | Comprehensive audit with validator |
+| **Tier 1** | SAST-only | 0, 1, 2, 2A, 4, 5, 6 | Quick audit, no toolchain required |
+| **Tier 2** | Full runtime | 0, 1, 2, 2A, 2B, 3, 4, 5, 6 | Comprehensive audit with validator |
+| **Tier 3** | Full + exploit sim | 0, 1, 2, 2A, 2B, 3, 4, 5, 6, PoC | Comprehensive + structured exploit metadata |
 
 Tier 1 runs without Solana toolchain. Tier 2 enables:
 - Runtime verification via Solana test validator
@@ -117,6 +118,7 @@ Tier 1 runs without Solana toolchain. Tier 2 enables:
 |-------|------|---------------|
 | orchestrator | Entry point, routes to specialists | All |
 | auditor | Primary audit execution | 1, 2, 2B |
+| threat-modeler | STRIDE threat identification, trust boundaries | 2A |
 | formal-verifier | Invariant proofs, QED 2A | 3 |
 | report-writer | Structured findings → report | 5 |
 | cross-program | CPI surface graph, cross-program analysis | 2B |
@@ -196,7 +198,114 @@ Tier 1 runs without Solana toolchain. Tier 2 enables:
 }
 ```
 
-### 3.3 Cross-Program Findings Schema (cross_program_findings.json)
+### 3.4 Exploit Metadata Schema (exploit_metadata.json)
+
+```json
+{
+  "exploits": [
+    {
+      "vuln_id": "VULN-01",
+      "stride_category": "Privilege Escalation",
+      "title": "<exploit-title>",
+      "preconditions": ["<condition-1>", "<condition-2>"],
+      "attack_steps": [
+        {"step": 1, "action": "<action>", "expected": "<expected>", "actual": "<actual>"}
+      ],
+      "expected_outcome": "<what-attacker-accomplishes>",
+      "actual_outcome": "<confirmed|partial|failed>",
+      "exploitability_score": 9.2,
+      "impact_confirmed": true,
+      "remediation_verified": false,
+      "remediation_date": null,
+      "references": [
+        {"type": "CVE", "id": "CVE-XXXX-XXXXX"},
+        {"type": "transaction", "id": "txn_sig_here"}
+      ],
+      "poc_language": "anchor | typescript | python | manual",
+      "poc_code": "<code-snippet-or-null>",
+      "audit_notes": "<analyst-observations>"
+    }
+  ]
+}
+```
+
+### 3.5 Threat Model Schema (threat_model.json)
+
+```json
+{
+  "program_id": "<solana-program-id>",
+  "program_name": "<name>",
+  "trust_boundaries": [
+    {
+      "id": "TB-01",
+      "name": "<boundary-name>",
+      "components": ["<component-1>"],
+      "data_flows": [
+        {"from": "<source>", "to": "<dest>", "protocol": "CPI|RPC|WebSocket"}
+      ]
+    }
+  ],
+  "stride_threats": [
+    {
+      "id": "STRIDE-01",
+      "category": "Spoofing|Tampering|Repudiation|Info Disclosure|DoS|Privilege Escalation",
+      "title": "<threat-title>",
+      "affected_component": "<component>",
+      "trust_boundary": "TB-01",
+      "likelihood": "HIGH|MEDIUM|LOW",
+      "impact": "HIGH|MEDIUM|LOW",
+      "risk_score": 8.1,
+      "mapped_findings": ["VULN-01", "VULN-02"],
+      "mitigations": ["<mitigation-1>"]
+    }
+  ],
+  "summary": {
+    "total_threats": 0,
+    "spoofing": 0,
+    "tampering": 0,
+    "repudiation": 0,
+    "info_disclosure": 0,
+    "dos": 0,
+    "privilege_escalation": 0
+  }
+}
+```
+
+## 4. Phase 2A: Threat Modeling
+
+### 4.1 STRIDE Overview
+
+| Category | What It Tests | Common Solana Patterns |
+|----------|---------------|------------------------|
+| **Spoofing** | Can an attacker impersonate a valid user/program? | Fake program ID in CPI, missing signer verification |
+| **Tampering** | Can data be modified without detection? | Account data mutations, state corruption |
+| **Repudiation** | Can a user deny an action they performed? | Missing event emission, unsigned transactions |
+| **Information Disclosure** | Can sensitive data be exposed? | Unencrypted account data, logging secrets |
+| **Denial of Service** | Can availability be disrupted? | Resource exhaustion, infinite loops, rent困 |
+| **Privilege Escalation** | Can an attacker gain unauthorized privileges? | Missing authority checks, PDA derivation bugs |
+
+### 4.2 Threat Modeler Agent Flow
+
+1. **Identify trust boundaries** — External programs, user accounts, PDAs, system accounts
+2. **Map data flows** — CPI calls, RPC calls, WebSocket subscriptions
+3. **Apply STRIDE per boundary** — 6 threat categories for each boundary
+4. **Cross-reference findings** — Map threats to existing VULN-IDs or flag as new
+5. **Score and rank** — Risk = Likelihood x Impact
+6. **Output threat_model.json** — Structured threat documentation
+7. **Integrate with Phase 5** — Threats feed into final audit report
+
+### 4.3 Trust Boundary Examples
+
+| Boundary | Components | Risk |
+|----------|------------|------|
+| User → Program | `invoke`, `invoke_signed` | CPI injection |
+| Program → Token | `transfer`, `mint` | Authority bypass |
+| Program → PDA | `bump` seed verification | PDA collision |
+| External → Program | RPC instruction parsing | Input validation |
+
+## 5. Phase 2B: Runtime Verification
+
+Same as previously documented.
 
 ```json
 {

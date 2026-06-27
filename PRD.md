@@ -1,7 +1,7 @@
 # PRD — Solana Auditor Skill
 
 > **Product Requirements Document**
-> _Superteam Brasil Solana Skills Contest — v1.8.1_
+> _Superteam Brasil Solana Skills Contest — v1.9.0_
 > Last updated: 2026-06-27
 
 ---
@@ -102,10 +102,18 @@ Transform Claude Code into the **gold-standard Solana security auditor** — a r
 - [ ] Multi-program audit aggregation
 - [ ] Native qed-solana CI integration (dependency of QED 2A)
 - [ ] Economic Security module (standalone DeFi attack analysis)
-- [ ] Threat Modeling module (STRIDE/PASTA integration)
 - [ ] Architecture Review module (standalone component analysis)
-- [ ] Exploit Simulation Framework (structured PoC metadata per finding)
 - [ ] Remediation Engine full upgrade (root cause + regression tests)
+
+### v1.9.0 — Threat Modeling + Exploit Simulation Framework (2026-06-27)
+- [x] **Phase 2A: Threat Modeling** — STRIDE methodology with 6 threat categories (Spoofing, Tampering, Repudiation, Info Disclosure, DoS, Privilege Escalation)
+- [x] **Threat modeler agent** (`agents/threat-modeler.md`) — 7-step threat identification flow with trust boundary mapping
+- [x] **Exploit simulation framework** — Structured PoC metadata per finding with preconditions, steps, expected outcome, actual outcome, exploitability score, and remediation verification
+- [x] **3 PoC metadata JSON files** — `examples/vault/exploit-metadata.json`, `examples/token-extensions/exploit-metadata.json`, `examples/token-2022-real/exploit-metadata.json`
+- [x] **exploit_metadata schema** — Canonical schema for structured exploit documentation
+- [x] **`/audit-poc` enhancements** — `--metadata` flag for structured output, `--full` flag for complete exploit report, `--explain` for step-by-step analysis
+- [x] **`06-remediation.md` updates** — exploit_metadata schema documentation, remediation blocks for each exploit metadata field
+- [x] **`audit-fix-suggestions.py` updates** — `--explain` flag for root cause + fix rationale, `--metadata` flag for structured output
 
 ## 4. Success Metrics
 

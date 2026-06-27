@@ -1,7 +1,7 @@
 # Learnings — Solana Auditor Skill
 
 > **Decision Log & Lessons Learned**
-> _Superteam Brasil Solana Skills Contest — v1.8.1_
+> _Superteam Brasil Solana Skills Contest — v1.9.0_
 > Last updated: 2026-06-27
 
 ---
@@ -134,6 +134,14 @@
 11. **Audit-report script: nested f-strings are a SyntaxError** — `f(f"...")` is invalid Python. Fix: `"string1" + (f"..." if cond else "") + "string2"`.
 12. **`demo.sh` step count must match reality** — When adding a step, update ALL `[X/6]` references and the `DEMO_VERSION` echo. SWE agent correctly updated to `[1/7]` through `[7/7]`.
 
+### 2026-06-27 — v1.9.0 Sprint: Threat Modeling + Exploit Simulation
+
+13. **STRIDE maps naturally to Solana** — Each STRIDE category maps to concrete Solana patterns: Spoofing → fake program IDs in CPI; Tampering → account data mutations; Repudiation → missing event emission; Info Disclosure → unencrypted account data; DoS → resource exhaustion; Privilege Escalation → missing authority checks. The mapping makes threat modeling actionable, not academic.
+14. **Exploit metadata schema as canonical structure** — Structuring PoC data as JSON (preconditions, attack_steps with expected/actual, exploitability_score, remediation_verified) turns informal exploit notes into machine-readable audit artifacts. Enables automated remediation tracking and finding prioritization.
+15. **Phase 2A slots between SAST (2) and Runtime (2B)** — The three-tier execution model (Tier 1: SAST-only, Tier 2: + Runtime, Tier 3: + Exploit Sim) gives auditors a progressive commitment path. Start Tier 1, escalate as needed. Threat modeling (2A) is toolchain-free so it belongs in Tier 1.
+16. **7 agents from 6** — Added `threat-modeler` as the 7th specialist agent. The handoff contract pattern (input_artifacts, expected_outputs, context) scales cleanly. Each agent owns one phase or phase group.
+17. **Option A vs Option B for exploit simulation** — Option A (metadata schema, `/audit-poc --metadata` flag, structured output) was chosen over Option B (interactive REPL). Option A is CI-friendly, idempotent, and integrates with the existing findings pipeline without requiring interactive sessions.
+
 ## Future Improvements
 
 - [ ] **Line-number drift check (Check 20)** — `rg -n "VULN-\d+"` in source and verify each finding's claimed line falls within its VULN function scope.
@@ -143,3 +151,4 @@
 - [ ] **Interactive audit dashboard** — Visual report with severity distribution.
 - [ ] **Multi-program audit aggregation** — Combine findings from multiple Anchor programs.
 - [ ] **Visual diff** — Pre/post-fix audit report comparison.
+- [ ] **Architecture Review module** — Standalone component analysis phase (post-contest backlog item #4).

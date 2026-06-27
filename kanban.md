@@ -1,7 +1,7 @@
 # Kanban — Solana Auditor Skill
 
 > **Project Kanban Board**
-> _Superteam Brasil Solana Skills Contest — v1.8.1_
+> _Superteam Brasil Solana Skills Contest — v1.9.0_
 > Last updated: 2026-06-27
 
 ---
@@ -107,7 +107,15 @@ audit-report/submissions/MATH-003-3-immunefi-submission.md  (MEDIUM, CVSS 6.5 �
 
 ---
 
-## Sprint Plan (Contest Edition)
+### Sprint 7 — Threat Modeling + Exploit Simulation (Done: 2026-06-27)
+- [x] Phase 2A: Threat Modeling with STRIDE methodology
+- [x] Threat modeler agent (`agents/threat-modeler.md`)
+- [x] Exploit simulation framework with structured PoC metadata
+- [x] `exploit_metadata` schema in `06-remediation.md`
+- [x] 3 PoC metadata JSON files (vault, token-extensions, token-2022-real)
+- [x] `/audit-poc --metadata` and `--full` flags
+- [x] `audit-fix-suggestions.py --explain` and `--metadata` flags
+- [x] PRD, spec, kanban, learnings updated to v1.9.0
 
 ### Sprint 6 — Dashboard + Integration (Done: 2026-06-27)
 - [x] HTML dashboard: `scripts/dashboard.py` + `templates/dashboard.html`
@@ -166,13 +174,13 @@ audit-report/submissions/MATH-003-3-immunefi-submission.md  (MEDIUM, CVSS 6.5 �
 
 ### Top 5 Priority Items (from 2026-06-27 Gap Analysis)
 
-| # | Item | Label | Effort | Impact |
-|---|------|-------|--------|--------|
-| 1 | Remediation Engine — Root Cause Analysis Layer | CONTEST-CRITICAL | MEDIUM | HIGH |
-| 2 | Exploit Simulation Framework — Structured PoC Metadata | CONTEST-CRITICAL | MEDIUM | HIGH |
-| 3 | Threat Modeling Module (STRIDE) | HIGH | MEDIUM | HIGH |
-| 4 | Architecture Review Module | HIGH | MEDIUM | HIGH |
-| 5 | Report Generator Enhancement (3 missing sections) | HIGH | LOW | HIGH |
+| # | Item | Label | Effort | Impact | Status |
+|---|------|-------|--------|--------|--------|
+| 1 | Remediation Engine — Root Cause Analysis Layer | CONTEST-CRITICAL | MEDIUM | HIGH | Done v1.9.0 |
+| 2 | Exploit Simulation Framework — Structured PoC Metadata | CONTEST-CRITICAL | MEDIUM | HIGH | Done v1.9.0 |
+| 3 | Threat Modeling Module (STRIDE) | HIGH | MEDIUM | HIGH | Done v1.9.0 |
+| 4 | Architecture Review Module | HIGH | MEDIUM | HIGH | Pending |
+| 5 | Report Generator Enhancement (3 missing sections) | HIGH | LOW | HIGH | Pending |
 
 Full details: `docs/superpowers/specs/2026-06-27-gap-analysis.md` and `docs/superpowers/specs/2026-06-27-priority-backlog.md`
 
@@ -180,18 +188,22 @@ Full details: `docs/superpowers/specs/2026-06-27-gap-analysis.md` and `docs/supe
 
 ## Velocity Tracking (FINAL)
 
-| Metric | v1.0 | v1.3 | v1.4 FINAL | v1.8.1 | Target |
-|--------|------|------|------------|--------|--------|
-| Integrity checks | 18 | 49 | **62** | **154** | 62+ |
-| VULN tags | 10 | 16 | **17** | 17 | 17 |
-| Property-based tests | 0 | 19 | **19** | **22** | 15+ |
-| Fixtures | 1 | 2 | **3** | 3 | 3 |
-| Rules | 12 | 12 | **17** | **50** | 15+ |
-| Commands | 5 | 5 | **6** | **9** | 6 |
-| Languages | 1 | 2 | **2** | 2 | 2 |
-| PoC walkthroughs | 0 | 0 | **3** | 3 | 3 |
-| Formal verification | 0 | 0 | **5 patterns** | **5 patterns** | 5+ |
-| SARIF export | No | No | **Yes** | **Yes** | Yes |
-| Lock file / resume | No | No | **Yes** | **Yes** | Yes |
-| HTML dashboard | No | No | No | **Yes** | Yes |
-| Commands frontmatter | No | No | No | **Yes** | Yes |
+| Metric | v1.0 | v1.3 | v1.4 FINAL | v1.8.1 | v1.9.0 | Target |
+|--------|------|------|------------|--------|--------|--------|
+| Integrity checks | 18 | 49 | **62** | **154** | **154** | 62+ |
+| VULN tags | 10 | 16 | **17** | 17 | 17 | 17 |
+| Property-based tests | 0 | 19 | **19** | **22** | **22** | 15+ |
+| Fixtures | 1 | 2 | **3** | 3 | 3 | 3 |
+| Rules | 12 | 12 | **17** | **50** | **50** | 15+ |
+| Commands | 5 | 5 | **6** | **9** | **9** | 6 |
+| Languages | 1 | 2 | **2** | 2 | 2 | 2 |
+| PoC walkthroughs | 0 | 0 | **3** | 3 | 3 | 3 |
+| Formal verification | 0 | 0 | **5 patterns** | **5 patterns** | **5 patterns** | 5+ |
+| SARIF export | No | No | **Yes** | **Yes** | **Yes** | Yes |
+| Lock file / resume | No | No | **Yes** | **Yes** | **Yes** | Yes |
+| HTML dashboard | No | No | No | **Yes** | **Yes** | Yes |
+| Commands frontmatter | No | No | No | **Yes** | **Yes** | Yes |
+| Threat Modeling (STRIDE) | No | No | No | No | **Yes** | Yes |
+| Exploit Sim Framework | No | No | No | No | **Yes** | Yes |
+| Threat modeler agent | No | No | No | No | **7 agents** | 6+ |
+| PoC metadata files | No | No | No | No | **3** | 3 |
