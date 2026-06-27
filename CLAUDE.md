@@ -4,10 +4,10 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 # Solana Auditor Shiba Skill
 
-Submission-grade Solana security auditor — 7-phase lifecycle (Phase 0 Safety Guard + Phases 1–6), 45 path-scoped rules + 5 agent-safety rules, 6 specialist agents, compile-verified example fixtures, 47 integrity checks, 22 fuzz tests.
+Submission-grade Solana security auditor — 7-phase lifecycle (Phase 0 Safety Guard + Phases 1–6), 45 path-scoped rules + 5 agent-safety rules, 9 specialist agents, compile-verified example fixtures, 47 integrity checks, 22 fuzz tests.
 
 **Extends**: solana-dev-skill  
-**Agents**: orchestrator, auditor, formal-verifier, report-writer, cross-program-agent, safety-guard  
+**Agents**: orchestrator, auditor, architecture-reviewer, threat-modeler, economic-security-analyst, formal-verifier, report-writer, cross-program-agent, safety-guard  
 **Commands**: `/audit`, `/audit-quick`, `/audit-resume`, `/audit-report`, `/audit-poc`, `/audit-findings`, `/audit-fix`, `/audit-history`, `/audit-pr`  
 **References**: `references/LIMITATIONS.md` — honest coverage ceiling (business-logic gaps are outside SAST scope)
 **Automation**: pre-commit hook (`scripts/pre-commit-audit.sh`), PR auditing (`/audit-pr`), audit history DB (`scripts/audit-history.sh`), inline fix suggestions (`scripts/audit-fix-suggestions.py`), SARIF export (`scripts/export-sarif.py`)

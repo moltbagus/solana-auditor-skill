@@ -1,0 +1,74 @@
+{
+  "$schema": "https://solana-auditor-skill/schemas/exploit-metadata-v1.json",
+  "poc_id": "VULN-06",
+  "title": "Manual init lacks 8-byte discriminator — reinit attack possible",
+  "severity": "MEDIUM",
+  "cvss": 6.5,
+  "cvss_vector": "CVSS:3.1/AV:N/AC:L/PR:L/UI:N/S:U/C:N/I:H/A:N",
+  "cwe": [
+    "CWE-665"
+  ],
+  "rule_ids": [
+    "Rule 11"
+  ],
+  "exploit_class": "state-manipulation",
+  "attack_surface": {
+    "entry_point": "VaultState struct",
+    "instruction_index": 145,
+    "accounts_required": [
+      "account"
+    ],
+    "cpi_calls": 0
+  },
+  "attacker_model": {
+    "position": "must control a vault/pool account key",
+    "capital": "rent_exempt_minimum lamports",
+    "privilege": "must initially call init or deposit"
+  },
+  "preconditions": [
+    "Attacker can submit transactions to the program (no signer required)",
+    "Account is not protected by Anchor's discriminator enforcement"
+  ],
+  "steps": [
+    {
+      "step": 1,
+      "action": "Invoke VaultState struct() instruction",
+      "tx_required": true
+    },
+    {
+      "step": 2,
+      "action": "Supply malicious/missing account parameters as defined by the vulnerability",
+      "tx_required": true
+    },
+    {
+      "step": 3,
+      "action": "Transaction confirms — vulnerability exploited",
+      "tx_required": true
+    }
+  ],
+  "post_conditions": {
+    "funds_transferred": "attacker-controlled account",
+    "state_corrupted": true,
+    "authority_modified": "may be overwritten depending on vulnerability"
+  },
+  "impact": {
+    "funds_at_risk_sol": "limited (individual accounts)",
+    "users_affected": "attacker only",
+    "protocol_insolvency": false,
+    "recovery_path": "standard upgrade path"
+  },
+  "remediation": {
+    "fix_tier": "A",
+    "confidence": 0.95,
+    "cvss_after": 5.2,
+    "cvss_reduction": 1.3,
+    "files_to_modify": [
+      "programs/vault/src/lib.rs"
+    ],
+    "verification_test": "tests/poc-VULN-06-fixed.rs",
+    "fix_type": "state_guard"
+  },
+  "poc_status": "pending",
+  "poc_author": "solana-auditor-skill",
+  "generated_at": "2026-06-27T05:40:01.571261+00:00"
+}

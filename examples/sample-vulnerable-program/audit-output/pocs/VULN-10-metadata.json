@@ -1,0 +1,71 @@
+{
+  "$schema": "https://solana-auditor-skill/schemas/exploit-metadata-v1.json",
+  "poc_id": "VULN-10",
+  "title": "Missing event emission for withdrawals",
+  "severity": "MEDIUM",
+  "cvss": 4.3,
+  "cvss_vector": "CVSS:3.1/AV:N/AC:L/PR:L/UI:N/S:U/C:L/I:N/A:N",
+  "cwe": [
+    "CWE-778"
+  ],
+  "rule_ids": [],
+  "exploit_class": "privilege-escalation",
+  "attack_surface": {
+    "entry_point": "silent_withdraw",
+    "instruction_index": 131,
+    "accounts_required": [
+      "account"
+    ],
+    "cpi_calls": 0
+  },
+  "attacker_model": {
+    "position": "none",
+    "capital": "none",
+    "privilege": "none"
+  },
+  "preconditions": [
+    "Attacker can submit transactions to the program"
+  ],
+  "steps": [
+    {
+      "step": 1,
+      "action": "Invoke silent_withdraw() instruction",
+      "tx_required": true
+    },
+    {
+      "step": 2,
+      "action": "Supply malicious/missing account parameters as defined by the vulnerability",
+      "tx_required": true
+    },
+    {
+      "step": 3,
+      "action": "Transaction confirms — vulnerability exploited",
+      "tx_required": true
+    }
+  ],
+  "post_conditions": {
+    "funds_transferred": "attacker-controlled account",
+    "state_corrupted": true,
+    "authority_modified": "may be overwritten depending on vulnerability"
+  },
+  "impact": {
+    "funds_at_risk_sol": "limited (individual accounts)",
+    "users_affected": "attacker only",
+    "protocol_insolvency": false,
+    "recovery_path": "standard upgrade path"
+  },
+  "remediation": {
+    "fix_tier": "B",
+    "confidence": 0.7,
+    "cvss_after": 3.4,
+    "cvss_reduction": 0.9,
+    "files_to_modify": [
+      "programs/vault/src/lib.rs"
+    ],
+    "verification_test": "tests/poc-VULN-10-fixed.rs",
+    "fix_type": "validation_check"
+  },
+  "poc_status": "pending",
+  "poc_author": "solana-auditor-skill",
+  "generated_at": "2026-06-27T05:40:01.571720+00:00"
+}

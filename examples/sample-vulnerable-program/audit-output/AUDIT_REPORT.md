@@ -19,6 +19,79 @@ The most severe issue (VULN-01) allows any signer to drain the program vault via
 
 ---
 
+## Architecture Review Summary
+
+### Program Design Overview
+
+The `vault` program is an Anchor-based Solana program (v0.31.1) that implements a simple vault with deposit and withdrawal functionality. The program manages 5 account types across 9 instruction handlers, with CPIs to the System Program and Token Program.
+
+### Account Architecture
+
+| Account Type | Purpose | Access Control |
+|--------------|---------|----------------|
+| VaultState | Stores vault authority, total deposits, bump | PDA — `["vault", authority]` |
+| UserDeposit | Tracks individual user deposits | PDA — `["user", user, vault]` |
+| Destination token account | Receives withdrawn tokens | User-supplied (no validation in VULN-04) |
+| Admin account | Authority for admin operations | Plain `AccountInfo` (missing signer check) |
+| Source token account | Debited on deposit | User-supplied with `Signer` |
+
+### Cross-Program Invocations
+
+| Target | Purpose | Trust Assumption |
+|--------|---------|------------------|
+| System Program | Account creation, lamport transfers | Trusted — immutable Solana core |
+| Token Program | SPL token transfers | Trusted — audited SPL standard |
+
+### Program Derived Addresses
+
+| PDA Seeds | Deriver | Access Pattern |
+|-----------|---------|----------------|
+| `["vault", authority]` | `initialize` | Authority only — stored in vault account |
+| `["user", user, vault]` | `user_deposit` | User or vault authority |
+
+### Data Flow
+
+```
+User Transaction
+      │
+      ▼
+┌─────────────────────────┐
+│  Instruction            │
+│  Deserialization        │ ── No 8-byte discriminator on VaultState (VULN-06)
+└────────────┬────────────┘
+             │
+             ▼
+┌─────────────────────────┐
+│  Account Validation     │ ── Admin missing Signer check (VULN-01)
+└────────────┬────────────┘ ── Destination not validated (VULN-04)
+             │
+             ▼
+┌─────────────────────────┐
+│  Business Logic         │ ── Integer overflow on deposit (VULN-05)
+└────────────┬────────────┘ ── Arbitrary CPI target (VULN-03)
+             │
+             ▼
+┌─────────────────────────┐
+│  State Write            │ ── Division truncation (VULN-07)
+└─────────────────────────┘
+```
+
+### Design Strengths
+
+- Uses Anchor's `Signer<'info>` type for user deposits — correctly enforces signer verification
+- Applies `#[account(mut)]` on vault account in `UserDeposit` — correctly marks mutation
+- Uses `/// CHECK:` documentation on user-supplied accounts for clarity
+
+### Design Concerns
+
+- **Plain `AccountInfo` on admin** (VULN-01): Using `AccountInfo` instead of `Signer` bypasses Anchor's signer enforcement
+- **Unchecked CPI target** (VULN-03): No program ID allowlist enables arbitrary program invocation
+- **Missing `#[account]` on VaultState** (VULN-06): Manual initialization bypasses Anchor's discriminator system
+- **Hardcoded bump** (VULN-02): Non-canonical bump undermines PDA collision resistance
+- **No event emission** (VULN-10): Silent operations prevent off-chain monitoring
+
+---
+
 ## Scope
 
 **Audited**:

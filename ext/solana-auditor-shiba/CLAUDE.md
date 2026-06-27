@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 # Solana Auditor Shiba Skill
 
-World-class Solana security auditor — 7-phase lifecycle, 26 path-scoped rules, 6 specialist agents, two-tier execution (SAST + runtime), compile-verified example fixture.
+World-class Solana security auditor — 7-phase lifecycle, 26 path-scoped rules, 7 specialist agents, two-tier execution (SAST + runtime), compile-verified example fixture.
 
 **Extends**: solana-dev-skill  
 **Agents**: orchestrator, auditor, formal-verifier, report-writer, cross-program-agent  

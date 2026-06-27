@@ -1,0 +1,201 @@
+{
+  "exploit_id": "reinit-attack",
+  "vulnerability_ref": "VULN-06",
+  "rule": "Rule 11",
+  "title": "Vault Authority Hijack via Reinitialization",
+  "severity": "HIGH",
+  "cvss": "7.5",
+
+  "summary": "Accounts initialized without Anchor's 8-byte discriminator can be reinitialized by anyone who controls the account key. An attacker who previously owned an account (or can create it with zero balance) can call initialize again and reset the vault authority to their key, gaining full control.",
+
+  "capital_requirements": {
+    "transaction_fees": {
+      "setup_tx": 5000,
+      "reinit_tx": 5000,
+      "drain_tx": 5000,
+      "total_sol": "~0.000015 SOL",
+      "usd_cost": "~$0.0015"
+    },
+    "rent_exemption": {
+      "amount_lamports": 890880,
+      "usd_cost": "~0.0009 SOL (~$0.09)",
+      "note": "Attacker only needs rent-exempt balance if creating new account; for pre-existing accounts this is 0"
+    },
+    "attack_scenario": {
+      "scenario_a": {
+        name: "Closed account reuse",
+        capital: "0 SOL (account previously existed, lamports returned to attacker on close)",
+        description: "Attacker previously had account, closed it (lamports returned), then reinitializes"
+      },
+      "scenario_b": {
+        name: "Fresh account creation",
+        capital: "~0.001 SOL (rent-exempt minimum)",
+        description: "Attacker creates account with minimum balance, then reinitializes"
+      }
+    }
+  },
+
+  "complexity": {
+    "skill_level": "MEDIUM",
+    "technical_steps": 5,
+    "mechanical_steps": 2,
+    "explanation": "Requires understanding of Anchor discriminator mechanism and Solana rent system. Mechanical steps are straightforward: call initialize with attacker key as authority."
+  },
+
+  "likelihood": {
+    "real_world_prevalence": "MEDIUM",
+    "detection_difficulty": "MEDIUM",
+    "ease_of_exploitation": "MODERATE",
+    "notes": [
+      "Requires access to the vault account's keypair (or account that was previously closed)",
+      "Common in programs with user-specific PDAs where users can close accounts",
+      "Harder to detect - legitimate-looking initialize call resets authority",
+      "No timing or market dependencies",
+      "Audit tools catch missing #[account] attribute"
+    ]
+  },
+
+  "attack_path": {
+    "preconditions": [
+      "Attacker knows program ID",
+      "Attacker controls the vault account keypair OR vault account was previously closed and refunded",
+      "Vault was initialized without Anchor's #[account] attribute (missing discriminator)",
+      "No reinit guard exists (no manual discriminator check)"
+    ],
+
+    "scenario_a_account_reuse": {
+      "description": "Attacker previously had a vault account, closed it (lamports returned), and now reinitializes it",
+      "steps": [
+        {
+          "step": 1,
+          "action": "Create vault account with attacker's authority",
+          "instruction": "initialize",
+          "result": "Vault created with attacker authority, attacker knows vault PDA"
+        },
+        {
+          "step": 2,
+          "action": "Close vault account",
+          "instruction": "close_vault",
+          "result": "Lamports returned to attacker, vault account data zeroed, account now empty but address exists"
+        },
+        {
+          "step": 3,
+          "action": "Reinitialize vault with new (victim's) authority",
+          "instruction": "initialize",
+          "result": "No discriminator check - vault reinitialized with victim's authority"
+        },
+        {
+          "step": 4,
+          "action": "Set attacker as new authority",
+          "instruction": "set_authority (if exists)",
+          "result": "Attacker now has full control"
+        },
+        {
+          "step": 5,
+          "action": "Drain vault",
+          "instruction": "admin_withdraw",
+          "result": "Full vault balance stolen"
+        }
+      ]
+    },
+
+    "scenario_b_fresh_account": {
+      "description": "Attacker creates a new account at a known address and initializes it",
+      "steps": [
+        {
+          "step": 1,
+          "action": "Create account at vault PDA address",
+          "instruction": "SystemProgram::createAccount",
+          "accounts": ["payer", "vault_pda", "system_program"],
+          "params": {
+            "lamports": "rent.minimum_balance(SPACE)",
+            "space": "8 + VaultState::LEN",
+            "owner": "program_id"
+          },
+          "note": "Attacker must know the PDA derivation seeds to generate the address"
+        },
+        {
+          "step": 2,
+          "action": "Initialize vault with attacker's authority",
+          "instruction": "initialize",
+          "params": {
+            "admin": "attacker_pubkey"
+          },
+          "note": "No discriminator check - initialization succeeds"
+        },
+        {
+          "step": 3,
+          "action": "Wait for legitimate users to deposit",
+          "result": "Deposits go to attacker's vault"
+        },
+        {
+          "step": 4,
+          "action": "Drain vault",
+          "instruction": "admin_withdraw",
+          "result": "Stolen funds"
+        }
+      ]
+    }
+  },
+
+  "mechanics": {
+    "root_cause": "Missing #[account] attribute on VaultState struct means Anchor doesn't write 8-byte discriminator on init or verify it on load",
+    "vulnerable_code": "#[derive(Clone)]\npub struct VaultState { ... }  // No #[account]",
+    "safe_code": "#[account]\npub struct VaultState { ... }  // Anchor adds discriminator",
+    "anchor_behavior": "#[account] generates: (1) 8-byte discriminator on init, (2) discriminator verification on load, (3) reinit detection",
+    "discriminator_mechanism": "Anchor uses first 8 bytes of account data as discriminator, computed as BorshSerialize(type_name). When no discriminator exists (all zeros), any data is accepted as valid."
+  },
+
+  "discriminator_anatomy": {
+    "valid_structure": [
+      "bytes_0_7: discriminator (e.g., SHA256('struct:VaultState')[:8])",
+      "bytes_8+: account data (authority, total, etc.)"
+    ],
+    "vulnerable_structure": [
+      "bytes_0_7: ALL ZEROS (no discriminator written)",
+      "bytes_8+: account data (attacker-controlled on reinit)"
+    ]
+  },
+
+  "detection": {
+    "on_chain_signals": [
+      "initialize called on account that already has data",
+      "initialize called with different authority than original",
+      "Vault authority change without authorized instruction"
+    ],
+    "off_chain_signals": [
+      "Unexpected initialize events for existing accounts",
+      "Authority changes in program event logs"
+    ],
+    "code_analysis": [
+      "grep -n '#\\[account\\]' programs/*/src/lib.rs",
+      "Verify all account types have #[account] or manual discriminator check",
+      "Check for init constraint on Account<'info, T> where T has #[account]"
+    ]
+  },
+
+  "remediation": {
+    "immediate": "Add #[account] attribute to VaultState struct",
+    "alternative": "Add manual discriminator check before initialization",
+    "defense_in_depth": "Combine with authority verification and event emission",
+    "migration_note": "Existing accounts need one-time migration to add discriminator"
+  },
+
+  "related_attacks": {
+    "pattern": "Reinitialization attacks are common in programs that use init_if_needed without discriminator checks",
+    "real_exploits": [
+      {
+        "name": "多个 DeFi 协议",
+        "pattern": "init_if_needed without discriminator",
+        "impact": "Account takeover via reinit"
+      }
+    ]
+  },
+
+  "poc_verification": {
+    "test_program": "programs/vault/src/lib.rs",
+    "test_instructions": ["initialize (twice)", "set_authority"],
+    "expected_behavior": "Second initialize should FAIL with AlreadyInitialized after fix",
+    "test_scenario": "Call initialize twice with different authorities - second should fail"
+  }
+}

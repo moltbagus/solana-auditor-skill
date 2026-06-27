@@ -1,0 +1,73 @@
+{
+  "$schema": "https://solana-auditor-skill/schemas/exploit-metadata-v1.json",
+  "poc_id": "VULN-09",
+  "title": "CPI return value discarded (no ? propagation)",
+  "severity": "MEDIUM",
+  "cvss": 6.3,
+  "cvss_vector": "CVSS:3.1/AV:N/AC:L/PR:L/UI:N/S:U/C:L/I:L/A:L",
+  "cwe": [
+    "CWE-754"
+  ],
+  "rule_ids": [
+    "Rule 4"
+  ],
+  "exploit_class": "privilege-escalation",
+  "attack_surface": {
+    "entry_point": "unchecked_cpi",
+    "instruction_index": 117,
+    "accounts_required": [
+      "program"
+    ],
+    "cpi_calls": 0
+  },
+  "attacker_model": {
+    "position": "none (public instruction)",
+    "capital": "none",
+    "privilege": "none"
+  },
+  "preconditions": [
+    "Attacker can submit transactions to the program"
+  ],
+  "steps": [
+    {
+      "step": 1,
+      "action": "Invoke unchecked_cpi() instruction",
+      "tx_required": true
+    },
+    {
+      "step": 2,
+      "action": "Supply malicious/missing account parameters as defined by the vulnerability",
+      "tx_required": true
+    },
+    {
+      "step": 3,
+      "action": "Transaction confirms — vulnerability exploited",
+      "tx_required": true
+    }
+  ],
+  "post_conditions": {
+    "funds_transferred": "attacker-controlled account",
+    "state_corrupted": true,
+    "authority_modified": "may be overwritten depending on vulnerability"
+  },
+  "impact": {
+    "funds_at_risk_sol": "limited (individual accounts)",
+    "users_affected": "attacker only",
+    "protocol_insolvency": false,
+    "recovery_path": "standard upgrade path"
+  },
+  "remediation": {
+    "fix_tier": "A",
+    "confidence": 0.9,
+    "cvss_after": 5.0,
+    "cvss_reduction": 1.3,
+    "files_to_modify": [
+      "programs/vault/src/lib.rs"
+    ],
+    "verification_test": "tests/poc-VULN-09-fixed.rs",
+    "fix_type": "validation_check"
+  },
+  "poc_status": "pending",
+  "poc_author": "solana-auditor-skill",
+  "generated_at": "2026-06-27T05:40:01.571611+00:00"
+}

@@ -1,7 +1,7 @@
 # Kanban — Solana Auditor Skill
 
 > **Project Kanban Board**
-> _Superteam Brasil Solana Skills Contest — v1.8.1_
+> _Superteam Brasil Solana Skills Contest — v1.12.0_
 > Last updated: 2026-06-27
 
 ---
@@ -52,6 +52,17 @@ Backlog → To Do → In Progress → Review → Done
 | Corporate-grade Python (type hints, constants, encoding) | Code Quality | v1.4.0 |
 | Python 3.9 compatibility | Code Quality | v1.4.0 |
 | Version staleness fixes (20 issues) — install.sh, README.md, CLAUDE.md, PRD.md, spec.md, CHANGELOG.md, demo.sh, todo.md, audit.rules, YAML frontmatter, fixture inconsistencies | Debug | v1.7.1 |
+
+### 🟢 Done v1.12.0
+
+| Task | Phase | Version |
+|------|-------|---------|
+| Phase 1C Economic Security Module (tokenomics, MEV, fee flows, governance, liquidity) | Security | v1.12.0 |
+| economic-security-analyst agent (9th specialist) | Security | v1.12.0 |
+| Formal Verification CI workflow (`.github/workflows/formal-verification.yml`) | CI | v1.12.0 |
+| QED integration script (`scripts/qed-integration.sh`, 3-tier fallback) | CI | v1.12.0 |
+| CI integration sections in `skill/03-formal-verification.md` + `agents/formal-verifier.md` | CI | v1.12.0 |
+| Agent count fix: 8→9 specialists (economic-security-analyst) | Debug | v1.12.0 |
 
 ---
 
@@ -107,7 +118,38 @@ audit-report/submissions/MATH-003-3-immunefi-submission.md  (MEDIUM, CVSS 6.5 �
 
 ---
 
-## Sprint Plan (Contest Edition)
+### Sprint 10 — Contest Win Plan (Done: 2026-06-27)
+- [x] README.md: Fix 47→159 integrity count, add Kamino Finance story to Contest section
+- [x] demo.sh: Add step 3B (QED 2A live), step 4B (Phase 1C economic analysis live)
+- [x] README.md: Rename Rules 46-50 to "Agent Safety (Audit Governance)", clarify 45+5 count
+- [x] VERIFICATION.md: Update checklist to 159 checks, add Phase 1C and QED FV steps
+- [x] PRD.md: Add v1.13.0 post-contest backlog section
+
+### Sprint 9 — Architecture Review + Report Enhancement (Done: 2026-06-27)
+- [x] Phase 7 architecture review module — `skill/07-architecture-review.md`
+- [x] Architecture-reviewer agent — `agents/architecture-reviewer.md`, 8-step flow
+- [x] Report template enhanced — Executive Summary, Methodology Trace, Finding Distribution sections
+- [x] Integrity checks 38–40 — Phase 7 presence, architecture-reviewer agent, report template sections
+- [x] PRD, spec, kanban, learnings updated to v1.11.0
+
+### Sprint 8 — Remediation Engine Full Upgrade (Done: 2026-06-27)
+- [x] Phase 6 Root Cause Analysis Layer — structured `root_cause` field (5 categories)
+- [x] Fix difficulty rating per finding — `trivial`, `moderate`, `complex`
+- [x] Regression test generation — `audit-fix-suggestions.py --regression`
+- [x] CVSS-adjusted priority ordering — CRITICAL > HIGH > MEDIUM > LOW > INFO
+- [x] Integrity checks 34-37 — root_cause, difficulty, regression_test_path, priority ordering
+- [x] Phase 6 procedure updated — `06-remediation.md` with new fields
+- [x] PRD, spec, kanban, learnings updated to v1.10.0
+
+### Sprint 7 — Threat Modeling + Exploit Simulation (Done: 2026-06-27)
+- [x] Phase 2A: Threat Modeling with STRIDE methodology
+- [x] Threat modeler agent (`agents/threat-modeler.md`)
+- [x] Exploit simulation framework with structured PoC metadata
+- [x] `exploit_metadata` schema in `06-remediation.md`
+- [x] 3 PoC metadata JSON files (vault, token-extensions, token-2022-real)
+- [x] `/audit-poc --metadata` and `--full` flags
+- [x] `audit-fix-suggestions.py --explain` and `--metadata` flags
+- [x] PRD, spec, kanban, learnings updated to v1.9.0
 
 ### Sprint 6 — Dashboard + Integration (Done: 2026-06-27)
 - [x] HTML dashboard: `scripts/dashboard.py` + `templates/dashboard.html`
@@ -166,13 +208,15 @@ audit-report/submissions/MATH-003-3-immunefi-submission.md  (MEDIUM, CVSS 6.5 �
 
 ### Top 5 Priority Items (from 2026-06-27 Gap Analysis)
 
-| # | Item | Label | Effort | Impact |
-|---|------|-------|--------|--------|
-| 1 | Remediation Engine — Root Cause Analysis Layer | CONTEST-CRITICAL | MEDIUM | HIGH |
-| 2 | Exploit Simulation Framework — Structured PoC Metadata | CONTEST-CRITICAL | MEDIUM | HIGH |
-| 3 | Threat Modeling Module (STRIDE) | HIGH | MEDIUM | HIGH |
-| 4 | Architecture Review Module | HIGH | MEDIUM | HIGH |
-| 5 | Report Generator Enhancement (3 missing sections) | HIGH | LOW | HIGH |
+| # | Item | Label | Effort | Impact | Status |
+|---|------|-------|--------|--------|--------|
+| 1 | Remediation Engine — Root Cause Analysis Layer | CONTEST-CRITICAL | MEDIUM | HIGH | Done v1.10.0 |
+| 2 | Exploit Simulation Framework — Structured PoC Metadata | CONTEST-CRITICAL | MEDIUM | HIGH | Done v1.9.0 |
+| 3 | Threat Modeling Module (STRIDE) | HIGH | MEDIUM | HIGH | Done v1.9.0 |
+| 4 | Architecture Review Module | HIGH | MEDIUM | HIGH | Done v1.11.0 |
+| 5 | Report Generator Enhancement (3 missing sections) | HIGH | LOW | HIGH | Done v1.11.0 |
+| 6 | Economic Security Module (Phase 1C) | HIGH | MEDIUM | HIGH | Done v1.12.0 |
+| 7 | Formal Verification CI (QED 2A integration) | HIGH | MEDIUM | HIGH | Done v1.12.0 |
 
 Full details: `docs/superpowers/specs/2026-06-27-gap-analysis.md` and `docs/superpowers/specs/2026-06-27-priority-backlog.md`
 
@@ -180,18 +224,34 @@ Full details: `docs/superpowers/specs/2026-06-27-gap-analysis.md` and `docs/supe
 
 ## Velocity Tracking (FINAL)
 
-| Metric | v1.0 | v1.3 | v1.4 FINAL | v1.8.1 | Target |
-|--------|------|------|------------|--------|--------|
-| Integrity checks | 18 | 49 | **62** | **154** | 62+ |
-| VULN tags | 10 | 16 | **17** | 17 | 17 |
-| Property-based tests | 0 | 19 | **19** | **22** | 15+ |
-| Fixtures | 1 | 2 | **3** | 3 | 3 |
-| Rules | 12 | 12 | **17** | **50** | 15+ |
-| Commands | 5 | 5 | **6** | **9** | 6 |
-| Languages | 1 | 2 | **2** | 2 | 2 |
-| PoC walkthroughs | 0 | 0 | **3** | 3 | 3 |
-| Formal verification | 0 | 0 | **5 patterns** | **5 patterns** | 5+ |
-| SARIF export | No | No | **Yes** | **Yes** | Yes |
-| Lock file / resume | No | No | **Yes** | **Yes** | Yes |
-| HTML dashboard | No | No | No | **Yes** | Yes |
-| Commands frontmatter | No | No | No | **Yes** | Yes |
+| Metric | v1.0 | v1.3 | v1.4 FINAL | v1.8.1 | v1.9.0 | v1.10.0 | v1.11.0 | v1.12.0 | Target |
+|--------|------|------|------------|--------|--------|---------|--------|--------|--------|
+| Integrity checks | 18 | 49 | **62** | **154** | **154** | **158** | **161** | **159** | 62+ |
+| VULN tags | 10 | 16 | **17** | 17 | 17 | 17 | 17 | 17 | 17 |
+| Property-based tests | 0 | 19 | **19** | **22** | **22** | 22 | 22 | 22 | 15+ |
+| Fixtures | 1 | 2 | **3** | 3 | 3 | 3 | 3 | 3 | 3 |
+| Rules | 12 | 12 | **17** | **50** | **50** | 50 | 50 | 50 | 15+ |
+| Commands | 5 | 5 | **6** | **9** | **9** | 9 | 9 | 9 | 6 |
+| Phases | 6 | 6 | **6** | **6** | **7** | **7** | **8** | **9** | 6+ |
+| Agents | 4 | 4 | **4** | **4** | **7** | **7** | **8** | **9** | 6+ |
+| Languages | 1 | 2 | **2** | 2 | 2 | 2 | 2 | 2 | 2 |
+| PoC walkthroughs | 0 | 0 | **3** | 3 | 3 | 3 | 3 | 3 | 3 |
+| Formal verification | 0 | 0 | **5 patterns** | **5 patterns** | **5 patterns** | **5 patterns** | **5 patterns** | **QED CI** | 5+ |
+| Economic security | 0 | 0 | 0 | 0 | 0 | 0 | 0 | **Phase 1C** | — |
+| SARIF export | No | No | **Yes** | **Yes** | **Yes** | **Yes** | **Yes** | Yes |
+| Lock file / resume | No | No | **Yes** | **Yes** | **Yes** | **Yes** | **Yes** | Yes |
+| HTML dashboard | No | No | No | **Yes** | **Yes** | **Yes** | **Yes** | Yes |
+| Commands frontmatter | No | No | No | **Yes** | **Yes** | **Yes** | **Yes** | Yes |
+| Threat Modeling (STRIDE) | No | No | No | No | **Yes** | **Yes** | **Yes** | Yes |
+| Exploit Sim Framework | No | No | No | No | **Yes** | **Yes** | **Yes** | Yes |
+| Threat modeler agent | No | No | No | No | **Yes** | **Yes** | **Yes** | 6+ |
+| PoC metadata files | No | No | No | No | **3** | **3** | **3** | 3 |
+| Root cause analysis | No | No | No | No | No | **Yes** | **Yes** | Yes |
+| Regression test gen | No | No | No | No | No | **Yes** | **Yes** | Yes |
+| Fix difficulty rating | No | No | No | No | No | **Yes** | **Yes** | Yes |
+| Remediation priority order | No | No | No | No | No | **Yes** | **Yes** | Yes |
+| Architecture Review (Phase 7) | No | No | No | No | No | No | **Yes** | Yes |
+| Architecture-reviewer agent | No | No | No | No | No | No | **Yes** | Yes |
+| Report: Executive Summary | No | No | No | No | No | No | **Yes** | Yes |
+| Report: Methodology Trace | No | No | No | No | No | No | **Yes** | Yes |
+| Report: Finding Distribution | No | No | No | No | No | No | **Yes** | Yes |

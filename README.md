@@ -1,6 +1,6 @@
 # Solana Auditor Shiba Skill
 
-**World-class Solana security auditor for Claude Code** — 7-phase audit lifecycle (Phase 0 Safety Guard + Phases 1–6), 45 Solana security rules + 5 agent-safety rules, 9 slash commands, 6 specialist agents, compile-verified example fixture, 47 integrity check categories (153 assertions), 22 fuzz tests, two-tier execution (SAST + runtime), pre-commit hook, PR auditing, audit history, and inline fix suggestions.
+**World-class Solana security auditor for Claude Code** — 7-phase audit lifecycle (Phase 0 Safety Guard + Phases 1–6), 45 Solana security rules + 5 agent safety rules (50 total), 9 slash commands, 9 specialist agents, compile-verified example fixture, 159 integrity checks passing, 22 fuzz tests, two-tier execution (SAST + runtime), pre-commit hook, PR auditing, audit history, and inline fix suggestions.
 
 [![CI](https://github.com/moltbagus/solana-auditor-skill/actions/workflows/test.yml/badge.svg)](https://github.com/moltbagus/solana-auditor-skill/actions/workflows/test.yml)
 [![Anchor 0.31.1](https://img.shields.io/badge/anchor-0.31.1-blueviolet)](https://www.anchor-lang.com/)
@@ -8,8 +8,8 @@
 [![Solana](https://img.shields.io/badge/solana-2.x-9945FF)](https://solana.com/)
 [![Brazil Contest](https://img.shields.io/badge/Superteam-Brasil-009739)](https://superteam.com.br/)
 [![Property-Based Tests](https://img.shields.io/badge/fuzz-22%20tests-8A2BE2)](tests/fuzz/)
-[![Rules](https://img.shields.io/badge/rules-50-FF4500)](rules/audit.rules)
-[![Agents](https://img.shields.io/badge/agents-6-blue)](agents/)
+[![45+5=50](https://img.shields.io/badge/rules-45%2B5%3D50-FF4500)](rules/audit.rules)
+[![Agents](https://img.shields.io/badge/agents-9-blue)](agents/)
 [![SDD](https://img.shields.io/badge/spec--driven%20development-PRD%2FSpec%2FKanban-FF6B35)](PRD.md)
 
 ## ⚡ Judges Quick Start (5 Minutes)
@@ -131,6 +131,9 @@ The `rules/audit.rules` file auto-activates whenever Claude touches Anchor progr
 |-------|------|
 | `agents/orchestrator.md` | Entry point — routes user requests to specialist agents |
 | `agents/auditor.md` | Primary auditor — runs full lifecycle |
+| `agents/architecture-reviewer.md` | On-chain config and authority topology review |
+| `agents/threat-modeler.md` | STRIDE threat identification and trust boundaries |
+| `agents/economic-security-analyst.md` | Tokenomics, MEV, fee flows, economic invariant violations |
 | `agents/formal-verifier.md` | Invariant proofs via QED 2A |
 | `agents/report-writer.md` | Structured report generation |
 | `agents/cross-program-agent.md` | Cross-program CPI chain analysis |
@@ -207,7 +210,7 @@ Each command is a self-contained workflow that runs even without the phase skill
 | 43 — Account compression | `programs/**/*.rs` | Missing concurrent merkle tree validation |
 | 44 — Token metadata | `programs/**/*.rs` | Unchecked metadata authority |
 | 45 — Confidential transfer | `programs/**/*.rs` | Missing proof verification |
-| **Rules 46-50 — AI Agent Safety** |
+| **Rules 46-50 — Agent Safety (Audit Governance)** (These rules govern the AI auditor's own behavior — consent gates, scope boundaries, audit trails. Distinct from Solana vulnerability detection rules 1-45.) |
 | 46 — Pre-flight checks | `programs/**/*.rs` | Agent pre-audit safety guard |
 | 47 — Scope boundary | `programs/**/*.rs` | Agent stays within declared scope |
 | 48 — Consent gate | `programs/**/*.rs` | Exploit steps gated on consent |
@@ -272,7 +275,16 @@ This skill is submitted to the **Superteam Brasil Solana Skills Contest**. For j
 bash demo.sh
 ```
 
-The demo script runs structure verification, 47 integrity checks, and 22 property-based
+### Live Audit Proof of Capability
+
+> This skill was used to audit **Kamino Finance's klend program** (2026-06-25/26).
+> Verifying source code revealed that 3 of 4 initial automated submissions had factual
+> errors — demonstrating that blind scanning without source verification produces false positives.
+> The skill found KAM-001 (Token2022 transfer fee structurally similar to Mango Markets),
+> and correctly recalled KAM-002/003/004 after source verification showed they were
+> already fixed or not findings.
+
+The demo script runs structure verification, 159 integrity checks, and 22 property-based
 fuzz tests in under 30 seconds.
 
 **Contest features**:

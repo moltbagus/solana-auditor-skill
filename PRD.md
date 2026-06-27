@@ -1,7 +1,7 @@
 # PRD — Solana Auditor Skill
 
 > **Product Requirements Document**
-> _Superteam Brasil Solana Skills Contest — v1.8.1_
+> _Superteam Brasil Solana Skills Contest — v1.12.0_
 > Last updated: 2026-06-27
 
 ---
@@ -26,7 +26,7 @@ Transform Claude Code into the **gold-standard Solana security auditor** — a r
 - [x] 6-phase audit lifecycle (Recon → Remediation)
 - [x] 9 slash commands (`/audit`, `/audit-quick`, `/audit-resume`, `/audit-report`, `/audit-poc`, `/audit-findings`, `/audit-resume`, and more)
 - [x] 50 path-scoped rules (auto-activate on file patterns)
-- [x] 6 specialist agents (orchestrator, auditor, formal-verifier, report-writer, cross-program, safety-guard)
+- [x] 9 specialist agents (orchestrator, auditor, architecture-reviewer, economic-security-analyst, threat-modeler, formal-verifier, report-writer, cross-program-agent, safety-guard)
 - [x] Dual example fixtures: vault (10 bugs) + token-extensions (6 bugs)
 - [x] CVSS 3.1 scoring with math verification
 - [x] 62 integrity checks (all passing)
@@ -102,10 +102,59 @@ Transform Claude Code into the **gold-standard Solana security auditor** — a r
 - [ ] Multi-program audit aggregation
 - [ ] Native qed-solana CI integration (dependency of QED 2A)
 - [ ] Economic Security module (standalone DeFi attack analysis)
-- [ ] Threat Modeling module (STRIDE/PASTA integration)
 - [ ] Architecture Review module (standalone component analysis)
-- [ ] Exploit Simulation Framework (structured PoC metadata per finding)
-- [ ] Remediation Engine full upgrade (root cause + regression tests)
+
+### v1.11.0 — Architecture Review + Report Enhancement (2026-06-27)
+
+Following Loop 3 feedback, added two post-contest backlog items as a single sprint.
+
+- [x] **Architecture Review Module** (`skill/07-architecture-review.md` + `agents/architecture-reviewer.md`) — Standalone component analysis phase using attack surface decomposition: entry point enumeration, trust boundary mapping, component dependency graph, and data flow analysis. Maps findings to architectural layers (instruction dispatch, account validation, state management, CPI interface, token operations).
+- [x] **Report Generator Enhancement** — Three missing sections added to `AUDIT_REPORT.md` template: (1) **Executive Summary** with severity-at-a-glance table and risk posture statement, (2) **Methodology Trace** cross-referencing each phase to its output artifact, (3) **Finding Distribution** with severity breakdown table and CVSS vector summary per finding.
+- [x] **Architecture-reviewer agent** — 8-step analysis flow: entry point enumeration, trust boundary mapping, component dependency graph, data flow analysis, architectural hotspot identification, architectural weakness assessment, mitigation recommendations, architecture findings export.
+- [x] **Phase 7 procedure** (`skill/07-architecture-review.md`) — Phase 7 standalone procedure document covering all 8 analysis steps.
+- [x] **Report template** (`templates/report-template.md`) — Updated with Executive Summary, Methodology Trace, Finding Distribution sections.
+- [x] **Integrity checks 38–40** — Phase 7 presence check, architecture-reviewer agent check, report template section checks.
+- [x] **SDD docs updated** — PRD.md, spec.md, kanban.md, learnings.md updated to v1.11.0.
+
+### v1.12.0 — Economic Security Module + Formal Verification CI (2026-06-27)
+
+- [x] **Phase 1C: Economic Security Module** (`skill/01C-economic-security.md`) — Standalone DeFi economic attack analysis covering 6 categories: tokenomics, fee flow mapping, economic invariant violations, MEV exposure, governance security, and liquidity analysis. Grounded in real Solana mechanics (Jito, BonkBot, Light MEV, Raydium, Solend, Crema Finance).
+- [x] **economic-security-analyst agent** (`agents/economic-security-analyst.md`) — 9th specialist agent with YAML frontmatter, 8-step analysis flow, and handoff protocol. Feeds Phase 5 reporting via the Economic Security Analysis section.
+- [x] **Formal Verification CI** (`.github/workflows/formal-verification.yml`) — GitHub Actions workflow triggered on push/PR to `programs/`, `scripts/`, or itself. Three-tier fallback chain: `qed-solana` → `anchor test` → graceful skip. Graceful skip exits 0 to never fail CI on missing toolchain.
+- [x] **QED integration script** (`scripts/qed-integration.sh`) — Bash CI wrapper with exit codes 0 (success), 1 (tool error), 2 (skip). Generates `formal_verification_report.json` with `programs_verified`, `invariants[]`, `findings[]`, `skipped[]`, `errors[]` fields. Artifact uploaded on every run.
+- [x] **CI integration in FV skill/agent** — `skill/03-formal-verification.md` and `agents/formal-verifier.md` both updated with CI integration sections documenting the 3-tier fallback chain, exit codes, report schema, and local run commands.
+- [x] **Agent count fix 8→9** — All docs, README badge, integrity script regex updated for `economic-security-analyst`.
+- [x] **Demo live execution** — `demo.sh` upgraded from pre-recorded walkthrough to live execution: step 3B runs QED integration script (proves CI integration), step 4B runs Phase 1C economic security analysis against fixture (live JSON output). Eliminates "pre-recorded" critique from judges.
+- [x] **Kamino Finance story in README** — Contest Submission section now surfaces the real klend audit proof: "3 of 4 initial submissions had factual errors after source verification" — changes framing from tool to proven capability.
+- [x] **VERIFICATION.md updated** — Quick checklist now reflects 159 checks, Phase 1C live step, QED FV step.
+
+### v1.13.0 — Contest Win Plan (2026-06-27, post-submission)
+
+Reserved for post-contest enhancements identified during win plan analysis:
+- [ ] **Live demo component** — Generate one finding live by running `/audit-quick` against a minimal injected-bug fixture
+- [ ] **semgrep-solana.yaml reference** — Surface native Solana coverage tool in README rule table
+- [ ] **Formal verification CI with anchor test fallback** — Upgrade graceful skip to anchor test proof-of-concept when QED unavailable
+
+### v1.10.0 — Remediation Engine Full Upgrade (2026-06-27)
+
+Following the Loop 2 contest judges feedback, the Remediation Engine received a complete overhaul with root cause analysis and regression test support.
+
+- [x] **Phase 6 Root Cause Analysis Layer** — Every fix suggestion now includes a structured `root_cause` field (missing validation, incorrect state transition, unchecked external call, race condition, unchecked arithmetic) with the specific line/function and a plain-language explanation of *why* this code path is dangerous
+- [x] **Regression test generation** — `audit-fix-suggestions.py --regression` emits a basic Anchor test stub per finding (if Anchor.toml detected) or a plain Rust test stub (standalone). Each stub includes the exploit precondition, the vulnerable code path commented inline, and an `#[test]` that verifies the fix
+- [x] **Fix difficulty rating** — Each finding now carries a `difficulty` field: `trivial` (add one check), `moderate` (restructure logic), `complex` (state machine refactor). Guides operator effort estimation
+- [x] **CVSS-adjusted priority ordering** — Remediation suggestions are now sorted by CVSS descending within each severity tier, and severity tiers are sorted CRITICAL > HIGH > MEDIUM > LOW > INFO
+- [x] **Integrity checks updated** — Check 17 and Check 20 updated to validate the new fields (`root_cause`, `difficulty`, `regression_test_path`) across all three fixture findings.json files
+- [x] **Phase 6 procedure (`06-remediation.md`)** — Updated to document the new remediation metadata fields, the regression test generation flow, and the priority ordering logic
+
+### v1.9.0 — Threat Modeling + Exploit Simulation Framework (2026-06-27)
+- [x] **Phase 2A: Threat Modeling** — STRIDE methodology with 6 threat categories (Spoofing, Tampering, Repudiation, Info Disclosure, DoS, Privilege Escalation)
+- [x] **Threat modeler agent** (`agents/threat-modeler.md`) — 7-step threat identification flow with trust boundary mapping
+- [x] **Exploit simulation framework** — Structured PoC metadata per finding with preconditions, steps, expected outcome, actual outcome, exploitability score, and remediation verification
+- [x] **3 PoC metadata JSON files** — `examples/vault/exploit-metadata.json`, `examples/token-extensions/exploit-metadata.json`, `examples/token-2022-real/exploit-metadata.json`
+- [x] **exploit_metadata schema** — Canonical schema for structured exploit documentation
+- [x] **`/audit-poc` enhancements** — `--metadata` flag for structured output, `--full` flag for complete exploit report, `--explain` for step-by-step analysis
+- [x] **`06-remediation.md` updates** — exploit_metadata schema documentation, remediation blocks for each exploit metadata field
+- [x] **`audit-fix-suggestions.py` updates** — `--explain` flag for root cause + fix rationale, `--metadata` flag for structured output
 
 ## 4. Success Metrics
 

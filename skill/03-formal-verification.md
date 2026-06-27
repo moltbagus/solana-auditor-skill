@@ -217,5 +217,44 @@ anchor test
 
 This exercises the QED-equivalent invariant checks via `anchor test` against the fixture.
 
+## CI Integration
+
+Formal verification runs automatically in CI via `.github/workflows/formal-verification.yml`. The workflow:
+
+1. **Detects toolchain** — checks for `anchor` CLI and `qed-solana` binary
+2. **Builds programs** — `anchor build` for programs with Cargo.toml
+3. **Runs QED 2A** — via `scripts/qed-integration.sh` (timeout 60s per invariant)
+4. **Falls back to anchor test** — if QED unavailable but anchor is present
+5. **Graceful skip** — if neither tool available, exits 0 with notice
+
+### CI Exit Codes
+
+| Code | Meaning |
+|------|---------|
+| `0` | Success (all invariants proved or findings generated) |
+| `1` | Tool error |
+| `2` | Skip (no toolchain) |
+
+### CI Report
+
+Results are written to `formal_verification_report.json` and uploaded as a GitHub Actions artifact. The report contains:
+- `programs_verified`: number of programs checked
+- `invariants[]`: per-program status (proved / violated / timeout / skipped)
+- `findings[]`: counterexamples mapped to finding format
+- `skipped[]`: programs not verifiable (no .so, timeout, etc.)
+
+### Running locally
+
+```bash
+# Full QED verification
+bash scripts/qed-integration.sh
+
+# Fallback anchor tests only
+anchor test
+
+# Check script validity
+bash -n scripts/qed-integration.sh
+```
+
 ## Next Phase
 After formal verification → load `skill/04-findings-triage.md` to classify findings.

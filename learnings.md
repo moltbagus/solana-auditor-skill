@@ -1,7 +1,7 @@
 # Learnings — Solana Auditor Skill
 
 > **Decision Log & Lessons Learned**
-> _Superteam Brasil Solana Skills Contest — v1.8.1_
+> _Superteam Brasil Solana Skills Contest — v1.12.0_
 > Last updated: 2026-06-27
 
 ---
@@ -134,6 +134,43 @@
 11. **Audit-report script: nested f-strings are a SyntaxError** — `f(f"...")` is invalid Python. Fix: `"string1" + (f"..." if cond else "") + "string2"`.
 12. **`demo.sh` step count must match reality** — When adding a step, update ALL `[X/6]` references and the `DEMO_VERSION` echo. SWE agent correctly updated to `[1/7]` through `[7/7]`.
 
+### 2026-06-27 — v1.9.0 Sprint: Threat Modeling + Exploit Simulation
+
+13. **STRIDE maps naturally to Solana** — Each STRIDE category maps to concrete Solana patterns: Spoofing → fake program IDs in CPI; Tampering → account data mutations; Repudiation → missing event emission; Info Disclosure → unencrypted account data; DoS → resource exhaustion; Privilege Escalation → missing authority checks. The mapping makes threat modeling actionable, not academic.
+14. **Exploit metadata schema as canonical structure** — Structuring PoC data as JSON (preconditions, attack_steps with expected/actual, exploitability_score, remediation_verified) turns informal exploit notes into machine-readable audit artifacts. Enables automated remediation tracking and finding prioritization.
+15. **Phase 2A slots between SAST (2) and Runtime (2B)** — The three-tier execution model (Tier 1: SAST-only, Tier 2: + Runtime, Tier 3: + Exploit Sim) gives auditors a progressive commitment path. Start Tier 1, escalate as needed. Threat modeling (2A) is toolchain-free so it belongs in Tier 1.
+16. **7 agents from 6** — Added `threat-modeler` as the 7th specialist agent. The handoff contract pattern (input_artifacts, expected_outputs, context) scales cleanly. Each agent owns one phase or phase group.
+17. **Option A vs Option B for exploit simulation** — Option A (metadata schema, `/audit-poc --metadata` flag, structured output) was chosen over Option B (interactive REPL). Option A is CI-friendly, idempotent, and integrates with the existing findings pipeline without requiring interactive sessions.
+
+### 2026-06-27 — Loop 2 Contest: Remediation Engine Sprint
+
+18. **Subagents can write to unintended directories** — When a subagent is spawned from a worktree whose CWD is not the skill repo root, its Write/Edit tools resolve relative paths from the wrong directory. Always pass absolute paths to subagent file operations, or spawn the agent from the correct CWD. Verify with `git status` after every subagent completes.
+19. **Stalled subagents look like success** — An agent that encounters a `ToolUseBlocked` rejection may report completion without actually writing files. If a subagent claims to have updated a file, run `git status` in the target repo to confirm. Do not assume the file was written.
+20. **SDD docs must be updated in the correct repo** — When working across multiple worktrees or the source repo vs kit repo, Edit tool path resolution uses the current session CWD, not the git working tree of the file being edited. Double-check the absolute path before editing; confirm with a Read if unsure.
+
+
+### 2026-06-27 — Loop 4: Economic Security Module + Formal Verification CI
+
+27. **Economic security is a standalone analysis dimension** — Separate from architecture review (structure) and threat modeling (attack paths). Tokenomics, fee flows, MEV exposure, governance security, and liquidity analysis each have their own detection patterns. Phase 1C runs after Phase 1B (architecture) and feeds Phase 5 reporting.
+28. **QED 2A CI is a three-tier fallback chain** — (1) `qed-solana` if installed, (2) `anchor test` as proof-of-concept fallback, (3) graceful skip with `exit 2`. CI must NEVER fail due to missing toolchain. The `qed-integration.sh` script handles all three cases with proper exit codes.
+29. **Formal verification report is CI artifact** — `formal_verification_report.json` with `programs_verified`, `invariants[]`, `findings[]`, `skipped[]`, `errors[]` fields. Uploaded as GitHub Actions artifact; parsable by both humans and scripts.
+30. **Loop 4 workflow stalled after Phase 1** — The background workflow ran 6 agents (3 econ + 3 fv in parallel) but stalled after Phase 2. The economic security files were created but FV files were not. Root cause: workflow run ID was not persisted to memory. Mitigation: always note the workflow run ID before backgrounding, and check `git status` on resume.
+31. **The integrity regex for agent lists is hardcoded** — Check 9 in `test-skill-integrity.sh` uses a hardcoded regex of agent names. Every time a new agent is added, BOTH the docs AND the regex must be updated. A future improvement: dynamically extract agent names from `agents/*.md` frontmatter instead of hardcoding.
+
+### 2026-06-27 — Loop 5: Contest Win Plan
+
+32. **Demo credibility: live > pre-recorded** — A judge who knows how to code will notice when demo.sh never runs the actual audit commands. Adding live execution of Phase 1C and QED integration transforms the demo from "polished walkthrough" to "working tool demonstrated."
+33. **Rules 46-50 are AI safety, not Solana security** — The "50 rules" claim is inflated by 5 agent governance rules. Renaming them "45 + 5 agent safety" is honest AND shows architectural maturity — agent safety is a real concern for AI-driven auditing.
+34. **The Kamino Finance story is the single best "wow" moment** — 3 of 4 initial submissions had factual errors after source verification. That sentence changes the framing from "here is a tool" to "here is a skill that has been professionally used." It belongs in README's Contest section, not buried in kanban.
+35. **Subagent stalls look like success** — When a subagent reports completion after hitting a `ToolUseBlocked` rejection, always verify with `git status` before trusting. The Phase 1C subagent in Loop 5 confirmed completion but never wrote the files.
+
+## Future Improvements — Threat modeling (Phase 2A, STRIDE) asks "what can go wrong at trust boundaries." Architecture review (Phase 7) asks "how are the components organized and what systemic risks does that structure create." Both are needed; they address different questions at different abstraction levels. Phase 2A feeds Phase 7 data; Phase 7 feeds Phase 5 reporting.
+22. **Three report sections were missing from v1.10.0** — Executive Summary (severity-at-a-glance + risk posture), Methodology Trace (phase-to-artifact mapping), and Finding Distribution (severity breakdown + per-layer distribution). These are standard in professional audit reports and were the most visible gaps against master-prompt quality. Adding them required only template edits, not new phase logic.
+23. **Agents-from-files pattern scales cleanly to 8** — Adding `architecture-reviewer` as the 8th specialist followed the same pattern as all previous agents: YAML frontmatter, 8-step flow, handoff contract. The existing orchestrator routing already handled Phase 7 routing by phase number.
+24. **pocs/ path collision with poc/ pluralization** — `examples/token-2022-real/pocs/` vs `examples/token-2022-real/poc/` in token-extensions. Both fixtures used different pluralization conventions. Consistent naming (always `poc/`, singular) avoids confusion and integrity check failures.
+25. **Stalling subagents look like success** — When a subagent hits a `ToolUseBlocked` rejection, it may report completion without writing files. Always verify with `git status` in the target repo before trusting subagent completion claims.
+26. **YAML frontmatter on ALL agent files is non-negotiable** — The integrity check `agents/architecture-reviewer.md` must have frontmatter matching the same schema as all other agents. Missing frontmatter fails Check 39 and blocks CI.
+
 ## Future Improvements
 
 - [ ] **Line-number drift check (Check 20)** — `rg -n "VULN-\d+"` in source and verify each finding's claimed line falls within its VULN function scope.
@@ -143,3 +180,4 @@
 - [ ] **Interactive audit dashboard** — Visual report with severity distribution.
 - [ ] **Multi-program audit aggregation** — Combine findings from multiple Anchor programs.
 - [ ] **Visual diff** — Pre/post-fix audit report comparison.
+- [ ] **Architecture Review module** — Done v1.11.0 (Phase 7 + architecture-reviewer agent).

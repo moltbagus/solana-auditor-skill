@@ -1,0 +1,73 @@
+{
+  "$schema": "https://solana-auditor-skill/schemas/exploit-metadata-v1.json",
+  "poc_id": "VULN-05",
+  "title": "Unchecked arithmetic on user-supplied deposit amount",
+  "severity": "HIGH",
+  "cvss": 7.1,
+  "cvss_vector": "CVSS:3.1/AV:N/AC:L/PR:L/UI:N/S:U/C:L/I:H/A:N",
+  "cwe": [
+    "CWE-190"
+  ],
+  "rule_ids": [
+    "Rule 6"
+  ],
+  "exploit_class": "arith",
+  "attack_surface": {
+    "entry_point": "user_deposit",
+    "instruction_index": 47,
+    "accounts_required": [
+      "account"
+    ],
+    "cpi_calls": 0
+  },
+  "attacker_model": {
+    "position": "none",
+    "capital": "none",
+    "privilege": "none"
+  },
+  "preconditions": [
+    "Vault account exists with lamports > rent_exempt_minimum"
+  ],
+  "steps": [
+    {
+      "step": 1,
+      "action": "Invoke user_deposit() instruction",
+      "tx_required": true
+    },
+    {
+      "step": 2,
+      "action": "Supply malicious/missing account parameters as defined by the vulnerability",
+      "tx_required": true
+    },
+    {
+      "step": 3,
+      "action": "Transaction confirms — vulnerability exploited",
+      "tx_required": true
+    }
+  ],
+  "post_conditions": {
+    "funds_transferred": "attacker-controlled account",
+    "state_corrupted": true,
+    "authority_modified": "may be overwritten depending on vulnerability"
+  },
+  "impact": {
+    "funds_at_risk_sol": "significant (10k-1m SOL equivalent)",
+    "users_affected": "attacker + affected depositors",
+    "protocol_insolvency": false,
+    "recovery_path": "protocol upgrade + social consensus"
+  },
+  "remediation": {
+    "fix_tier": "A",
+    "confidence": 0.98,
+    "cvss_after": 5.3,
+    "cvss_reduction": 1.8,
+    "files_to_modify": [
+      "programs/vault/src/lib.rs"
+    ],
+    "verification_test": "tests/poc-VULN-05-fixed.rs",
+    "fix_type": "arithmetic_safety"
+  },
+  "poc_status": "pending",
+  "poc_author": "solana-auditor-skill",
+  "generated_at": "2026-06-27T05:40:01.571140+00:00"
+}

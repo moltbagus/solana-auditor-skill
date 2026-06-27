@@ -1,7 +1,7 @@
 # Spec — Solana Auditor Skill
 
 > **Technical Specification**
-> _Version 1.8.1 — Dashboard + Exploit Simulation_
+> _Version 1.12.0 — Economic Security Module + Formal Verification CI Integration_
 > Last updated: 2026-06-27
 
 ---
@@ -71,12 +71,13 @@ Phase 2B Runtime ──► CPI Surface Graph ──► Cross-Program Analysis
                                               + methodology-trace.md
 ```
 
-### 1.3 Two-Tier Execution Model
+### 1.3 Three-Tier Execution Model
 
 | Tier | Mode | Phases | Use Case |
 |------|------|--------|----------|
-| **Tier 1** | SAST-only | 0, 1, 2, 4, 5, 6 | Quick audit, no toolchain required |
-| **Tier 2** | Full runtime | 0, 1, 2, 2B, 3, 4, 5, 6 | Comprehensive audit with validator |
+| **Tier 1** | SAST-only | 0, 1, 2, 2A, 4, 5, 6 | Quick audit, no toolchain required |
+| **Tier 2** | Full + arch review | 0, 1, 2, 2A, 2B, 3, 4, 5, 6, **7** | Comprehensive + component analysis |
+| **Tier 3** | Full + exploit sim | 0, 1, 2, 2A, 2B, 3, 4, 5, 6, **7**, PoC | Comprehensive + component analysis + exploit metadata |
 
 Tier 1 runs without Solana toolchain. Tier 2 enables:
 - Runtime verification via Solana test validator
@@ -111,16 +112,19 @@ Tier 1 runs without Solana toolchain. Tier 2 enables:
 }
 ```
 
-### 2.3 Agent Roster (6 specialists)
+### 2.3 Agent Roster (9 specialists)
 
 | Agent | Role | Primary Phase |
 |-------|------|---------------|
 | orchestrator | Entry point, routes to specialists | All |
 | auditor | Primary audit execution | 1, 2, 2B |
+| threat-modeler | STRIDE threat identification, trust boundaries | 2A |
+| economic-security-analyst | Tokenomics, MEV, fee flows, economic invariants | 1C |
 | formal-verifier | Invariant proofs, QED 2A | 3 |
 | report-writer | Structured findings → report | 5 |
 | cross-program | CPI surface graph, cross-program analysis | 2B |
 | safety-guard | Agent safety guardrails, prevents harmful ops | 0 |
+| architecture-reviewer | Component analysis, trust boundaries, data flow | 7 |
 
 ---
 
@@ -196,7 +200,114 @@ Tier 1 runs without Solana toolchain. Tier 2 enables:
 }
 ```
 
-### 3.3 Cross-Program Findings Schema (cross_program_findings.json)
+### 3.4 Exploit Metadata Schema (exploit_metadata.json)
+
+```json
+{
+  "exploits": [
+    {
+      "vuln_id": "VULN-01",
+      "stride_category": "Privilege Escalation",
+      "title": "<exploit-title>",
+      "preconditions": ["<condition-1>", "<condition-2>"],
+      "attack_steps": [
+        {"step": 1, "action": "<action>", "expected": "<expected>", "actual": "<actual>"}
+      ],
+      "expected_outcome": "<what-attacker-accomplishes>",
+      "actual_outcome": "<confirmed|partial|failed>",
+      "exploitability_score": 9.2,
+      "impact_confirmed": true,
+      "remediation_verified": false,
+      "remediation_date": null,
+      "references": [
+        {"type": "CVE", "id": "CVE-XXXX-XXXXX"},
+        {"type": "transaction", "id": "txn_sig_here"}
+      ],
+      "poc_language": "anchor | typescript | python | manual",
+      "poc_code": "<code-snippet-or-null>",
+      "audit_notes": "<analyst-observations>"
+    }
+  ]
+}
+```
+
+### 3.5 Threat Model Schema (threat_model.json)
+
+```json
+{
+  "program_id": "<solana-program-id>",
+  "program_name": "<name>",
+  "trust_boundaries": [
+    {
+      "id": "TB-01",
+      "name": "<boundary-name>",
+      "components": ["<component-1>"],
+      "data_flows": [
+        {"from": "<source>", "to": "<dest>", "protocol": "CPI|RPC|WebSocket"}
+      ]
+    }
+  ],
+  "stride_threats": [
+    {
+      "id": "STRIDE-01",
+      "category": "Spoofing|Tampering|Repudiation|Info Disclosure|DoS|Privilege Escalation",
+      "title": "<threat-title>",
+      "affected_component": "<component>",
+      "trust_boundary": "TB-01",
+      "likelihood": "HIGH|MEDIUM|LOW",
+      "impact": "HIGH|MEDIUM|LOW",
+      "risk_score": 8.1,
+      "mapped_findings": ["VULN-01", "VULN-02"],
+      "mitigations": ["<mitigation-1>"]
+    }
+  ],
+  "summary": {
+    "total_threats": 0,
+    "spoofing": 0,
+    "tampering": 0,
+    "repudiation": 0,
+    "info_disclosure": 0,
+    "dos": 0,
+    "privilege_escalation": 0
+  }
+}
+```
+
+## 4. Phase 2A: Threat Modeling
+
+### 4.1 STRIDE Overview
+
+| Category | What It Tests | Common Solana Patterns |
+|----------|---------------|------------------------|
+| **Spoofing** | Can an attacker impersonate a valid user/program? | Fake program ID in CPI, missing signer verification |
+| **Tampering** | Can data be modified without detection? | Account data mutations, state corruption |
+| **Repudiation** | Can a user deny an action they performed? | Missing event emission, unsigned transactions |
+| **Information Disclosure** | Can sensitive data be exposed? | Unencrypted account data, logging secrets |
+| **Denial of Service** | Can availability be disrupted? | Resource exhaustion, infinite loops, rent困 |
+| **Privilege Escalation** | Can an attacker gain unauthorized privileges? | Missing authority checks, PDA derivation bugs |
+
+### 4.2 Threat Modeler Agent Flow
+
+1. **Identify trust boundaries** — External programs, user accounts, PDAs, system accounts
+2. **Map data flows** — CPI calls, RPC calls, WebSocket subscriptions
+3. **Apply STRIDE per boundary** — 6 threat categories for each boundary
+4. **Cross-reference findings** — Map threats to existing VULN-IDs or flag as new
+5. **Score and rank** — Risk = Likelihood x Impact
+6. **Output threat_model.json** — Structured threat documentation
+7. **Integrate with Phase 5** — Threats feed into final audit report
+
+### 4.3 Trust Boundary Examples
+
+| Boundary | Components | Risk |
+|----------|------------|------|
+| User → Program | `invoke`, `invoke_signed` | CPI injection |
+| Program → Token | `transfer`, `mint` | Authority bypass |
+| Program → PDA | `bump` seed verification | PDA collision |
+| External → Program | RPC instruction parsing | Input validation |
+
+## 5. Phase 2B: Runtime Verification
+
+Same as previously documented.
 
 ```json
 {
@@ -227,6 +338,54 @@ Tier 1 runs without Solana toolchain. Tier 2 enables:
   }
 }
 ```
+
+---
+
+## 6. Phase 7: Architecture Review
+
+### 6.1 Purpose
+
+Phase 7 performs standalone component analysis after Phase 2B (Runtime Verification) and before Phase 4 (Findings Triage). It decomposes the program into architectural layers and identifies systemic weaknesses that individual findings may not surface.
+
+### 6.2 Architecture-Reviewer Agent Flow
+
+1. **Enumerate entry points** — All `process_instruction` handlers and their access paths
+2. **Map trust boundaries** — External programs, user accounts, PDAs, system accounts
+3. **Build component dependency graph** — Instruction dispatch, account validation, state management, CPI interface, token operations
+4. **Trace data flows** — Per-entry-point data flow from input to storage
+5. **Identify architectural hotspots** — Components with high coupling, shared state, or privileged access
+6. **Assess architectural weaknesses** — Patterns that are individually correct but compose into systemic risk
+7. **Recommend mitigations** — Layer-level fixes that address multiple findings at once
+8. **Export architecture_findings.json** — Structured architectural findings
+
+### 6.3 Architecture Findings Schema
+
+```json
+{
+  "architecture_findings": [
+    {
+      "id": "ARCH-01",
+      "severity": "HIGH | MEDIUM | LOW",
+      "layer": "instruction_dispatch | account_validation | state_management | cpi_interface | token_operations",
+      "title": "<arch-title>",
+      "components": ["<component-1>", "<component-2>"],
+      "description": "<architectural-analysis>",
+      "impact": "<systemic-impact>",
+      "recommendation": "<layer-level-fix>",
+      "related_findings": ["VULN-01"],
+      "mitigation_effort": "trivial | moderate | complex"
+    }
+  ]
+}
+```
+
+### 6.4 Three Missing Report Sections
+
+The audit report template now includes three sections previously absent from v1.10.0:
+
+1. **Executive Summary** — Severity-at-a-glance table (CRITICAL/HIGH/MEDIUM/LOW/INFO counts) + risk posture statement (Critical/High/Medium/Low/Informational based on highest severity and total count).
+2. **Methodology Trace** — Per-phase table mapping each phase to its output artifact and key findings, enabling judges to trace the audit methodology from input to conclusion.
+3. **Finding Distribution** — Severity breakdown table with per-finding CVSS vector and CWE reference, plus per-layer distribution (instruction dispatch, account validation, state management, CPI interface, token operations).
 
 ---
 
@@ -269,6 +428,13 @@ Tier 1 runs without Solana toolchain. Tier 2 enables:
 | 31 | Agent safety guardrails coverage | 5 | Rules 46-50 have VULN tags in fixtures |
 | 32 | Phase 0 safety guard presence | 3 | skill/00-safety-guard.md exists + YAML frontmatter |
 | 33 | Safety-guard agent presence | 2 | agents/safety-guard.md exists + YAML frontmatter |
+| 34 | Phase 6 root_cause fields | 4 | findings.json entries have root_cause (all fixtures) |
+| 35 | Phase 6 difficulty rating | 3 | findings.json entries have difficulty field |
+| 36 | Regression test path presence | 3 | findings.json entries have regression_test_path field |
+| 37 | Remediation priority ordering | 3 | CRITICAL > HIGH > MEDIUM > LOW > INFO within each tier |
+| 38 | Phase 7 architecture review presence | 3 | skill/07-architecture-review.md exists + YAML frontmatter |
+| 39 | Architecture-reviewer agent presence | 3 | agents/architecture-reviewer.md exists + YAML frontmatter |
+| 40 | Report template enhanced sections | 4 | Executive Summary, Methodology Trace, Finding Distribution present |
 
 ### 4.2 Verification Methods
 
@@ -282,6 +448,68 @@ Tier 1 runs without Solana toolchain. Tier 2 enables:
 | Property-based invariants | Hypothesis (19 tests, 1000s of examples) | Every CI run |
 | Trace CVSS consistency | `check_trace_cvss_for_fixture()` in bash | Every CI run |
 | Schema validation | Python jsonschema | Tier 2 findings |
+| Remediation field validation | Python script + bash | Phase 6 findings |
+
+---
+
+## 4.3 Phase 6: Remediation Engine Enhancements (v1.10.0)
+
+Phase 6 was upgraded from fix suggestions to a full Remediation Engine with structured root cause analysis and regression test support.
+
+### 4.3.1 Root Cause Classification
+
+Every finding now includes a structured `root_cause` field with one of five categories:
+
+| Root Cause | Description | Solana Pattern |
+|------------|-------------|----------------|
+| `missing_validation` | Input or state not checked before use | Missing `has_one`, zero-guard on div |
+| `incorrect_state_transition` | State machine advanced incorrectly | Missing state enum check |
+| `unchecked_external_call` | CPI result not checked | Missing `invoke` error propagation |
+| `race_condition` | Concurrent state access without locking | Missing `invoke_signed` re-entrancy guard |
+| `unchecked_arithmetic` | Math operation overflows/underflows | Plain `/` or `*` without `.checked_*` |
+
+### 4.3.2 Fix Difficulty Rating
+
+Each finding carries a `difficulty` field:
+
+| Difficulty | Effort | Example |
+|------------|--------|---------|
+| `trivial` | Add one check | `require!` / `assert!` |
+| `moderate` | Restructure logic | State machine, re-entrancy lock |
+| `complex` | Multi-file refactor | New account type, PDA derivation change |
+
+### 4.3.3 Regression Test Generation
+
+`audit-fix-suggestions.py --regression` generates test stubs:
+
+**Anchor project** (detected via Anchor.toml):
+```rust
+#[test]
+fn test_vuln_01_fixed() {
+    // Precondition: attacker account must be non-admin
+    // VULN-01: admin_withdraw missing has_one check
+    // FIX: added require!(ctx.accounts.admin.key() == vault.admin);
+    // After fix: transaction reverts for non-admin caller
+}
+```
+
+**Standalone Rust project** (no Anchor.toml):
+```rust
+#[cfg(test)]
+mod vuln_01_tests {
+    // Precondition: attacker account must be non-admin
+    // VULN-01: admin_withdraw missing has_one check
+    // FIX: added authority check before withdrawal
+    #[test]
+    fn test_vuln_01_fixed() { /* ... */ }
+}
+```
+
+### 4.3.4 Remediation Priority Ordering
+
+Findings are sorted by:
+1. **Severity tier**: CRITICAL > HIGH > MEDIUM > LOW > INFO
+2. **CVSS score**: Descending within each severity tier
 
 ---
 

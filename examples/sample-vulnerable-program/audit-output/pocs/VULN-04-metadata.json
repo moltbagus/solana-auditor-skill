@@ -1,0 +1,75 @@
+{
+  "$schema": "https://solana-auditor-skill/schemas/exploit-metadata-v1.json",
+  "poc_id": "VULN-04",
+  "title": "Lamport drain via unchecked transfer",
+  "severity": "CRITICAL",
+  "cvss": 9.8,
+  "cvss_vector": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H",
+  "cwe": [
+    "CWE-285"
+  ],
+  "rule_ids": [
+    "Rule 7"
+  ],
+  "exploit_class": "privilege-escalation",
+  "attack_surface": {
+    "entry_point": "drain_vault",
+    "instruction_index": 82,
+    "accounts_required": [
+      "vault",
+      "destination"
+    ],
+    "cpi_calls": 0
+  },
+  "attacker_model": {
+    "position": "none (public instruction)",
+    "capital": "none",
+    "privilege": "none"
+  },
+  "preconditions": [
+    "Attacker can submit transactions to the program (no signer required)",
+    "Vault account exists with lamports > rent_exempt_minimum"
+  ],
+  "steps": [
+    {
+      "step": 1,
+      "action": "Invoke drain_vault() instruction",
+      "tx_required": true
+    },
+    {
+      "step": 2,
+      "action": "Supply malicious/missing account parameters as defined by the vulnerability",
+      "tx_required": true
+    },
+    {
+      "step": 3,
+      "action": "Transaction confirms — vulnerability exploited",
+      "tx_required": true
+    }
+  ],
+  "post_conditions": {
+    "funds_transferred": "attacker-controlled account",
+    "state_corrupted": true,
+    "authority_modified": "may be overwritten depending on vulnerability"
+  },
+  "impact": {
+    "funds_at_risk_sol": "unbounded",
+    "users_affected": "all depositors",
+    "protocol_insolvency": true,
+    "recovery_path": "none"
+  },
+  "remediation": {
+    "fix_tier": "A",
+    "confidence": 0.95,
+    "cvss_after": 8.3,
+    "cvss_reduction": 1.5,
+    "files_to_modify": [
+      "programs/vault/src/lib.rs"
+    ],
+    "verification_test": "tests/poc-VULN-04-fixed.rs",
+    "fix_type": "architectural_refactor"
+  },
+  "poc_status": "pending",
+  "poc_author": "solana-auditor-skill",
+  "generated_at": "2026-06-27T05:40:01.571014+00:00"
+}
