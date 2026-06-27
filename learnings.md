@@ -1,7 +1,7 @@
 # Learnings — Solana Auditor Skill
 
 > **Decision Log & Lessons Learned**
-> _Superteam Brasil Solana Skills Contest — v1.11.0_
+> _Superteam Brasil Solana Skills Contest — v1.12.0_
 > Last updated: 2026-06-27
 
 ---
@@ -149,9 +149,15 @@
 20. **SDD docs must be updated in the correct repo** — When working across multiple worktrees or the source repo vs kit repo, Edit tool path resolution uses the current session CWD, not the git working tree of the file being edited. Double-check the absolute path before editing; confirm with a Read if unsure.
 
 
-### 2026-06-27 — Loop 3: Architecture Review + Report Enhancement
+### 2026-06-27 — Loop 4: Economic Security Module + Formal Verification CI
 
-21. **Architecture review is a separate phase from threat modeling** — Threat modeling (Phase 2A, STRIDE) asks "what can go wrong at trust boundaries." Architecture review (Phase 7) asks "how are the components organized and what systemic risks does that structure create." Both are needed; they address different questions at different abstraction levels. Phase 2A feeds Phase 7 data; Phase 7 feeds Phase 5 reporting.
+27. **Economic security is a standalone analysis dimension** — Separate from architecture review (structure) and threat modeling (attack paths). Tokenomics, fee flows, MEV exposure, governance security, and liquidity analysis each have their own detection patterns. Phase 1C runs after Phase 1B (architecture) and feeds Phase 5 reporting.
+28. **QED 2A CI is a three-tier fallback chain** — (1) `qed-solana` if installed, (2) `anchor test` as proof-of-concept fallback, (3) graceful skip with `exit 2`. CI must NEVER fail due to missing toolchain. The `qed-integration.sh` script handles all three cases with proper exit codes.
+29. **Formal verification report is CI artifact** — `formal_verification_report.json` with `programs_verified`, `invariants[]`, `findings[]`, `skipped[]`, `errors[]` fields. Uploaded as GitHub Actions artifact; parsable by both humans and scripts.
+30. **Loop 4 workflow stalled after Phase 1** — The background workflow ran 6 agents (3 econ + 3 fv in parallel) but stalled after Phase 2. The economic security files were created but FV files were not. Root cause: workflow run ID was not persisted to memory. Mitigation: always note the workflow run ID before backgrounding, and check `git status` on resume.
+31. **The integrity regex for agent lists is hardcoded** — Check 9 in `test-skill-integrity.sh` uses a hardcoded regex of agent names. Every time a new agent is added, BOTH the docs AND the regex must be updated. A future improvement: dynamically extract agent names from `agents/*.md` frontmatter instead of hardcoding.
+
+## Future Improvements — Threat modeling (Phase 2A, STRIDE) asks "what can go wrong at trust boundaries." Architecture review (Phase 7) asks "how are the components organized and what systemic risks does that structure create." Both are needed; they address different questions at different abstraction levels. Phase 2A feeds Phase 7 data; Phase 7 feeds Phase 5 reporting.
 22. **Three report sections were missing from v1.10.0** — Executive Summary (severity-at-a-glance + risk posture), Methodology Trace (phase-to-artifact mapping), and Finding Distribution (severity breakdown + per-layer distribution). These are standard in professional audit reports and were the most visible gaps against master-prompt quality. Adding them required only template edits, not new phase logic.
 23. **Agents-from-files pattern scales cleanly to 8** — Adding `architecture-reviewer` as the 8th specialist followed the same pattern as all previous agents: YAML frontmatter, 8-step flow, handoff contract. The existing orchestrator routing already handled Phase 7 routing by phase number.
 24. **pocs/ path collision with poc/ pluralization** — `examples/token-2022-real/pocs/` vs `examples/token-2022-real/poc/` in token-extensions. Both fixtures used different pluralization conventions. Consistent naming (always `poc/`, singular) avoids confusion and integrity check failures.

@@ -1,7 +1,7 @@
 # PRD — Solana Auditor Skill
 
 > **Product Requirements Document**
-> _Superteam Brasil Solana Skills Contest — v1.11.0_
+> _Superteam Brasil Solana Skills Contest — v1.12.0_
 > Last updated: 2026-06-27
 
 ---
@@ -26,7 +26,7 @@ Transform Claude Code into the **gold-standard Solana security auditor** — a r
 - [x] 6-phase audit lifecycle (Recon → Remediation)
 - [x] 9 slash commands (`/audit`, `/audit-quick`, `/audit-resume`, `/audit-report`, `/audit-poc`, `/audit-findings`, `/audit-resume`, and more)
 - [x] 50 path-scoped rules (auto-activate on file patterns)
-- [x] 7 specialist agents (orchestrator, auditor, formal-verifier, report-writer, cross-program, safety-guard, threat-modeler)
+- [x] 9 specialist agents (orchestrator, auditor, architecture-reviewer, economic-security-analyst, threat-modeler, formal-verifier, report-writer, cross-program-agent, safety-guard)
 - [x] Dual example fixtures: vault (10 bugs) + token-extensions (6 bugs)
 - [x] CVSS 3.1 scoring with math verification
 - [x] 62 integrity checks (all passing)
@@ -115,6 +115,15 @@ Following Loop 3 feedback, added two post-contest backlog items as a single spri
 - [x] **Report template** (`templates/report-template.md`) — Updated with Executive Summary, Methodology Trace, Finding Distribution sections.
 - [x] **Integrity checks 38–40** — Phase 7 presence check, architecture-reviewer agent check, report template section checks.
 - [x] **SDD docs updated** — PRD.md, spec.md, kanban.md, learnings.md updated to v1.11.0.
+
+### v1.12.0 — Economic Security Module + Formal Verification CI (2026-06-27)
+
+- [x] **Phase 1C: Economic Security Module** (`skill/01C-economic-security.md`) — Standalone DeFi economic attack analysis covering 6 categories: tokenomics, fee flow mapping, economic invariant violations, MEV exposure, governance security, and liquidity analysis. Grounded in real Solana mechanics (Jito, BonkBot, Light MEV, Raydium, Solend, Crema Finance).
+- [x] **economic-security-analyst agent** (`agents/economic-security-analyst.md`) — 9th specialist agent with YAML frontmatter, 8-step analysis flow, and handoff protocol. Feeds Phase 5 reporting via the Economic Security Analysis section.
+- [x] **Formal Verification CI** (`.github/workflows/formal-verification.yml`) — GitHub Actions workflow triggered on push/PR to `programs/`, `scripts/`, or itself. Three-tier fallback chain: `qed-solana` → `anchor test` → graceful skip. Graceful skip exits 0 to never fail CI on missing toolchain.
+- [x] **QED integration script** (`scripts/qed-integration.sh`) — Bash CI wrapper with exit codes 0 (success), 1 (tool error), 2 (skip). Generates `formal_verification_report.json` with `programs_verified`, `invariants[]`, `findings[]`, `skipped[]`, `errors[]` fields. Artifact uploaded on every run.
+- [x] **CI integration in FV skill/agent** — `skill/03-formal-verification.md` and `agents/formal-verifier.md` both updated with CI integration sections documenting the 3-tier fallback chain, exit codes, report schema, and local run commands.
+- [x] **Agent count fix 8→9** — All docs, README badge, integrity script regex updated for `economic-security-analyst`.
 
 ### v1.10.0 — Remediation Engine Full Upgrade (2026-06-27)
 

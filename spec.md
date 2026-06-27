@@ -1,7 +1,7 @@
 # Spec — Solana Auditor Skill
 
 > **Technical Specification**
-> _Version 1.11.0 — Architecture Review + Report Enhancement_
+> _Version 1.12.0 — Economic Security Module + Formal Verification CI Integration_
 > Last updated: 2026-06-27
 
 ---
@@ -112,13 +112,14 @@ Tier 1 runs without Solana toolchain. Tier 2 enables:
 }
 ```
 
-### 2.3 Agent Roster (8 specialists)
+### 2.3 Agent Roster (9 specialists)
 
 | Agent | Role | Primary Phase |
 |-------|------|---------------|
 | orchestrator | Entry point, routes to specialists | All |
 | auditor | Primary audit execution | 1, 2, 2B |
 | threat-modeler | STRIDE threat identification, trust boundaries | 2A |
+| economic-security-analyst | Tokenomics, MEV, fee flows, economic invariants | 1C |
 | formal-verifier | Invariant proofs, QED 2A | 3 |
 | report-writer | Structured findings → report | 5 |
 | cross-program | CPI surface graph, cross-program analysis | 2B |

@@ -1,7 +1,7 @@
 # Kanban — Solana Auditor Skill
 
 > **Project Kanban Board**
-> _Superteam Brasil Solana Skills Contest — v1.11.0_
+> _Superteam Brasil Solana Skills Contest — v1.12.0_
 > Last updated: 2026-06-27
 
 ---
@@ -52,6 +52,17 @@ Backlog → To Do → In Progress → Review → Done
 | Corporate-grade Python (type hints, constants, encoding) | Code Quality | v1.4.0 |
 | Python 3.9 compatibility | Code Quality | v1.4.0 |
 | Version staleness fixes (20 issues) — install.sh, README.md, CLAUDE.md, PRD.md, spec.md, CHANGELOG.md, demo.sh, todo.md, audit.rules, YAML frontmatter, fixture inconsistencies | Debug | v1.7.1 |
+
+### 🟢 Done v1.12.0
+
+| Task | Phase | Version |
+|------|-------|---------|
+| Phase 1C Economic Security Module (tokenomics, MEV, fee flows, governance, liquidity) | Security | v1.12.0 |
+| economic-security-analyst agent (9th specialist) | Security | v1.12.0 |
+| Formal Verification CI workflow (`.github/workflows/formal-verification.yml`) | CI | v1.12.0 |
+| QED integration script (`scripts/qed-integration.sh`, 3-tier fallback) | CI | v1.12.0 |
+| CI integration sections in `skill/03-formal-verification.md` + `agents/formal-verifier.md` | CI | v1.12.0 |
+| Agent count fix: 8→9 specialists (economic-security-analyst) | Debug | v1.12.0 |
 
 ---
 
@@ -197,6 +208,8 @@ audit-report/submissions/MATH-003-3-immunefi-submission.md  (MEDIUM, CVSS 6.5 �
 | 3 | Threat Modeling Module (STRIDE) | HIGH | MEDIUM | HIGH | Done v1.9.0 |
 | 4 | Architecture Review Module | HIGH | MEDIUM | HIGH | Done v1.11.0 |
 | 5 | Report Generator Enhancement (3 missing sections) | HIGH | LOW | HIGH | Done v1.11.0 |
+| 6 | Economic Security Module (Phase 1C) | HIGH | MEDIUM | HIGH | Done v1.12.0 |
+| 7 | Formal Verification CI (QED 2A integration) | HIGH | MEDIUM | HIGH | Done v1.12.0 |
 
 Full details: `docs/superpowers/specs/2026-06-27-gap-analysis.md` and `docs/superpowers/specs/2026-06-27-priority-backlog.md`
 
@@ -204,19 +217,20 @@ Full details: `docs/superpowers/specs/2026-06-27-gap-analysis.md` and `docs/supe
 
 ## Velocity Tracking (FINAL)
 
-| Metric | v1.0 | v1.3 | v1.4 FINAL | v1.8.1 | v1.9.0 | v1.10.0 | v1.11.0 | Target |
-|--------|------|------|------------|--------|--------|---------|--------|--------|
-| Integrity checks | 18 | 49 | **62** | **154** | **154** | **158** | **161** | 62+ |
-| VULN tags | 10 | 16 | **17** | 17 | 17 | 17 | 17 | 17 |
-| Property-based tests | 0 | 19 | **19** | **22** | **22** | 22 | 22 | 15+ |
-| Fixtures | 1 | 2 | **3** | 3 | 3 | 3 | 3 | 3 |
-| Rules | 12 | 12 | **17** | **50** | **50** | 50 | 50 | 15+ |
-| Commands | 5 | 5 | **6** | **9** | **9** | 9 | 9 | 6 |
-| Phases | 6 | 6 | **6** | **6** | **7** | **7** | **8** | 6+ |
-| Agents | 4 | 4 | **4** | **4** | **7** | **7** | **8** | 6+ |
-| Languages | 1 | 2 | **2** | 2 | 2 | 2 | 2 | 2 |
-| PoC walkthroughs | 0 | 0 | **3** | 3 | 3 | 3 | 3 | 3 |
-| Formal verification | 0 | 0 | **5 patterns** | **5 patterns** | **5 patterns** | **5 patterns** | **5 patterns** | 5+ |
+| Metric | v1.0 | v1.3 | v1.4 FINAL | v1.8.1 | v1.9.0 | v1.10.0 | v1.11.0 | v1.12.0 | Target |
+|--------|------|------|------------|--------|--------|---------|--------|--------|--------|
+| Integrity checks | 18 | 49 | **62** | **154** | **154** | **158** | **161** | **159** | 62+ |
+| VULN tags | 10 | 16 | **17** | 17 | 17 | 17 | 17 | 17 | 17 |
+| Property-based tests | 0 | 19 | **19** | **22** | **22** | 22 | 22 | 22 | 15+ |
+| Fixtures | 1 | 2 | **3** | 3 | 3 | 3 | 3 | 3 | 3 |
+| Rules | 12 | 12 | **17** | **50** | **50** | 50 | 50 | 50 | 15+ |
+| Commands | 5 | 5 | **6** | **9** | **9** | 9 | 9 | 9 | 6 |
+| Phases | 6 | 6 | **6** | **6** | **7** | **7** | **8** | **9** | 6+ |
+| Agents | 4 | 4 | **4** | **4** | **7** | **7** | **8** | **9** | 6+ |
+| Languages | 1 | 2 | **2** | 2 | 2 | 2 | 2 | 2 | 2 |
+| PoC walkthroughs | 0 | 0 | **3** | 3 | 3 | 3 | 3 | 3 | 3 |
+| Formal verification | 0 | 0 | **5 patterns** | **5 patterns** | **5 patterns** | **5 patterns** | **5 patterns** | **QED CI** | 5+ |
+| Economic security | 0 | 0 | 0 | 0 | 0 | 0 | 0 | **Phase 1C** | — |
 | SARIF export | No | No | **Yes** | **Yes** | **Yes** | **Yes** | **Yes** | Yes |
 | Lock file / resume | No | No | **Yes** | **Yes** | **Yes** | **Yes** | **Yes** | Yes |
 | HTML dashboard | No | No | No | **Yes** | **Yes** | **Yes** | **Yes** | Yes |
