@@ -214,6 +214,7 @@ Examples:
     if stdout_mode:
         sys.stdout.write(html)
     else:
+        output_path.parent.mkdir(parents=True, exist_ok=True)
         output_path.write_text(html, encoding="utf-8")
         print(f"Dashboard written to {output_path}", file=sys.stderr)
 

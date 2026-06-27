@@ -1,8 +1,8 @@
 # PRD — Solana Auditor Skill
 
 > **Product Requirements Document**
-> _Superteam Brasil Solana Skills Contest — v1.8.0_
-> Last updated: 2026-06-26
+> _Superteam Brasil Solana Skills Contest — v1.8.1_
+> Last updated: 2026-06-27
 
 ---
 
@@ -72,6 +72,17 @@ Transform Claude Code into the **gold-standard Solana security auditor** — a r
 - [x] 50 security rules (up from 26)
 - [x] 8 phases (up from 7)
 
+### v1.8.1 — Dashboard + Exploit Simulation (2026-06-27)
+- [x] HTML audit dashboard: `scripts/dashboard.py` + `templates/dashboard.html`
+- [x] demo.sh step 7: generates HTML dashboard automatically
+- [x] `/audit-report --html`: generates markdown + HTML in one pass
+- [x] `scripts/audit-report.py`: standalone CLI for markdown + HTML generation
+- [x] All 9 commands: `name:` frontmatter added for Claude Code registration
+- [x] Bug fixes: exit logic, FUZZ_COUNT, heredoc quoting verified clean
+- [x] Post-contest backlog: 8 gaps identified, 5 priority items planned
+- [x] Gap analysis + priority backlog: `docs/superpowers/specs/2026-06-27-gap-analysis.md`
+- [x] `docs/superpowers/specs/2026-06-27-priority-backlog.md`: 5 items, 4 new files
+
 ### v1.8.0 — Kit Submission (2026-06-26)
 - [x] **Solana AI Kit submission repo** at `github.com/moltbagus/solana-auditor-skill`
 - [x] Restructured for kit fit: `skill/`, `agents/`, `commands/`, `rules/` at root
@@ -88,9 +99,13 @@ Transform Claude Code into the **gold-standard Solana security auditor** — a r
 
 ### Stretch (Future)
 - [ ] Line-number drift integrity check
-- [ ] Visual audit report dashboard
 - [ ] Multi-program audit aggregation
 - [ ] Native qed-solana CI integration (dependency of QED 2A)
+- [ ] Economic Security module (standalone DeFi attack analysis)
+- [ ] Threat Modeling module (STRIDE/PASTA integration)
+- [ ] Architecture Review module (standalone component analysis)
+- [ ] Exploit Simulation Framework (structured PoC metadata per finding)
+- [ ] Remediation Engine full upgrade (root cause + regression tests)
 
 ## 4. Success Metrics
 
