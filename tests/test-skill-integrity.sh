@@ -341,7 +341,7 @@ EXPECTED_AGENTS=$(ls agents/*.md 2>/dev/null | xargs -n1 basename | sed 's/\.md$
 for doc in CLAUDE.md skill/SKILL.md README.md; do
     if [ ! -f "$doc" ]; then continue; fi
     # Look for the Agents: line in the frontmatter/header
-    MENTIONED=$(rg -o 'orchestrator|auditor|formal-verifier|report-writer|cross-program-agent|safety-guard' "$doc" | sort -u | tr '\n' ',' | sed 's/,$//')
+    MENTIONED=$(rg -o 'orchestrator|auditor|architecture-reviewer|threat-modeler|economic-security-analyst|formal-verifier|report-writer|cross-program-agent|safety-guard' "$doc" | sort -u | tr '\n' ',' | sed 's/,$//')
     if [ -n "$MENTIONED" ]; then
         # Compare
         if [ "$MENTIONED" != "$EXPECTED_AGENTS" ]; then
@@ -1015,6 +1015,80 @@ for finding in data.get('findings', []):
 done
 if [ "$MISSING_LOC_FILE" -eq 0 ]; then
     ok "All fixture findings.json have location.file on every finding"
+fi
+
+# =========================================================================
+# v1.8 REMEDIATION ENGINE CHECKS — root_cause and regression_test integrity
+# =========================================================================
+
+# Check 48: Every finding in findings.json has non-empty root_cause
+echo ""
+echo "Check 48: All findings have non-empty root_cause field"
+ROOT_CAUSE_CHECK=$(python3 -c "
+import json, os
+findings_files = [
+    'examples/sample-vulnerable-program/audit-output/findings.json',
+    'examples/sample-vulnerable-program/audit-output/token-extensions/findings.json',
+    'examples/token-2022-real/audit-output/findings.json',
+    'examples/sample-vulnerable-program/audit-output/native-vault-findings.json',
+]
+failures = []
+for fp in findings_files:
+    if not os.path.exists(fp):
+        continue
+    data = json.load(open(fp))
+    for f in data.get('findings', []):
+        fid = f.get('id', 'unknown')
+        rc = f.get('root_cause', '')
+        if not rc or len(str(rc).strip()) < 10:
+            failures.append(f'{os.path.basename(fp)}: {fid} missing root_cause')
+print('\n'.join(failures) if failures else 'OK', end='')
+" 2>/dev/null)
+if [ "$ROOT_CAUSE_CHECK" = "OK" ]; then
+    ok "All fixture findings.json have non-empty root_cause"
+else
+    echo "$ROOT_CAUSE_CHECK" | while read -r line; do
+        [ -z "$line" ] && continue
+        fail "$line"
+    done
+fi
+
+# Check 49: Every regression_test in findings.json is syntactically valid
+# Python-only validation to handle multiline test code (read splits on newlines)
+echo ""
+echo "Check 49: All regression_test patterns are syntactically valid"
+REGRESSION_CHECK=$(python3 -c "
+import json, sys, re, os
+
+PATTERNS = [r'fn test_', r'#\[test\]', r'assert!', r'let result =']
+findings_files = [
+    'examples/sample-vulnerable-program/audit-output/findings.json',
+    'examples/sample-vulnerable-program/audit-output/token-extensions/findings.json',
+    'examples/token-2022-real/audit-output/findings.json',
+    'examples/sample-vulnerable-program/audit-output/native-vault-findings.json',
+]
+failures = []
+for fp in findings_files:
+    if not os.path.exists(fp):
+        continue
+    data = json.load(open(fp))
+    for f in data.get('findings', []):
+        fid = f.get('id', 'unknown')
+        rt = f.get('regression_test', '')
+        if not rt:
+            continue
+        matched = any(re.search(p, rt) for p in PATTERNS)
+        if not matched:
+            failures.append(f'{os.path.basename(fp)}: {fid} regression_test lacks test syntax')
+print('\n'.join(failures) if failures else 'OK', end='')
+" 2>/dev/null)
+if [ "$REGRESSION_CHECK" = "OK" ]; then
+    ok "All regression_test patterns contain valid test syntax (fn test, #[test], assert)"
+else
+    echo "$REGRESSION_CHECK" | while read -r line; do
+        [ -z "$line" ] && continue
+        fail "$line"
+    done
 fi
 
 # Summary

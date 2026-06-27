@@ -18,7 +18,7 @@ Auditor-lifecycle skill for comprehensive Solana program security review. Runs f
 5. Report Generation
 6. Remediation Guidance
 
-**Agents** (6 specialists): orchestrator (entry-point router), auditor (primary), formal-verifier, report-writer, cross-program-agent, safety-guard
+**Agents** (9 specialists): orchestrator (entry-point router), auditor (primary), architecture-reviewer, economic-security-analyst, threat-modeler, formal-verifier, report-writer, cross-program-agent, safety-guard
 
 **Commands** (9): /audit, /audit-quick, /audit-resume, /audit-report, /audit-poc, /audit-findings, /audit-fix, /audit-history, /audit-pr
 
@@ -31,7 +31,10 @@ Auditor-lifecycle skill for comprehensive Solana program security review. Runs f
 | Phase | File | When to Load |
 |-------|------|-------------|
 | Recon | `skill/01-recon.md` | Initial repo/program audit start |
-| Static Analysis | `skill/02A-static-analysis.md` | After recon, before dynamic testing |
+| Architecture Review | `skill/01B-architecture-review.md` | After recon, before static analysis (structural risks) |
+| Economic Security Review | `skill/01C-economic-security.md` | After Phase 1B, before static analysis (economic design risks) |
+| Static Analysis | `skill/02-static-analysis.md` | After recon, before dynamic testing |
+| Threat Modeling (Phase 2A) | `skill/02-threat-modeling.md` | After recon, before static analysis (STRIDE enumeration) |
 | Runtime Verification | `skill/02B-runtime-testing.md` | Tier 2 only (anchor + solana toolchain) |
 | Formal Verification | `skill/03-formal-verification.md` | When invariants need proof |
 | Findings Triage | `skill/04-findings-triage.md` | After finding collection |
@@ -53,12 +56,24 @@ Auditor-lifecycle skill for comprehensive Solana program security review. Runs f
 
 ### User wants to start an audit
 → Load `skill/01-recon.md` first
+→ Load `skill/01B-architecture-review.md` for structural threat modeling
+
+### User wants architecture review specifically
+→ Load `skill/01B-architecture-review.md` (Phase 1B — runs after recon, before static analysis)
+→ Invoke `architecture-reviewer` agent for deployed programs
+
+### User wants economic security review specifically
+→ Load `skill/01C-economic-security.md` (Phase 1C — runs after Phase 1B, before static analysis)
+→ Invoke `economic-security-analyst` agent for token and DeFi programs
 
 ### User mentions finding a specific vulnerability class
 → Load relevant phase skill file
 
 ### User wants Tier 2 runtime verification
 → Load `skill/02B-runtime-testing.md` (requires anchor + solana CLI)
+
+### User wants threat modeling (STRIDE enumeration)
+→ Load `skill/02-threat-modeling.md` (Phase 2A — run after Phase 1 recon, before static analysis)
 
 ### User wants a full audit report
 → Load `skill/05-report-generation.md` + `skill/01-recon.md` + `skill/02A-static-analysis.md`
@@ -120,9 +135,13 @@ Auditor-lifecycle skill for comprehensive Solana program security review. Runs f
 |-------|------|------|
 | orchestrator | `agents/orchestrator.md` | Entry-point router, phase sequencing |
 | auditor | `agents/auditor.md` | Primary audit execution, finding generation |
+| architecture-reviewer | `agents/architecture-reviewer.md` | Structural architecture review: upgrade authority, token extensions, design-level findings |
+| economic-security-analyst | `agents/economic-security-analyst.md` | Economic security review: tokenomics, MEV, staking/LP, governance, invariant enforcement |
 | formal-verifier | `agents/formal-verifier.md` | Invariant proofs with QED 2A |
 | report-writer | `agents/report-writer.md` | Structured findings to report |
-| cross-program-agent | `agents/cross-program-agent.md` | CPI chain analysis, flash loan detection (NEW) |
+| cross-program-agent | `agents/cross-program-agent.md` | CPI chain analysis, flash loan detection |
+| threat-modeler | `agents/threat-modeler.md` | STRIDE threat enumeration, exploit intelligence, Helius API |
+| safety-guard | `agents/safety-guard.md` | Phase 0 pre-flight: consent, program identity, cluster boundary |
 
 ### Cross-Program Agent
 
@@ -142,7 +161,7 @@ Auditor-lifecycle skill for comprehensive Solana program security review. Runs f
 | Feature | Description |
 |---------|-------------|
 | **50 security rules** | 33 new rules (Rules 27–50): Token-2022 Transfer Hook (27–35), Pinocchio/Native Solana (36–45), AI Agent Safety (46–50) |
-| **6 specialist agents** | Added safety-guard for Phase 0 pre-flight (consent, scope, cluster, credentials) |
+| **7 specialist agents** | Added safety-guard for Phase 0 pre-flight (consent, scope, cluster, credentials) |
 | **153 integrity checks** | 3× growth from v1.5 (62 → 153) covering Phase 1–3 |
 | **22 property-based fuzz tests** | CVSS formula verification, fixture regression guards, Token-2022 rule coverage |
 | **3 compile-verified fixtures** | vault (Anchor), token-2022-real (Token Extensions), native-vault (Pinocchio) |
@@ -175,6 +194,10 @@ Rules auto-activate on file open. Full rule set in `rules/audit.rules`.
 - [ ] Upgradable programs (upgrade authority)
 - [ ] CPI surface graph (`cpi_surface.json`)
 - [ ] cargo-audit supply chain scan
+- [ ] Architecture review: upgrade authority model
+- [ ] Architecture review: tokenomics (supply, fees, emissions)
+- [ ] Architecture review: shared state / CPI trust chains
+- [ ] Architecture review: economic invariants (solvency, liquidity)
 
 ---
 

@@ -9,7 +9,7 @@
 
 ## Executive Summary
 
-The skill is **production-grade for its current scope**: 50 security rules, 6 specialist agents, 9 commands, 2-tier execution, CVSS 3.1 math verification, formal verification demo, CPI surface analysis, and SARIF export. The architecture is clean, well-tested, and CI-green.
+The skill is **production-grade for its current scope**: 50 security rules, 8 specialist agents, 9 commands, 2-tier execution, CVSS 3.1 math verification, formal verification demo, CPI surface analysis, and SARIF export. The architecture is clean, well-tested, and CI-green.
 
 However, the master prompt identifies **8 structural gaps** across 4 dimensions that would elevate the skill from "solid SAST wrapper" to "world-class auditor platform":
 

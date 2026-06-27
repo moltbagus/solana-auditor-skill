@@ -15,6 +15,10 @@ Take existing findings and produce a final structured report. **No new analysis 
 /audit-report <findings-json> --format json   # JSON-only, normalized schema
 /audit-report <findings-json> --format sarif  # SARIF 2.1.0 for GitHub Code Scanning
 /audit-report <findings-json> --html          # Markdown report + HTML dashboard
+/audit-report <findings-json> --include-architecture  # Include Architecture Review Summary
+/audit-report <findings-json> --include-threat-model  # Include Threat Model Summary (STRIDE)
+/audit-report <findings-json> --include-economic      # Include Economic Security Analysis
+/audit-report <findings-json> --include-all           # Include all three enhanced sections
 ```
 
 Default output: `<findings-dir>/AUDIT_REPORT.md`.
@@ -31,15 +35,63 @@ See `skill/05-report-generation.md` §Report Structure for the full template and
 
 1. **Cover Page** — program, repo, date, methodology, tools
 2. **Executive Summary** — 3-6 sentences, lead with severity count
-3. **Scope** — files audited, exclusions
-4. **Severity Summary Table** — counts by level
-5. **Findings** — one section per finding, severity-sorted, with Description/Impact/PoC-reference/Recommendation
-6. **Patterns Reviewed, Not Exploited** — builds reviewer trust
-7. **Out-of-Scope** — explicit list
-8. **Disclaimer** — point-in-time review notice
-9. **Appendix — Tools & Methodology**
+3. **Architecture Review Summary** — program design, account architecture, CPI map, PDAs (if `--include-architecture` or `--include-all`)
+4. **Threat Model Summary (STRIDE)** — six-category threat analysis (if `--include-threat-model` or `--include-all`)
+5. **Economic Security Analysis** — TVL, attack economics, incentive alignment (if `--include-economic` or `--include-all`)
+6. **Scope** — files audited, exclusions
+7. **Severity Summary Table** — counts by level
+8. **Findings** — one section per finding, severity-sorted, with Description/Impact/PoC-reference/Recommendation
+9. **Patterns Reviewed, Not Exploited** — builds reviewer trust
+10. **Out-of-Scope** — explicit list
+11. **Disclaimer** — point-in-time review notice
+12. **Appendix — Tools & Methodology**
 
 **Reference, do not paste exploit code** in the report. PoC paths only.
+
+## Enhanced Sections
+
+### --include-architecture
+
+Adds Section 2: **Architecture Review Summary** containing:
+
+- Program design overview (Anchor version, account count, instruction count)
+- Account architecture table (type, purpose, access control)
+- Cross-program invocation map (targets, purpose, trust assumptions)
+- PDA derivation table (seeds, deriver, access pattern)
+- Data flow diagram (text-based)
+- Design strengths and concerns
+
+Use when: auditing complex programs with multiple account types and CPI chains.
+
+### --include-threat-model
+
+Adds Section 3: **Threat Model Summary (STRIDE)** containing:
+
+- STRIDE threat breakdown per category (Spoofing, Tampering, Repudiation, Information Disclosure, Denial of Service, Elevation of Privilege)
+- Per-threat table: affected component, likelihood, impact
+- Mitigations in place vs. gaps
+- Threat surface summary table
+
+Use when: preparing for formal security review, bug bounty launch, or insurance application.
+
+### --include-economic
+
+Adds Section 4: **Economic Security Analysis** containing:
+
+- TVL and fund flow metrics
+- Attack economics table (max extractable, cost, net profit per finding)
+- Economic viability assessment per finding
+- Incentive alignment analysis per actor type
+- Griefing and loss scenarios
+- Economic constraint recommendations (immediate/short-term/long-term)
+
+Use when: program manages significant TVL, token reserves, or fee flows.
+
+### --include-all
+
+Shorthand for `--include-architecture --include-threat-model --include-economic`. Adds all three enhanced sections. Use when: full corporate-grade report required.
+
+**Note**: Enhanced sections require manual input for architecture diagrams, threat likelihood ratings, and economic figures. The command will prompt for these if not present in findings.json under the `architecture`, `threat_model`, and `economic` keys.
 
 ## JSON output schema
 
@@ -51,6 +103,9 @@ See `skill/05-report-generation.md` §Report Structure for the full template and
   "audit_date": "<iso>",
   "executive_summary": "<text>",
   "scope": ["<file>", "..."],
+  "architecture_summary": {"..."},
+  "threat_model": {"..."},
+  "economic_security": {"..."},
   "severity_summary": {"CRITICAL": 0, "HIGH": 0, "MEDIUM": 0, "LOW": 0, "INFO": 0},
   "findings": [{
     "id": "CRIT-01",
@@ -120,9 +175,12 @@ If `--html` is passed:
 4. Ask: "Generate PoCs? Run `/audit-poc <finding-id>`."
 5. Do NOT auto-open the report.
 6. If `--html` was passed, print the dashboard path after the report path.
+7. If `--include-architecture`, `--include-threat-model`, `--include-economic`, or `--include-all` was passed, note which enhanced sections were included.
 
 ## Rules
 
 - No new analysis. Preserve operator wording.
 - Malformed findings → "Malformed Findings" appendix, don't drop.
 - Severity sort + re-number IDs if any were renumbered during triage.
+- Enhanced sections are omitted unless explicitly requested via flags.
+- When `--include-all` is passed, treat as if all three individual flags were passed.

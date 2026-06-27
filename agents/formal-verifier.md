@@ -93,8 +93,25 @@ fn pda_bump_invariant(ctx: &Context, seeds: &[&[u8]], bump: u8) -> bool {
 }
 ```
 
+## CI Integration
+
+Formal verification runs in CI via `.github/workflows/formal-verification.yml`. The workflow:
+- Triggers on push/PR to `programs/`, `scripts/`, or itself
+- Detects `anchor` and `qed-solana` binaries
+- Runs `scripts/qed-integration.sh` (exit 0/1/2 semantics)
+- Uploads `formal_verification_report.json` as artifact
+- Graceful skip if no toolchain — **never fails CI on missing toolchain**
+
+When invoked by CI:
+1. Load `skill/03-formal-verification.md` CI Integration section
+2. Run `bash scripts/qed-integration.sh` in the repo root
+3. Parse `formal_verification_report.json` for findings
+4. Any `findings[]` entries → append to `audit-report/findings.json` with `rule_caught: "formal-verification"`
+5. Report SV-VERIFIED / SV-INCONCLUSIVE / SV-SKIPPED per program
+
 ## Constraints
 
 - QED 2A is preferred — avoid manual Coq proofs unless necessary
 - Always write regression test for every counterexample
 - If QED times out (>300s), report as "inconclusive" and note scope
+- **CI must never fail due to missing toolchain** — exit 2 triggers graceful skip
