@@ -371,7 +371,7 @@ echo -e "${WHITE}╔════════════════════
 echo -e "${WHITE}║${NC}  ${MAGENTA}Submission Summary — World-Class v${DEMO_VERSION}${NC}                ${WHITE}║${NC}"
 echo -e "${WHITE}╠════════════════════════════════════════════════════╣${NC}"
 echo -e "${WHITE}║${NC}  Skill:       solana-auditor-skill (world-class)    ${WHITE}║${NC}"
-echo -e "${WHITE}║${NC}  Version:     $(git describe --tags 2>/dev/null || echo "v1.7.0")                        ${WHITE}║${NC}"
+echo -e "${WHITE}║${NC}  Version:     $(git describe --tags 2>/dev/null || echo "v1.8.0")                        ${WHITE}║${NC}"
 echo -e "${WHITE}║${NC}  Integrity:   ${IG_PASS:-0} passed, ${IG_FAIL:-0} failed                    ${WHITE}║${NC}"
 echo -e "${WHITE}║${NC}  Phases:      7 (Recon → Remediation + Phase 2B)  ${WHITE}║${NC}"
 echo -e "${WHITE}║${NC}  Execution:   Two-tier (Tier 1 SAST / Tier 2 full)  ${WHITE}║${NC}"

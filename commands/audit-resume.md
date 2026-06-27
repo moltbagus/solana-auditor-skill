@@ -1,4 +1,5 @@
 ---
+name: audit-resume
 description: Resume a previously interrupted audit from the last completed phase
 ---
 

@@ -1,4 +1,5 @@
 ---
+name: audit-findings
 description: List, filter, dedupe, retag, export the findings database — pure data manipulation, no analysis
 ---
 

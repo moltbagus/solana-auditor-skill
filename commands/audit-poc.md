@@ -1,4 +1,5 @@
 ---
+name: audit-poc
 description: Generate proof-of-concept exploit for a finding — REQUIRES EXPLICIT CONSENT before execution
 ---
 

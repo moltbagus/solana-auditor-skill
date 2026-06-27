@@ -1,4 +1,5 @@
 ---
+name: audit-quick
 description: Fast heuristic SAST scan — surface likely vulns in minutes, false positives expected
 ---
 

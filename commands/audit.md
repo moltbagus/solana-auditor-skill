@@ -1,4 +1,5 @@
 ---
+name: audit
 description: Full Solana program security audit — recon, static analysis, formal verification, triage, report
 ---
 

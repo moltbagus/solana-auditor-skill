@@ -1,4 +1,5 @@
 ---
+name: audit-report
 description: Synthesize findings.json into a production-grade audit report — markdown + JSON
 ---
 
