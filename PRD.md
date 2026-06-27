@@ -1,7 +1,7 @@
 # PRD — Solana Auditor Skill
 
 > **Product Requirements Document**
-> _Superteam Brasil Solana Skills Contest — v1.9.0_
+> _Superteam Brasil Solana Skills Contest — v1.10.0_
 > Last updated: 2026-06-27
 
 ---
@@ -103,7 +103,17 @@ Transform Claude Code into the **gold-standard Solana security auditor** — a r
 - [ ] Native qed-solana CI integration (dependency of QED 2A)
 - [ ] Economic Security module (standalone DeFi attack analysis)
 - [ ] Architecture Review module (standalone component analysis)
-- [ ] Remediation Engine full upgrade (root cause + regression tests)
+
+### v1.10.0 — Remediation Engine Full Upgrade (2026-06-27)
+
+Following the Loop 2 contest judges feedback, the Remediation Engine received a complete overhaul with root cause analysis and regression test support.
+
+- [x] **Phase 6 Root Cause Analysis Layer** — Every fix suggestion now includes a structured `root_cause` field (missing validation, incorrect state transition, unchecked external call, race condition, unchecked arithmetic) with the specific line/function and a plain-language explanation of *why* this code path is dangerous
+- [x] **Regression test generation** — `audit-fix-suggestions.py --regression` emits a basic Anchor test stub per finding (if Anchor.toml detected) or a plain Rust test stub (standalone). Each stub includes the exploit precondition, the vulnerable code path commented inline, and an `#[test]` that verifies the fix
+- [x] **Fix difficulty rating** — Each finding now carries a `difficulty` field: `trivial` (add one check), `moderate` (restructure logic), `complex` (state machine refactor). Guides operator effort estimation
+- [x] **CVSS-adjusted priority ordering** — Remediation suggestions are now sorted by CVSS descending within each severity tier, and severity tiers are sorted CRITICAL > HIGH > MEDIUM > LOW > INFO
+- [x] **Integrity checks updated** — Check 17 and Check 20 updated to validate the new fields (`root_cause`, `difficulty`, `regression_test_path`) across all three fixture findings.json files
+- [x] **Phase 6 procedure (`06-remediation.md`)** — Updated to document the new remediation metadata fields, the regression test generation flow, and the priority ordering logic
 
 ### v1.9.0 — Threat Modeling + Exploit Simulation Framework (2026-06-27)
 - [x] **Phase 2A: Threat Modeling** — STRIDE methodology with 6 threat categories (Spoofing, Tampering, Repudiation, Info Disclosure, DoS, Privilege Escalation)

@@ -1,7 +1,7 @@
 # Learnings — Solana Auditor Skill
 
 > **Decision Log & Lessons Learned**
-> _Superteam Brasil Solana Skills Contest — v1.9.0_
+> _Superteam Brasil Solana Skills Contest — v1.10.0_
 > Last updated: 2026-06-27
 
 ---
@@ -141,6 +141,13 @@
 15. **Phase 2A slots between SAST (2) and Runtime (2B)** — The three-tier execution model (Tier 1: SAST-only, Tier 2: + Runtime, Tier 3: + Exploit Sim) gives auditors a progressive commitment path. Start Tier 1, escalate as needed. Threat modeling (2A) is toolchain-free so it belongs in Tier 1.
 16. **7 agents from 6** — Added `threat-modeler` as the 7th specialist agent. The handoff contract pattern (input_artifacts, expected_outputs, context) scales cleanly. Each agent owns one phase or phase group.
 17. **Option A vs Option B for exploit simulation** — Option A (metadata schema, `/audit-poc --metadata` flag, structured output) was chosen over Option B (interactive REPL). Option A is CI-friendly, idempotent, and integrates with the existing findings pipeline without requiring interactive sessions.
+
+### 2026-06-27 — Loop 2 Contest: Remediation Engine Sprint
+
+18. **Subagents can write to unintended directories** — When a subagent is spawned from a worktree whose CWD is not the skill repo root, its Write/Edit tools resolve relative paths from the wrong directory. Always pass absolute paths to subagent file operations, or spawn the agent from the correct CWD. Verify with `git status` after every subagent completes.
+19. **Stalled subagents look like success** — An agent that encounters a `ToolUseBlocked` rejection may report completion without actually writing files. If a subagent claims to have updated a file, run `git status` in the target repo to confirm. Do not assume the file was written.
+20. **SDD docs must be updated in the correct repo** — When working across multiple worktrees or the source repo vs kit repo, Edit tool path resolution uses the current session CWD, not the git working tree of the file being edited. Double-check the absolute path before editing; confirm with a Read if unsure.
+
 
 ## Future Improvements
 

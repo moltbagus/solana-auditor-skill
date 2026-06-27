@@ -1,7 +1,7 @@
 # Spec — Solana Auditor Skill
 
 > **Technical Specification**
-> _Version 1.9.0 — Threat Modeling + Exploit Simulation Framework_
+> _Version 1.10.0 — Remediation Engine Full Upgrade_
 > Last updated: 2026-06-27
 
 ---
@@ -378,6 +378,10 @@ Same as previously documented.
 | 31 | Agent safety guardrails coverage | 5 | Rules 46-50 have VULN tags in fixtures |
 | 32 | Phase 0 safety guard presence | 3 | skill/00-safety-guard.md exists + YAML frontmatter |
 | 33 | Safety-guard agent presence | 2 | agents/safety-guard.md exists + YAML frontmatter |
+| 34 | Phase 6 root_cause fields | 4 | findings.json entries have root_cause (all fixtures) |
+| 35 | Phase 6 difficulty rating | 3 | findings.json entries have difficulty field |
+| 36 | Regression test path presence | 3 | findings.json entries have regression_test_path field |
+| 37 | Remediation priority ordering | 3 | CRITICAL > HIGH > MEDIUM > LOW > INFO within each tier |
 
 ### 4.2 Verification Methods
 
@@ -391,6 +395,68 @@ Same as previously documented.
 | Property-based invariants | Hypothesis (19 tests, 1000s of examples) | Every CI run |
 | Trace CVSS consistency | `check_trace_cvss_for_fixture()` in bash | Every CI run |
 | Schema validation | Python jsonschema | Tier 2 findings |
+| Remediation field validation | Python script + bash | Phase 6 findings |
+
+---
+
+## 4.3 Phase 6: Remediation Engine Enhancements (v1.10.0)
+
+Phase 6 was upgraded from fix suggestions to a full Remediation Engine with structured root cause analysis and regression test support.
+
+### 4.3.1 Root Cause Classification
+
+Every finding now includes a structured `root_cause` field with one of five categories:
+
+| Root Cause | Description | Solana Pattern |
+|------------|-------------|----------------|
+| `missing_validation` | Input or state not checked before use | Missing `has_one`, zero-guard on div |
+| `incorrect_state_transition` | State machine advanced incorrectly | Missing state enum check |
+| `unchecked_external_call` | CPI result not checked | Missing `invoke` error propagation |
+| `race_condition` | Concurrent state access without locking | Missing `invoke_signed` re-entrancy guard |
+| `unchecked_arithmetic` | Math operation overflows/underflows | Plain `/` or `*` without `.checked_*` |
+
+### 4.3.2 Fix Difficulty Rating
+
+Each finding carries a `difficulty` field:
+
+| Difficulty | Effort | Example |
+|------------|--------|---------|
+| `trivial` | Add one check | `require!` / `assert!` |
+| `moderate` | Restructure logic | State machine, re-entrancy lock |
+| `complex` | Multi-file refactor | New account type, PDA derivation change |
+
+### 4.3.3 Regression Test Generation
+
+`audit-fix-suggestions.py --regression` generates test stubs:
+
+**Anchor project** (detected via Anchor.toml):
+```rust
+#[test]
+fn test_vuln_01_fixed() {
+    // Precondition: attacker account must be non-admin
+    // VULN-01: admin_withdraw missing has_one check
+    // FIX: added require!(ctx.accounts.admin.key() == vault.admin);
+    // After fix: transaction reverts for non-admin caller
+}
+```
+
+**Standalone Rust project** (no Anchor.toml):
+```rust
+#[cfg(test)]
+mod vuln_01_tests {
+    // Precondition: attacker account must be non-admin
+    // VULN-01: admin_withdraw missing has_one check
+    // FIX: added authority check before withdrawal
+    #[test]
+    fn test_vuln_01_fixed() { /* ... */ }
+}
+```
+
+### 4.3.4 Remediation Priority Ordering
+
+Findings are sorted by:
+1. **Severity tier**: CRITICAL > HIGH > MEDIUM > LOW > INFO
+2. **CVSS score**: Descending within each severity tier
 
 ---
 
