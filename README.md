@@ -1,6 +1,6 @@
 # Solana Auditor Shiba Skill
 
-**World-class Solana security auditor for Claude Code** — 7-phase audit lifecycle (Phase 0 Safety Guard + Phases 1–6), 45 Solana security rules + 5 agent-safety rules, 9 slash commands, 6 specialist agents, compile-verified example fixture, 47 integrity check categories (153 assertions), 22 fuzz tests, two-tier execution (SAST + runtime), pre-commit hook, PR auditing, audit history, and inline fix suggestions.
+**World-class Solana security auditor for Claude Code** — 7-phase audit lifecycle (Phase 0 Safety Guard + Phases 1–6), 45 Solana security rules + 5 agent-safety rules, 9 slash commands, 9 specialist agents, compile-verified example fixture, 47 integrity check categories (153 assertions), 22 fuzz tests, two-tier execution (SAST + runtime), pre-commit hook, PR auditing, audit history, and inline fix suggestions.
 
 [![CI](https://github.com/moltbagus/solana-auditor-skill/actions/workflows/test.yml/badge.svg)](https://github.com/moltbagus/solana-auditor-skill/actions/workflows/test.yml)
 [![Anchor 0.31.1](https://img.shields.io/badge/anchor-0.31.1-blueviolet)](https://www.anchor-lang.com/)
@@ -9,7 +9,7 @@
 [![Brazil Contest](https://img.shields.io/badge/Superteam-Brasil-009739)](https://superteam.com.br/)
 [![Property-Based Tests](https://img.shields.io/badge/fuzz-22%20tests-8A2BE2)](tests/fuzz/)
 [![Rules](https://img.shields.io/badge/rules-50-FF4500)](rules/audit.rules)
-[![Agents](https://img.shields.io/badge/agents-6-blue)](agents/)
+[![Agents](https://img.shields.io/badge/agents-9-blue)](agents/)
 [![SDD](https://img.shields.io/badge/spec--driven%20development-PRD%2FSpec%2FKanban-FF6B35)](PRD.md)
 
 ## ⚡ Judges Quick Start (5 Minutes)
@@ -131,6 +131,9 @@ The `rules/audit.rules` file auto-activates whenever Claude touches Anchor progr
 |-------|------|
 | `agents/orchestrator.md` | Entry point — routes user requests to specialist agents |
 | `agents/auditor.md` | Primary auditor — runs full lifecycle |
+| `agents/architecture-reviewer.md` | On-chain config and authority topology review |
+| `agents/threat-modeler.md` | STRIDE threat identification and trust boundaries |
+| `agents/economic-security-analyst.md` | Tokenomics, MEV, fee flows, economic invariant violations |
 | `agents/formal-verifier.md` | Invariant proofs via QED 2A |
 | `agents/report-writer.md` | Structured report generation |
 | `agents/cross-program-agent.md` | Cross-program CPI chain analysis |

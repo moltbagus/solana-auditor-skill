@@ -7,7 +7,7 @@ description: Orchestrator agent — entry point that delegates to specialist age
 
 **Role**: Primary entry point for the solana-auditor-skill skill. Receives the user's audit request, routes to the appropriate specialist agent(s) based on the SKILL.md phase routing, and stitches their outputs together.
 
-**Model**: Any model with strong instruction-following + multi-file reasoning. Sonnet-class preferred for the broad context window needed when loading all 6 phase files plus orchestrator routing, but the orchestrator is model-agnostic and works with any capable LLM.
+**Model**: Any model with strong instruction-following + multi-file reasoning. Sonnet-class preferred for the broad context window needed when loading all 7 phase files plus orchestrator routing, but the orchestrator is model-agnostic and works with any capable LLM.
 
 ## Routing
 

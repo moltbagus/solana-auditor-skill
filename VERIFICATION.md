@@ -102,4 +102,4 @@ anchor build
 | Example report | `examples/sample-vulnerable-program/audit-output/AUDIT_REPORT.md` |
 | 50 audit rules | `rules/audit.rules` |
 | 9 slash commands | `commands/` |
-| 6 specialist agents | `agents/` |
+| 7 specialist agents | `agents/` |

@@ -13,7 +13,28 @@ Generate a runnable PoC for a finding. Writes the PoC; does NOT execute without 
 /audit-poc <finding-id>
 /audit-poc <finding-id> --no-exec
 /audit-poc <finding-id> --network devnet
+/audit-poc <finding-id> --metadata
+/audit-poc <finding-id> --full
+/audit-poc <finding-id> --full --metadata
 ```
+
+### Flags
+
+| Flag | Description |
+|------|-------------|
+| `--no-exec` | Write PoC files only; skip execution (default) |
+| `--network <net>` | Target network: `localnet` (default), `devnet`, `mainnet-beta`, `custom` |
+| `--metadata` | Also generate `<finding-id>-metadata.json` in `audit-output/pocs/` |
+| `--full` | Generate all three outputs: PoC markdown, metadata JSON, and fix verification test |
+
+**Behavior by flag combination**:
+
+| Flags | Outputs Generated |
+|-------|-----------------|
+| (none) | PoC markdown only |
+| `--metadata` | PoC markdown + metadata JSON |
+| `--full` | PoC markdown + metadata JSON + verification test |
+| `--full --metadata` | All three (same as `--full`) |
 
 ## ⚠️ Consent gate (mandatory)
 
@@ -38,6 +59,25 @@ Proceed? [type YES to continue, anything else to abort]
 
 **Wait for explicit "YES".** Any other response → abort cleanly.
 
+### Metadata Generation (`--metadata`, `--full`)
+
+When `--metadata` or `--full` is passed, generate a machine-readable metadata JSON file alongside the PoC markdown:
+
+1. Map `rule_caught` to `rule_ids` array (e.g., `"Rule 8 — Signer Verification"` → `["Rule 8"]`).
+2. Derive `exploit_class` from the vulnerability type:
+   - Missing signer/auth → `privilege-escalation`
+   - Reinit/mutable state → `state-manipulation`
+   - Price oracle/balance snapshot → `oracle-manipulation`
+   - Callback/unchecked external call → `reentrancy`
+   - Arithmetic on user input → `arith`
+   - Config/authority/upgrade → `config`
+3. Compute `attacker_model`:
+   - `privilege`: any → `none`; some auth required → `authenticated`
+   - `capital`: unbounded → `none`; borrowed → `flash_loan`; own funds → specific token amounts
+   - `position`: how the attacker relates to the protocol before the exploit
+4. Populate `attack_surface`, `preconditions`, `steps`, `post_conditions`, `impact`, and `remediation` from the finding data.
+5. Write to `audit-report/pocs/<FINDING_ID>-metadata.json`.
+
 ## Pre-flight
 
 1. Verify finding exists in `audit-report/findings.json` or accept inline.
@@ -57,13 +97,21 @@ Proceed? [type YES to continue, anything else to abort]
    - Type C — `poc/<FINDING_ID>-manual.md` (human-executable steps)
      — start from `templates/poc-template-manual.md`
 4. **Document** — `audit-report/pocs/<FINDING_ID>.md` with setup, steps, expected outcome, cleanup, files.
-5. **Execute** (only if user typed YES):
+5. **Generate metadata** (when `--metadata` or `--full` is set):
+   - Populate `skill/06-remediation.md` schema fields from the finding data.
+   - Map `rule_caught` → `rule_ids`, derive `exploit_class` from vulnerability type.
+   - Compute `attacker_model` from the finding description.
+   - Write `audit-report/pocs/<FINDING_ID>-metadata.json`.
+6. **Generate verification test** (when `--full` is set):
+   - Write `tests/poc-<FINDING_ID>-fixed.rs` that asserts the exploit **fails** after fix.
+   - Follow the pattern in `skill/06-remediation.md` §Exploit PoC Verification.
+7. **Execute** (only if user typed YES):
    - Run the PoC.
    - Capture stdout/stderr to `audit-report/pocs/<id>-output.txt`.
    - Print transaction signatures inline.
    - Verify post-state matches expected exploit outcome.
    - Update `findings.json` `poc_status = "verified"` (or `"failed"`).
-6. **Cleanup** — print state diff; offer `solana-test-validator --reset` for localnet.
+8. **Cleanup** — print state diff; offer `solana-test-validator --reset` for localnet.
 
 Full Anchor test template, TypeScript template, manual-steps template, and failure-mode handling live in `skill/06-remediation.md` §Exploit PoC Verification.
 

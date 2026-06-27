@@ -245,3 +245,118 @@ The CVSS math is verified by `tests/severity_counts.py::check_cvss_math()`.
 2. **Never skip verification**: Always run tests after fix
 3. **No breaking changes**: Fixes must preserve intended behavior
 4. **Document all changes**: Record fix in findings.json remediation block
+
+---
+
+## /audit-fix-explain — Deep Remediation Analysis
+
+Generate detailed root cause analysis, attack scenarios, and regression tests for a finding.
+
+### Usage
+
+```
+/audit-fix-explain <finding-id>            # Full analysis (root_cause + attack + regression)
+/audit-fix-explain <finding-id> --root-cause    # Root cause analysis only
+/audit-fix-explain <finding-id> --regression    # Regression test only
+/audit-fix-explain <finding-id> --full           # Everything including tradeoffs + CU impact
+```
+
+### Flags
+
+| Flag | Description |
+|------|-------------|
+| `--root-cause` | Emit root cause analysis, attack scenario, and business impact |
+| `--regression` | Emit concrete regression test code (not a placeholder) |
+| `--full` | Emit all sections: root cause, attack scenario, business impact, regression test, tradeoffs, CU impact |
+| (default) | Emit root_cause + attack_scenario + business_impact + regression_test |
+
+### Output Schema
+
+Each section is emitted only if requested and if the data exists in `skill/06-remediation.md` or `scripts/audit-fix-suggestions.py`.
+
+```json
+{
+  "finding_id": "CRIT-01",
+  "root_cause": "Human-readable root cause (2-3 sentences)",
+  "attack_scenario": ["Step 1", "Step 2", "..."],
+  "business_impact": "Quantified impact description",
+  "regression_test": "fn test_xxx() { ... }",
+  "tradeoffs": {
+    "gas_cost": "+600 CU",
+    "breaking_changes": "none | may affect X | significant",
+    "complexity": "low | medium | high"
+  },
+  "compute_unit_impact": "~+600 CU estimate"
+}
+```
+
+### Examples
+
+```
+/audit-fix-explain CRIT-01
+```
+
+Output:
+```
+=== Remediation Analysis: CRIT-01 ===
+
+Root cause:
+The admin field in AdminWithdraw was declared as AccountInfo<'info> instead of
+Signer<'info>. Anchor's deserializer accepts any AccountInfo regardless of whether
+it signed the transaction. The raw lamport transfer then executes because no signer
+gate exists at any level.
+
+Attack scenario:
+  1. Attacker constructs a transaction invoking admin_withdraw with their own pubkey
+  2. Transaction is signed only by the attacker's wallet (for the payer account)
+  3. Anchor deserializes the instruction without verifying the admin field signed
+  4. Program executes vault.lamports -= amount unconditionally
+  5. Vault is drained; attacker receives lamports at their chosen destination
+
+Business impact:
+Total loss of vault funds. Unbounded SOL drain. All depositors lose funds.
+Protocol insolvency with no recovery path.
+
+Regression test:
+#[tokio::test]
+async fn test_admin_withdraw_requires_signer() {
+    let malicious_tx = Transaction::new_signed_with_payer(
+        &[instruction::admin_withdraw(...)],
+        Some(&payer.pubkey()),
+        &[&payer],  // Only payer signs — admin does NOT sign
+        recent_blockhash,
+    );
+    let result = program.rpc().process_transaction(&malicious_tx).await;
+    assert!(result.is_err());  // Must fail with NotSigner
+}
+```
+
+```
+/audit-fix-explain CRIT-01 --full
+```
+
+Output includes additional tradeoffs and CU impact:
+```
+Tradeoffs:
+  Gas cost: +600 CU (Signer deserialization overhead)
+  Breaking changes: Existing callers must sign with the admin key
+  Complexity: None — single type swap from AccountInfo to Signer
+
+Compute unit impact: ~+600 CU. Signer verification is a single sysvar
+check at deserialization.
+```
+
+### Implementation
+
+The command delegates to `scripts/audit-fix-suggestions.py` which reads:
+- `skill/06-remediation.md` for pre-authored Remediation Analysis blocks (PoC walkthroughs)
+- `scripts/audit-fix-suggestions.py` rule templates for mechanically-derivable analysis
+- `findings.json` for finding metadata (severity, CVSS, rule)
+
+If no Remediation Analysis block exists for the finding, the engine synthesizes one from the fix template for that rule (Rule 1-50), falling back to a generic analysis.
+
+### Constraints
+
+1. **Never fabricate analysis**: If no analysis exists for a rule, say so rather than generating plausible-sounding but unverified content
+2. **Preserve test syntax**: Regression test blocks must use syntactically valid Rust (`#[test]`, `fn test_`, `assert!`)
+3. **Quantify where possible**: Business impact should use concrete terms (SOL amounts, user counts, protocol insolvency)
