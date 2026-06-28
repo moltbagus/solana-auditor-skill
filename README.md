@@ -12,6 +12,8 @@
 [![Agents](https://img.shields.io/badge/agents-9-blue)](agents/)
 [![SDD](https://img.shields.io/badge/spec--driven%20development-PRD%2FSpec%2FKanban-FF6B35)](PRD.md)
 
+> :brazil: [Guia de auditoria em Portugues Brasileiro](guides/pt-BR/AUDITORIA_GUIA.md)
+
 ## ⚡ Judges Quick Start (5 Minutes)
 
 ```bash
@@ -22,7 +24,7 @@ bash demo.sh
 bash tests/test-skill-integrity.sh
 
 # 3. Run fuzz tests — 22 Hypothesis strategies
-python3 tests/fuzz/test_properties.py
+python3 -c "import pytest; pytest.main(['-v', 'tests/fuzz/test_properties.py'])"
 
 # 4. Inspect the pre-committed audit fixture
 cat examples/sample-vulnerable-program/audit-output/findings.json | python3 -m json.tool
@@ -32,6 +34,17 @@ python3 tests/severity_counts.py
 ```
 
 → See [VERIFICATION.md](VERIFICATION.md) for the full proof walkthrough.
+
+### 📊 Interactive Dashboard
+
+Run the dashboard to see findings visualized with severity breakdown, CVSS scores, and CWE mapping:
+
+```bash
+python3 scripts/dashboard.py examples/sample-vulnerable-program/audit-output/findings.json /tmp/audit_dashboard.html
+open /tmp/audit_dashboard.html
+```
+
+![Audit Dashboard Preview](https://img.shields.io/badge/dashboard-interactive%20HTML%20report-FF6B35?style=flat-square)
 
 ---
 
@@ -189,7 +202,7 @@ Each command is a self-contained workflow that runs even without the phase skill
 | 14 — Reentrancy guard | `programs/**/*.rs` | State mutation after external call |
 | 15 — remaining_accounts | `programs/**/*.rs` | CPI with unvalidated extra accounts |
 | 16 — Discriminator collision | `programs/**/*.rs` | Two account types sharing 8-byte discriminator |
-| **Rules 27-35 — Transfer Hook (Token Extensions)** |
+| **Rules 27-35 — Token-2022 Extension Operations** |
 | 27 — Transfer hook accounts | `programs/**/*.rs` | Missing `TransferHook` account validation |
 | 28 — Extra account metas | `programs/**/*.rs` | CPI to transfer hook with missing extra accounts |
 | 29 — Owner mismatch | `programs/**/*.rs` | Unchecked owner in hook callback |
@@ -199,7 +212,7 @@ Each command is a self-contained workflow that runs even without the phase skill
 | 33 — Mint freeze authority | `programs/**/*.rs` | Unchecked `freeze_authority` |
 | 34 — Close mint | `programs/**/*.rs` | Mint closed with existing holders |
 | 35 — Memo extension | `programs/**/*.rs` | Unsanitized memo in CPI chain |
-| **Rules 36-45 — Pinocchio / Native Solana** |
+| **Rules 36-45 — Account Validation + Runtime Security** |
 | 36 — Sysvar account | `programs/**/*.rs` | Missing or unchecked sysvar account |
 | 37 — Clock sysvar | `programs/**/*.rs` | Unsigned or unvalidated slot/time |
 | 38 — Rent sysvar | `programs/**/*.rs` | Rent exemption bypass |
@@ -377,6 +390,18 @@ cargo install --git https://github.com/coral-xyz/anchor --tag v0.31.1 anchor-cli
 ```
 
 See [CHANGELOG.md](CHANGELOG.md) for the full development history.
+
+---
+
+## Para Desenvolvedores Brasileiros
+
+Este skill foi feito para a comunidade Solana brasileira. Para um guia completo em portugues brasileiro, veja [guides/pt-BR/AUDITORIA_GUIA.md](guides/pt-BR/AUDITORIA_GUIA.md).
+
+Comandos principais:
+- `/audit <repo>` — Auditoria completa
+- `/audit-quick <repo>` — Varredura rapida SAST
+- `/audit-report` — Gerar relatorio final
+- `/audit-fix` — Corrigir vulnerabilidades encontradas
 
 ## License
 

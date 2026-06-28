@@ -1,8 +1,8 @@
 # PRD — Solana Auditor Skill
 
 > **Product Requirements Document**
-> _Superteam Brasil Solana Skills Contest — v1.11.0_
-> Last updated: 2026-06-27
+> _Superteam Brasil Solana Skills Contest — v1.12.0_
+> Last updated: 2026-06-28
 
 ---
 
@@ -17,7 +17,7 @@ Transform Claude Code into the **gold-standard Solana security auditor** — a r
 | Solana dApp developer | Quick security check before mainnet deploy | `/audit-quick` — 5 min SAST scan |
 | Solana audit firm | Structured audit methodology + reporting | `/audit` — 7-phase lifecycle |
 | Security researcher | Finding validation + PoC generation | `/audit-poc` — consent-gated exploit |
-| Contest judge | Evaluate skill quality + completeness | Demo script, 70+ integrity checks, 19 fuzz tests |
+| Contest judge | Evaluate skill quality + completeness | Demo script, 75+ integrity checks, 19 fuzz tests |
 | Brazilian dev | Solana security in their native language | PT-BR glossary + terminology |
 
 ## 3. Features
@@ -68,7 +68,7 @@ Transform Claude Code into the **gold-standard Solana security auditor** — a r
 - [x] cargo-audit integration for dependency vulnerabilities
 - [x] QED 2A fallback chain: QED → Anchor test → manual assertion
 - [x] Agent safety guardrails: preventing harmful operations during audit
-- [x] 70+ integrity checks (up from 62)
+- [x] 75+ integrity checks (up from 62)
 - [x] 50 security rules (up from 26)
 - [x] 8 phases (up from 7)
 
@@ -96,6 +96,17 @@ Transform Claude Code into the **gold-standard Solana security auditor** — a r
 - [x] CI: lint-install + integrity + fuzz (no anchor build — kit-compatible)
 - [x] Phase 0 safety guard as standalone `skill/00-safety-guard.md`
 - [x] All 50 rules, 6 agents, 9 commands, 9 phase files preserved
+
+### v1.12.0 — Contest Sprint (2026-06-28)
+- [x] pytest invocation fix — 22/22 fuzz tests now run
+- [x] README rule descriptions corrected — Rules 27-35 Token-2022, Rules 36-45 Account Validation
+- [x] HTML dashboard screenshot — visual proof in README
+- [x] PT-BR guide — guides/pt-BR/AUDITORIA_GUIA.md
+- [x] Benchmark table — vs solhint, cargo audit, manual review
+- [x] GitHub Actions template — .github/workflows/audit-on-push.yml
+- [x] Before/After dashboard comparison
+- [x] Live exploit audit — historical Solana exploit documented
+- [x] CI fuzz tests verified — 22/22 pass in CI
 
 ### Stretch (Future)
 - [ ] Line-number drift integrity check
@@ -141,7 +152,7 @@ Following the Loop 2 contest judges feedback, the Remediation Engine received a 
 
 | Metric | Target | Current | How Measured |
 |--------|--------|---------|-------------|
-| Integrity checks passing | 100% (70+) | 70+/70 | `test-skill-integrity.sh` exit code |
+| Integrity checks passing | 100% (75+) | 75+/75 | `test-skill-integrity.sh` exit code |
 | Vulnerability coverage | ≥50 classes | 50 rules | `grep "^## Rule " rules/audit.rules` |
 | CVSS math accuracy | 100% | 50/50 verified | `check-cvss-math` integrity check |
 | Security rules | ≥50 | 50 | `grep "^## Rule " rules/audit.rules` |
@@ -173,7 +184,7 @@ User → Claude Code CLI
       │   ├─ skill/04-findings-triage.md (Phase 4)
       │   ├─ skill/05-report-generation.md (Phase 5)
       │   └─ skill/06-remediation.md     (Phase 6)
-      ├─ tests/                          (70+ integrity checks + 19 fuzz tests)
+      ├─ tests/                          (75+ integrity checks + 19 fuzz tests)
       ├─ scripts/export-sarif.py          (SARIF export for Code Scanning)
       ├─ scripts/helius-replay.py        (Helius transaction replay) [NEW]
       └─ examples/                       (3 vulnerable fixtures: vault, Token-2022, real Token-2022)
@@ -199,11 +210,15 @@ User → Claude Code CLI
 For the **Superteam Brasil Solana Skills Contest**:
 
 1. **Judge-ready** — A judge can clone, `./demo.sh`, and evaluate in < 2 min
-2. **Brazil-friendly** — Portuguese glossary for Brazilian devs
+2. **Brazil-friendly** — Portuguese glossary + PT-BR audit guide for Brazilian devs
 3. **Comprehensive** — Covers ALL major Solana vulnerability classes across 3 fixtures
 4. **Correct** — All data mathematically verified (CVSS, counts, file references, methodology trace)
 5. **Professional** — Production-grade CI, documentation, SRP codebase, maximal test coverage
 6. **World-class** — Formal verification demo, PoC exploit walkthroughs, SARIF export, concurrent protection, two-tier execution, CPI surface analysis
+7. **Dashboard proof** — HTML dashboard screenshot in README as visual evidence
+8. **GH Actions template** — Audit-on-push workflow template for contest submissions
+9. **Live exploit audit** — Historical Solana exploit documented for real-world context
+10. **Benchmarked** — Comparative table vs solhint, cargo audit, and manual review
 
 ## 8. New Features in v1.5.0
 

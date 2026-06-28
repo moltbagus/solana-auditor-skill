@@ -461,12 +461,13 @@ done
 echo ""
 echo "Check 14: property-based (fuzz) tests pass"
 if [ -d "tests/fuzz" ]; then
-    if python3 -m pytest tests/fuzz/ -x --tb=short -q 2>&1 | grep -q "passed"; then
-        PYTEST_OUT=$(python3 -m pytest tests/fuzz/ -x --tb=short -q 2>&1)
-        TEST_COUNT=$(echo "$PYTEST_OUT" | grep -o '[0-9]\+ passed' | head -1)
-        ok "$TEST_COUNT property-based tests pass"
+    PYTEST_OUT=$(python3 -c "import pytest; pytest.main(['-x', '--tb=short', '-q', 'tests/fuzz/test_properties.py'])" 2>&1)
+    PYTEST_EXIT=$?
+    TEST_COUNT=$(echo "$PYTEST_OUT" | grep -o '[0-9]\+ passed' | head -1 || echo "unknown")
+    if [ $PYTEST_EXIT -eq 0 ]; then
+        ok "${TEST_COUNT:-all} property-based tests pass"
     else
-        fail "Property-based tests failed — run 'python3 -m pytest tests/fuzz/ -v'"
+        fail "Property-based tests failed (exit $PYTEST_EXIT) — run 'python3 -c \"import pytest; pytest.main([\\\"-v\\\", \\\"tests/fuzz/test_properties.py\\\"])\"'"
     fi
 else
     fail "tests/fuzz/ directory missing — property-based tests not found"

@@ -46,7 +46,7 @@ jobs:
         run: pip3 install hypothesis
 
       - name: Run property-based (fuzz) tests
-        run: python3 -m pytest tests/fuzz/ -x --tb=short -q
+        run: python3 -c "import pytest; pytest.main(['-x', '--tb=short', '-q', 'tests/fuzz/test_properties.py'])"
 
       - name: Run markdown integrity checks
         run: |

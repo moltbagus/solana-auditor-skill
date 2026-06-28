@@ -1,8 +1,8 @@
 # Kanban — Solana Auditor Skill
 
 > **Project Kanban Board**
-> _Superteam Brasil Solana Skills Contest — v1.11.0_
-> Last updated: 2026-06-27
+> _Superteam Brasil Solana Skills Contest — v1.12.0_
+> Last updated: 2026-06-28
 
 ---
 
@@ -52,6 +52,15 @@ Backlog → To Do → In Progress → Review → Done
 | Corporate-grade Python (type hints, constants, encoding) | Code Quality | v1.4.0 |
 | Python 3.9 compatibility | Code Quality | v1.4.0 |
 | Version staleness fixes (20 issues) — install.sh, README.md, CLAUDE.md, PRD.md, spec.md, CHANGELOG.md, demo.sh, todo.md, audit.rules, YAML frontmatter, fixture inconsistencies | Debug | v1.7.1 |
+| pytest fix — test collection path corrected | Debug | v1.12.0 |
+| README corrections — dead links, broken badges, install.sh path | Docs | v1.12.0 |
+| Dashboard screenshot — `docs/assets/dashboard.png` added | Polish | v1.12.0 |
+| PT-BR guide — `docs/guides/pt-BR/guide.md` | Docs | v1.12.0 |
+| Benchmark — `docs/benchmark.md` | Docs | v1.12.0 |
+| GH Actions — `docs/GH-actions.md` | Docs | v1.12.0 |
+| Before/After comparison — `docs/before-after.md` | Docs | v1.12.0 |
+| Live exploit audit — Kamino Lend 2026-06-25, 4 submissions | BugBounty | v1.12.0 |
+| SDD docs — full project spec synchronized to v1.12.0 | Core | v1.12.0 |
 
 ---
 
@@ -96,18 +105,32 @@ audit-report/submissions/MATH-003-3-immunefi-submission.md  (MEDIUM, CVSS 6.5 �
 
 | Task | Phase | Priority |
 |------|-------|----------|
-| M-7 (bonus formula) — rewrite with correct impact framing and source verification | BugBounty | P1 |
-| Admin findings — verify caller-side protections (multisig, timelock) | BugBounty | P2 |
-| Line-number drift integrity check | Testing | P2 |
-| Flake8 config + lint CI | Code Quality | P2 |
 | Native qed-solana CI integration | Security | P2 |
-| Runtime test validator in CI | Testing | P3 |
-| Interactive audit dashboard | Polish | P3 |
 | Multi-program audit aggregation | Core | P3 |
+| Economic Security framework | Security | P3 |
+| Architecture Review (Phase 7) adoption | Architecture | P3 |
 
 ---
 
-### Sprint 9 — Architecture Review + Report Enhancement (Done: 2026-06-27)
+### Sprint 10 — Architecture Review + Report Enhancement (Done: 2026-06-28)
+- [x] Architecture-reviewer agent — `agents/architecture-reviewer.md`, 8-step flow
+- [x] Report template enhanced — Executive Summary, Methodology Trace, Finding Distribution sections
+- [x] Integrity checks 38–40 — Phase 7 presence, architecture-reviewer agent, report template sections
+- [x] PRD, spec, kanban, learnings updated to v1.11.0
+
+### Sprint 48 — Contest Ready (Done: 2026-06-28)
+- [x] pytest fix — test collection path corrected
+- [x] README corrections — dead links, broken badges, install.sh path
+- [x] Dashboard screenshot — `docs/assets/dashboard.png` added
+- [x] PT-BR guide — `docs/guides/pt-BR/guide.md`
+- [x] Benchmark — `docs/benchmark.md`
+- [x] GH Actions — `docs/GH-actions.md`
+- [x] Before/After comparison — `docs/before-after.md`
+- [x] Live exploit audit — Kamino Lend 2026-06-25, 4 submissions
+- [x] SDD docs — full project spec synchronized to v1.12.0
+- [x] PRD, spec, kanban, learnings updated to v1.12.0
+
+### Sprint 9 — Phase 7 Architecture + Report Enhancement (Done: 2026-06-27)
 - [x] Phase 7 architecture review module — `skill/07-architecture-review.md`
 - [x] Architecture-reviewer agent — `agents/architecture-reviewer.md`, 8-step flow
 - [x] Report template enhanced — Executive Summary, Methodology Trace, Finding Distribution sections
@@ -204,33 +227,37 @@ Full details: `docs/superpowers/specs/2026-06-27-gap-analysis.md` and `docs/supe
 
 ## Velocity Tracking (FINAL)
 
-| Metric | v1.0 | v1.3 | v1.4 FINAL | v1.8.1 | v1.9.0 | v1.10.0 | v1.11.0 | Target |
+| Metric | v1.0 | v1.3 | v1.4 FINAL | v1.8.1 | v1.9.0 | v1.10.0 | v1.11.0 | v1.12.0 | Target |
 |--------|------|------|------------|--------|--------|---------|--------|--------|
-| Integrity checks | 18 | 49 | **62** | **154** | **154** | **158** | **161** | 62+ |
-| VULN tags | 10 | 16 | **17** | 17 | 17 | 17 | 17 | 17 |
-| Property-based tests | 0 | 19 | **19** | **22** | **22** | 22 | 22 | 15+ |
-| Fixtures | 1 | 2 | **3** | 3 | 3 | 3 | 3 | 3 |
-| Rules | 12 | 12 | **17** | **50** | **50** | 50 | 50 | 15+ |
-| Commands | 5 | 5 | **6** | **9** | **9** | 9 | 9 | 6 |
-| Phases | 6 | 6 | **6** | **6** | **7** | **7** | **8** | 6+ |
-| Agents | 4 | 4 | **4** | **4** | **7** | **7** | **8** | 6+ |
-| Languages | 1 | 2 | **2** | 2 | 2 | 2 | 2 | 2 |
-| PoC walkthroughs | 0 | 0 | **3** | 3 | 3 | 3 | 3 | 3 |
-| Formal verification | 0 | 0 | **5 patterns** | **5 patterns** | **5 patterns** | **5 patterns** | **5 patterns** | 5+ |
-| SARIF export | No | No | **Yes** | **Yes** | **Yes** | **Yes** | **Yes** | Yes |
-| Lock file / resume | No | No | **Yes** | **Yes** | **Yes** | **Yes** | **Yes** | Yes |
-| HTML dashboard | No | No | No | **Yes** | **Yes** | **Yes** | **Yes** | Yes |
-| Commands frontmatter | No | No | No | **Yes** | **Yes** | **Yes** | **Yes** | Yes |
-| Threat Modeling (STRIDE) | No | No | No | No | **Yes** | **Yes** | **Yes** | Yes |
-| Exploit Sim Framework | No | No | No | No | **Yes** | **Yes** | **Yes** | Yes |
-| Threat modeler agent | No | No | No | No | **Yes** | **Yes** | **Yes** | 6+ |
-| PoC metadata files | No | No | No | No | **3** | **3** | **3** | 3 |
-| Root cause analysis | No | No | No | No | No | **Yes** | **Yes** | Yes |
-| Regression test gen | No | No | No | No | No | **Yes** | **Yes** | Yes |
-| Fix difficulty rating | No | No | No | No | No | **Yes** | **Yes** | Yes |
-| Remediation priority order | No | No | No | No | No | **Yes** | **Yes** | Yes |
-| Architecture Review (Phase 7) | No | No | No | No | No | No | **Yes** | Yes |
-| Architecture-reviewer agent | No | No | No | No | No | No | **Yes** | Yes |
-| Report: Executive Summary | No | No | No | No | No | No | **Yes** | Yes |
-| Report: Methodology Trace | No | No | No | No | No | No | **Yes** | Yes |
-| Report: Finding Distribution | No | No | No | No | No | No | **Yes** | Yes |
+| Integrity checks | 18 | 49 | **62** | **154** | **154** | **158** | **161** | **161** | 62+ |
+| VULN tags | 10 | 16 | **17** | 17 | 17 | 17 | 17 | 17 | 17 |
+| Property-based tests | 0 | 19 | **19** | **22** | **22** | 22 | 22 | 22 | 15+ |
+| Fixtures | 1 | 2 | **3** | 3 | 3 | 3 | 3 | 3 | 3 |
+| Rules | 12 | 12 | **17** | **50** | **50** | 50 | 50 | 50 | 15+ |
+| Commands | 5 | 5 | **6** | **9** | **9** | 9 | 9 | 9 | 6 |
+| Phases | 6 | 6 | **6** | **6** | **7** | **7** | **8** | **8** | 6+ |
+| Agents | 4 | 4 | **4** | **4** | **7** | **7** | **8** | **8** | 6+ |
+| Languages | 1 | 2 | **2** | 2 | 2 | 2 | 2 | 2 | 2 |
+| PoC walkthroughs | 0 | 0 | **3** | 3 | 3 | 3 | 3 | 3 | 3 |
+| Formal verification | 0 | 0 | **5 patterns** | **5 patterns** | **5 patterns** | **5 patterns** | **5 patterns** | **5 patterns** | 5+ |
+| SARIF export | No | No | **Yes** | **Yes** | **Yes** | **Yes** | **Yes** | **Yes** | Yes |
+| Lock file / resume | No | No | **Yes** | **Yes** | **Yes** | **Yes** | **Yes** | **Yes** | Yes |
+| HTML dashboard | No | No | No | **Yes** | **Yes** | **Yes** | **Yes** | **Yes** | Yes |
+| Commands frontmatter | No | No | No | **Yes** | **Yes** | **Yes** | **Yes** | **Yes** | Yes |
+| Threat Modeling (STRIDE) | No | No | No | No | **Yes** | **Yes** | **Yes** | **Yes** | Yes |
+| Exploit Sim Framework | No | No | No | No | **Yes** | **Yes** | **Yes** | **Yes** | Yes |
+| Threat modeler agent | No | No | No | No | **Yes** | **Yes** | **Yes** | **Yes** | 6+ |
+| PoC metadata files | No | No | No | No | **3** | **3** | **3** | **3** | 3 |
+| Root cause analysis | No | No | No | No | No | **Yes** | **Yes** | **Yes** | Yes |
+| Regression test gen | No | No | No | No | No | **Yes** | **Yes** | **Yes** | Yes |
+| Fix difficulty rating | No | No | No | No | No | **Yes** | **Yes** | **Yes** | Yes |
+| Remediation priority order | No | No | No | No | No | **Yes** | **Yes** | **Yes** | Yes |
+| Architecture Review (Phase 7) | No | No | No | No | No | No | **Yes** | **Yes** | Yes |
+| Architecture-reviewer agent | No | No | No | No | No | No | **Yes** | **Yes** | Yes |
+| Report: Executive Summary | No | No | No | No | No | No | **Yes** | **Yes** | Yes |
+| Report: Methodology Trace | No | No | No | No | No | No | **Yes** | **Yes** | Yes |
+| Report: Finding Distribution | No | No | No | No | No | No | **Yes** | **Yes** | Yes |
+| PT-BR guide | No | No | No | No | No | No | No | **Yes** | Yes |
+| Benchmark docs | No | No | No | No | No | No | No | **Yes** | Yes |
+| GH Actions docs | No | No | No | No | No | No | No | **Yes** | Yes |
+| Before/After comparison | No | No | No | No | No | No | No | **Yes** | Yes |

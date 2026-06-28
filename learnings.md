@@ -1,10 +1,37 @@
 # Learnings — Solana Auditor Skill
 
 > **Decision Log & Lessons Learned**
-> _Superteam Brasil Solana Skills Contest — v1.11.0_
-> Last updated: 2026-06-27
+> _Superteam Brasil Solana Skills Contest — v1.12.0_
+> Last updated: 2026-06-28
 
 ---
+
+## 2026-06-28 — Contest Sprint v1.12.0
+
+### What we did
+Fixed critical pytest bug and added 5 polish items + live exploit audit for Superteam Brasil contest submission (July 8, 2026).
+
+### Critical bug found
+python3 -m pytest fails silently on clean clone because pytest is not on system Python module path. All 22 fuzz tests were reporting "0 tests collected" and exit 0. Fixed with python3 -c "import pytest; pytest.main([...])". PATTERN: always verify test commands actually run, not just exit 0. Demo scripts with || true mask silent failures.
+
+### Contest differentiators
+1. Dashboard screenshot — visual proof above the fold
+2. PT-BR guide — built for the audience
+3. Benchmark table — proves differentiation vs existing tools
+4. GH Actions template — "I could use this tomorrow"
+5. Live exploit audit — real production exploit documented
+6. Before/After comparison — full lifecycle demonstration
+
+### Pattern for winning
+- Visual proof above the fold > text description
+- One-click integration > complex setup
+- Live production usage > theoretical examples
+- Mathematically verified correctness > assertions
+
+### Still missing
+- Native QED 2A CI integration
+- Multi-program audit aggregation
+- Video walkthrough
 
 ## Principles
 

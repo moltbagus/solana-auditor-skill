@@ -34,7 +34,7 @@ bash tests/test-skill-integrity.sh 2>&1 | grep "Check 10"
 python3 tests/fuzz/test_properties.py
 
 # Single fuzz test
-python3 -m pytest tests/fuzz/test_properties.py::test_cvss_vector_roundtrip -v
+python3 -c "import pytest; pytest.main(['-v', 'tests/fuzz/test_properties.py', '-k', 'test_cvss_vector_roundtrip'])"
 ```
 
 ---

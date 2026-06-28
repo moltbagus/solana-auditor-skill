@@ -1,8 +1,8 @@
 # Spec — Solana Auditor Skill
 
 > **Technical Specification**
-> _Version 1.11.0 — Architecture Review + Report Enhancement_
-> Last updated: 2026-06-27
+> _Version 1.12.0 — Architecture Review + Report Enhancement_
+> Last updated: 2026-06-28
 
 ---
 
@@ -41,6 +41,8 @@
 ```
 
 **Kit Submission v1.8.1**: Added HTML audit dashboard generator (`scripts/dashboard.py`), standalone report CLI (`scripts/audit-report.py`), `demo.sh` step 7 auto-generates dashboard. All 9 commands have `name:` frontmatter for Claude Code registration.
+
+**v1.12.0**: dashboard, PT-BR guide, benchmark, GH Actions, before/after, live exploit audit.
 
 ```
 

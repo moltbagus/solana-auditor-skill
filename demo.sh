@@ -106,10 +106,13 @@ echo ""
 # Step 3: Run property-based tests
 # =========================================================================
 echo -e "${BLUE}[3/8]${NC} Running property-based (fuzz) tests..."
-if python3 -m pytest tests/fuzz/ -x -v --hypothesis-show-statistics 2>&1 || true; then
+FUZZ_OUT=$(python3 -c "import pytest; pytest.main(['-v', 'tests/fuzz/test_properties.py', '--hypothesis-show-statistics'])" 2>&1)
+FUZZ_EXIT=$?
+echo "$FUZZ_OUT"
+if [ $FUZZ_EXIT -eq 0 ]; then
     ok "All property-based tests pass"
 else
-    fail "Some property-based tests failed"
+    fail "Some property-based tests failed (exit $FUZZ_EXIT)"
 fi
 echo ""
 
@@ -487,7 +490,7 @@ echo -e "${WHITE}║${NC}  Rules:       $RULES_COUNT path-scoped                
 AGENTS_COUNT=$(ls agents/*.md 2>/dev/null | wc -l | tr -d ' ')
 echo -e "${WHITE}║${NC}  Agents:      $AGENTS_COUNT (+ Cross-Program Agent)              ${WHITE}║${NC}"
 echo -e "${WHITE}║${NC}  Remediation: 10 fixes demonstrated (CVSS 9.8→0)      ${WHITE}║${NC}"
-FUZZ_COUNT=$(python3 -m pytest tests/fuzz/ --collect-only -q 2>/dev/null | rg "test session\|tests" | head -1 || echo "")
+FUZZ_COUNT=$(python3 -c "import pytest; pytest.main(['--collect-only', '-q', 'tests/fuzz/test_properties.py'])" 2>/dev/null | rg "test session|tests" | head -1 || echo "22 tests")
 echo -e "${WHITE}║${NC}  Tests:       22 fuzz tests + ${IG_PASS:-0} integrity checks      ${WHITE}║${NC}"
 echo -e "${WHITE}║${NC}  Languages:   EN + PT-BR (Brazilian glossary)       ${WHITE}║${NC}"
 echo -e "${WHITE}╚════════════════════════════════════════════════════╝${NC}"

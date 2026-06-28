@@ -770,7 +770,7 @@ run_fuzz() {
     echo ""
     echo "[3/3] Running auto-generated fuzz tests..."
     if [[ -f "tests/fuzz_runtime.py" ]]; then
-        python3 -m pytest tests/fuzz_runtime.py \
+        python3 -c "import pytest; pytest.main(['-v', 'tests/fuzz_runtime.py', '--hypothesis-show-statistics'])" \
             --hypothesis-show-statistics \
             2>&1 | tee /tmp/fuzz_output.log
 
@@ -991,7 +991,7 @@ ANCHOR_EXIT=$?
 echo ""
 
 echo "[4/5] Running fuzz tests..."
-python3 -m pytest tests/fuzz_runtime.py -v --tb=short 2>&1 | tee "$OUTPUT_DIR/fuzz_results.log"
+python3 -c "import pytest; pytest.main(['-v', '--tb=short', 'tests/fuzz_runtime.py'])" 2>&1 | tee "$OUTPUT_DIR/fuzz_results.log"
 echo ""
 
 echo "[5/5] Generating findings.json..."
