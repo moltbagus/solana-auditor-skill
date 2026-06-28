@@ -1,0 +1,18 @@
+[toolchain]
+anchor_version = "0.31.1"
+
+[features]
+resolution = true
+skip-lint = false
+
+[programs.localnet]
+amm = "AMMpool7v8N9m2Xy3Ko4BpQ6rHzdLmN5StF8aGpLmN6PtQ"
+swap = "SWAPpool9m2Xy3Ko4BpQ6rHzdLmN5StF8aGpLmN6PtQa"
+oracle = "ORAcle7v8N9m2Xy3Ko4BpQ6rHzdLmN5StF8aGpLmN6PtQb"
+
+[registry]
+url = "https://api.apr.dev"
+
+[provider]
+cluster = "Localnet"
+wallet = "~/.config/solana/id.json"

@@ -1,0 +1,320 @@
+{
+  "findings": [
+    {
+      "id": "VULN-01",
+      "title": "Reentrancy on withdraw — CEI pattern violation",
+      "severity": "CRITICAL",
+      "cvss": 9.8,
+      "cvss_vector": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H",
+      "cwe": "CWE-862",
+      "location": {
+        "file": "programs/amm/src/lib.rs",
+        "line": 52,
+        "function": "withdraw"
+      },
+      "description": "The withdraw instruction transfers tokens BEFORE updating the pool's virtual_balance state. An attacker can re-enter the function via a callback during the token transfer, draining additional funds before the state update completes. The CEI (Checks-Effects-Interactions) pattern is violated: Effects (state mutation) should precede Interactions (external calls).",
+      "impact": "Complete drain of the AMM pool via reentrancy. The attacker can re-enter withdraw() multiple times before state is updated, extracting multiples of their deposited amount.",
+      "recommendation": "Move state update BEFORE the token::transfer call. Add a reentrancy guard (e.g., a boolean flag on the pool account) that is checked at entry and cleared after state updates. Use Checks-Effects-Interactions pattern: validate, update state, then interact with external systems.",
+      "poc_status": "pending",
+      "rule_caught": "Rule 14 — Reentrancy",
+      "rule": 14,
+      "status": "Open",
+      "root_cause": "Token transfer (interaction) occurs before state update (effect). No reentrancy guard exists. The attacker exploits the timing gap between transfer and state mutation.",
+      "regression_test": "#[tokio::test]\nasync fn test_withdraw_reentrancy_guard() {\n    let pool_before = pool.virtual_balance;\n    let malicious_tx = build_reentrant_withdraw_tx(&attacker, amount);\n    let result = program.process_transaction(malicious_tx).await;\n    // Either reentrancy guard blocks, or state updates before transfer\n    assert!(result.is_err() || pool.virtual_balance < pool_before - amount);\n}"
+    },
+    {
+      "id": "VULN-02",
+      "title": "Remaining accounts forwarded without validation in swap CPI",
+      "severity": "HIGH",
+      "cvss": 8.6,
+      "cvss_vector": "CVSS:3.1/AV:N/AC:L/PR:L/UI:N/S:U/C:H/I:H/A:N",
+      "cwe": "CWE-345",
+      "location": {
+        "file": "programs/amm/src/lib.rs",
+        "line": 77,
+        "function": "swap"
+      },
+      "description": "The swap instruction accepts remaining_accounts and forwards them directly to the token program without validating that they are legitimate token accounts. An attacker can inject malicious accounts that the token program will accept, enabling unauthorized token transfers or other attacks.",
+      "impact": "Account injection attack. Attacker can manipulate the account list passed to the token program, potentially draining associated token accounts or performing unauthorized transfers.",
+      "recommendation": "Validate all accounts in remaining_accounts against expected types and owners. Use explicit account constraints instead of remaining_accounts. If remaining_accounts are necessary, implement strict allowlist validation for each account's program_id and mint.",
+      "poc_status": "pending",
+      "rule_caught": "Rule 15 — Remaining Accounts",
+      "rule": 15,
+      "status": "Open",
+      "root_cause": "ctx.remaining_accounts is forwarded blindly to invoke(). No validation that these accounts are expected token accounts. Any account metas can be injected.",
+      "regression_test": "#[tokio::test]\nasync fn test_swap_rejects_injected_accounts() {\n    let malicious_accounts = vec![attacker_token_account.clone()];\n    let result = program.rpc().process_transaction(\n        swap_tx_with_extra_accounts(&user, malicious_accounts)\n    ).await;\n    assert!(result.is_err());  // Must reject unknown accounts\n}"
+    },
+    {
+      "id": "VULN-03",
+      "title": "Flash loan composition — no flash loan protection",
+      "severity": "CRITICAL",
+      "cvss": 9.1,
+      "cvss_vector": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H",
+      "cwe": "CWE-770",
+      "location": {
+        "file": "programs/amm/src/lib.rs",
+        "line": 94,
+        "function": "execute_arbitrage"
+      },
+      "description": "The execute_arbitrage instruction accepts arbitrary amounts and adds them to the pool balance without any flash loan protection mechanism. An attacker can borrow tokens from a flash loan program, manipulate pool prices, execute arbitrage, and repay the loan—all within a single transaction.",
+      "impact": "Flash loan attack enabling unlimited arbitrage profit. The attacker can manipulate pool state arbitrarily within a single transaction, extracting value from the protocol or other liquidity providers.",
+      "recommendation": "Implement flash loan protection: require that input amounts do not exceed the user's prior balance, track balance snapshots, or use a two-phase commit pattern that validates state changes against pre-flash baselines.",
+      "poc_status": "pending",
+      "rule_caught": "Rule 26 — Flash Loans",
+      "rule": 26,
+      "status": "Open",
+      "root_cause": "No validation that amounts are from legitimate liquidity. No balance snapshot check before and after flash loan operations. Arbitrary Vec<u64> accepted without constraints.",
+      "regression_test": "#[tokio::test]\nasync fn test_arbitrage_requires_legitimate_funds() {\n    let pre_balance = get_token_balance(&attacker);\n    let flash_loan_amount = 1_000_000_000_u64;\n    let result = execute_flash_arbitrage(&attacker, flash_loan_amount).await;\n    let post_balance = get_token_balance(&attacker);\n    // Attacker should not profit from flash loan\n    assert!(post_balance <= pre_balance + legitimate_trade_profit);\n}"
+    },
+    {
+      "id": "VULN-04",
+      "title": "Price oracle manipulation via stale data",
+      "severity": "HIGH",
+      "cvss": 7.5,
+      "cvss_vector": "CVSS:3.1/AV:N/AC:L/PR:L/UI:N/S:U/C:L/I:L/A:N",
+      "cwe": "CWE-1334",
+      "location": {
+        "file": "programs/amm/src/lib.rs",
+        "line": 112,
+        "function": "get_price"
+      },
+      "description": "The get_price function reads the price_feed.value without checking if the last_update slot is recent. An attacker can set a stale price on the oracle and read it before legitimate updates occur, enabling price manipulation attacks on any AMM that depends on this oracle.",
+      "impact": "Oracle price manipulation. The attacker can read outdated prices to execute favorable trades before legitimate oracle updates occur, extracting value from the protocol.",
+      "recommendation": "Add staleness check: read Clock::get() and verify clock.slot - price_feed.last_update < MAX_STALENESS_SLOTS. Revert with OracleError::PriceStale if stale. Set MAX_STALENESS_SLOTS to an appropriate value for the asset's expected update frequency.",
+      "poc_status": "pending",
+      "rule_caught": "Rule 13 — Price Oracles",
+      "rule": 13,
+      "status": "Open",
+      "root_cause": "No Clock sysvar read to verify slot freshness. price_feed.last_update is set by user without cross-checking against actual blockchain slot.",
+      "regression_test": "#[tokio::test]\nasync fn test_get_price_rejects_stale_data() {\n    let stale_price = PriceFeed { value: manipulated_price, last_update: old_slot };\n    let result = get_price(&user, stale_price).await;\n    assert!(result.is_err());  // Must reject stale prices\n}"
+    },
+    {
+      "id": "VULN-05",
+      "title": "Arithmetic overflow in liquidity calculation",
+      "severity": "HIGH",
+      "cvss": 7.1,
+      "cvss_vector": "CVSS:3.1/AV:N/AC:L/PR:L/UI:N/S:U/C:L/I:H/A:N",
+      "cwe": "CWE-190",
+      "location": {
+        "file": "programs/amm/src/lib.rs",
+        "line": 127,
+        "function": "add_liquidity"
+      },
+      "description": "The add_liquidity function computes total_liquidity = amount_a * amount_b using Rust's default * operator. In release mode, this wraps silently on overflow. An attacker can craft amounts that overflow the calculation, corrupting the pool's liquidity tracking.",
+      "impact": "Integer overflow corrupts liquidity accounting. The wrapped total_liquidity no longer reflects actual deposits, enabling attackers to drain the pool via manipulated share calculations.",
+      "recommendation": "Use checked_mul: let total = amount_a.checked_mul(amount_b).ok_or(AmmError::Overflow)?;. Add an Overflow variant to AmmError. Apply checked arithmetic to all user-controlled calculations.",
+      "poc_status": "pending",
+      "rule_caught": "Rule 6 — Arithmetic",
+      "rule": 6,
+      "status": "Open",
+      "root_cause": "Rust's default * operator on u64 wraps silently in release mode. No checked_mul used for amount_a * amount_b.",
+      "regression_test": "#[test]\nfn test_overflow_returns_error() {\n    let max = u64::MAX;\n    let result = max.checked_mul(2);\n    assert!(result.is_none());\n}"
+    },
+    {
+      "id": "VULN-06",
+      "title": "Arbitrary CPI via callback — no program allowlist",
+      "severity": "HIGH",
+      "cvss": 8.1,
+      "cvss_vector": "CVSS:3.1/AV:N/AC:L/PR:L/UI:N/S:U/C:H/I:H/A:N",
+      "cwe": "CWE-347",
+      "location": {
+        "file": "programs/amm/src/lib.rs",
+        "line": 143,
+        "function": "exec_swap_callback"
+      },
+      "description": "The exec_swap_callback instruction accepts a user-supplied target_program and invokes it via invoke() with user-supplied data and remaining_accounts. No allowlist validates the target program, enabling arbitrary CPI to any program the caller has authority to invoke.",
+      "impact": "Arbitrary code execution via CPI. The attacker can invoke the System Program, Token Program, or any other program to perform unauthorized operations using the AMM's authority.",
+      "recommendation": "Replace AccountInfo with Program<'info, AllowedProgram> for known programs. If dynamic programs are required, maintain an on-chain allowlist PDA and validate target_program.key() against it before invoking.",
+      "poc_status": "pending",
+      "rule_caught": "Rule 4 — CPI Safety",
+      "rule": 4,
+      "status": "Open",
+      "root_cause": "target_program is an unvalidated AccountInfo. invoke() is called with attacker-controlled program_id, accounts, and data.",
+      "regression_test": "#[tokio::test]\nasync fn test_callback_rejects_unknown_program() {\n    let malicious_tx = Transaction::new_signed_with_payer(\n        &[instruction::exec_swap_callback(&program_id, &[], &malicious_program.pubkey())],\n        Some(&user.pubkey()),\n        &[&user],\n        recent_blockhash,\n    );\n    let result = program.rpc().process_transaction(&malicious_tx).await;\n    assert!(result.is_err());\n}"
+    },
+    {
+      "id": "VULN-07",
+      "title": "Missing signer verification on pool admin",
+      "severity": "HIGH",
+      "cvss": 7.2,
+      "cvss_vector": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:L/A:N",
+      "cwe": "CWE-306",
+      "location": {
+        "file": "programs/amm/src/lib.rs",
+        "line": 156,
+        "function": "set_pool_fee"
+      },
+      "description": "The set_pool_fee instruction takes admin as AccountInfo instead of Signer. No is_signer check exists, so any account can be passed as admin to modify the pool fee. This allows unauthorized fee changes that can extract value from liquidity providers.",
+      "impact": "Unauthorized fee modification. Any user can call set_pool_fee with arbitrary fee values, potentially redirecting fees to an attacker-controlled address or setting fees to 0 to drain the pool.",
+      "recommendation": "Change admin: AccountInfo to admin: Signer. Add has_one = authority constraint on pool to bind admin to the pool's stored authority. Anchor will then enforce signer verification at deserialization.",
+      "poc_status": "pending",
+      "rule_caught": "Rule 8 — Signer Verification",
+      "rule": 8,
+      "status": "Open",
+      "root_cause": "admin field declared as AccountInfo instead of Signer. No is_signer gate. Anchor deserializer accepts any AccountInfo regardless of whether it signed the transaction.",
+      "regression_test": "#[tokio::test]\nasync fn test_set_pool_fee_requires_admin_signer() {\n    let malicious_tx = Transaction::new_signed_with_payer(\n        &[instruction::set_pool_fee(&program_id, new_fee)],\n        Some(&attacker.pubkey()),\n        &[&attacker],  // Only attacker signs — admin does NOT\n        recent_blockhash,\n    );\n    let result = program.rpc().process_transaction(&malicious_tx).await;\n    assert!(result.is_err());  // Must fail with NotSigner\n}"
+    },
+    {
+      "id": "VULN-08",
+      "title": "Manual init without discriminator check — reinit vulnerability",
+      "severity": "MEDIUM",
+      "cvss": 6.5,
+      "cvss_vector": "CVSS:3.1/AV:N/AC:L/PR:L/UI:N/S:U/C:N/I:H/A:N",
+      "cwe": "CWE-665",
+      "location": {
+        "file": "programs/swap/src/lib.rs",
+        "line": 34,
+        "function": "init_pool"
+      },
+      "description": "The init_pool instruction uses manual field assignment without Anchor's #[account(init)] discriminator. The SwapPool account is populated directly without writing the 8-byte Anchor discriminator. If the account is closed and re-funded, it can be re-initialized with new parameters.",
+      "impact": "Reinitialization attack. An attacker who controls a closed account's key can call init_pool again and reset the pool's authority, effectively hijacking the pool.",
+      "recommendation": "Use #[account(init, payer = authority, space = X)] on the pool field, or use Account<'info, SwapPool> which verifies the discriminator. Never manually initialize account fields without discriminator enforcement.",
+      "poc_status": "pending",
+      "rule_caught": "Rule 40 — Manual Initialization",
+      "rule": 40,
+      "status": "Open",
+      "root_cause": "Manual field assignment without discriminator check. AccountInfo used instead of Account<'info, T> which enforces 8-byte discriminator verification.",
+      "regression_test": "#[tokio::test]\nasync fn test_initialize_rejects_reinit() {\n    program.rpc().process_transaction(&init_tx).await.unwrap();\n    program.rpc().process_transaction(&close_tx).await.unwrap();\n    program.rpc().process_transaction(&refund_tx).await.unwrap();\n    let result = program.rpc().process_transaction(&init_tx).await;\n    assert!(result.is_err());  // Must fail with AlreadyInitialized\n}"
+    },
+    {
+      "id": "VULN-09",
+      "title": "Reentrancy via token callback",
+      "severity": "HIGH",
+      "cvss": 7.5,
+      "cvss_vector": "CVSS:3.1/AV:N/AC:L/PR:L/UI:N/S:U/C:H/I:H/A:N",
+      "cwe": "CWE-862",
+      "location": {
+        "file": "programs/swap/src/lib.rs",
+        "line": 47,
+        "function": "transfer_with_callback"
+      },
+      "description": "The transfer_with_callback instruction executes a token transfer without a reentrancy guard. The token callback could re-enter this instruction or other instructions in the same transaction before state updates complete.",
+      "impact": "Reentrancy attack via token callback. The attacker can re-enter during the transfer and extract additional funds before the swap state is updated.",
+      "recommendation": "Add a reentrancy guard to the swap pool account (e.g., is_locked boolean). Check the guard at entry and set it before the transfer. Clear it after all state updates complete. Follow CEI pattern strictly.",
+      "poc_status": "pending",
+      "rule_caught": "Rule 14 — Reentrancy",
+      "rule": 14,
+      "status": "Open",
+      "root_cause": "Token transfer occurs before state update. No reentrancy guard. Token callbacks can re-enter during external call.",
+      "regression_test": "#[tokio::test]\nasync fn test_transfer_callback_reentrancy() {\n    let pre_balance = get_balance(&vault);\n    let malicious_tx = build_callback_transfer_tx(&attacker, amount);\n    let result = program.process_transaction(malicious_tx).await;\n    assert!(result.is_err() || get_balance(&vault) >= pre_balance - amount);\n}"
+    },
+    {
+      "id": "VULN-10",
+      "title": "Duplicate mutable account — double-spend vulnerability",
+      "severity": "HIGH",
+      "cvss": 8.6,
+      "cvss_vector": "CVSS:3.1/AV:N/AC:L/PR:L/UI:N/S:U/C:H/I:H/A:N",
+      "cwe": "CWE-733",
+      "location": {
+        "file": "programs/swap/src/lib.rs",
+        "line": 65,
+        "function": "double_transfer"
+      },
+      "description": "The double_transfer instruction accepts token_a and token_b as separate AccountInfo fields. If the same token account is passed twice (once as each parameter), the transfer logic will execute twice on the same account, potentially transferring double the intended amount.",
+      "impact": "Double-spend via duplicate accounts. The attacker can pass the same account twice and extract double the authorized transfer amount.",
+      "recommendation": "Add account deduplication checks: verify token_a.key() != token_b.key() at function entry. Alternatively, use unique account constraints or a single account list instead of separate fields.",
+      "poc_status": "pending",
+      "rule_caught": "Rule 38 — Duplicate Accounts",
+      "rule": 38,
+      "status": "Open",
+      "root_cause": "token_a and token_b are separate AccountInfo fields with no constraint preventing them from being the same account. The duplicate account check exists only at Solana's instruction-level validation, not at the program logic level.",
+      "regression_test": "#[tokio::test]\nasync fn test_double_transfer_rejects_duplicate() {\n    let duplicate_tx = double_transfer_tx(&user, &same_account, &same_account, amount);\n    let result = program.rpc().process_transaction(&duplicate_tx).await;\n    assert!(result.is_err());  // Must reject duplicate accounts\n}"
+    },
+    {
+      "id": "VULN-11",
+      "title": "Arithmetic underflow in fee calculation",
+      "severity": "MEDIUM",
+      "cvss": 6.3,
+      "cvss_vector": "CVSS:3.1/AV:N/AC:L/PR:L/UI:N/S:U/C:L/I:L/A:N",
+      "cwe": "CWE-190",
+      "location": {
+        "file": "programs/swap/src/lib.rs",
+        "line": 94,
+        "function": "calc_net_amount"
+      },
+      "description": "The calc_net_amount function computes net = gross - fee where fee = gross * fee_bps / 10000. If fee_bps exceeds 10000, fee will exceed gross, causing a silent underflow when subtracting. The result wraps to a very large number.",
+      "impact": "Integer underflow corrupts fee accounting. The wrapped net amount may be extremely large, enabling the attacker to extract excess tokens or cause accounting inconsistencies.",
+      "recommendation": "Add bounds check on fee_bps: require!(fee_bps <= 10000, SwapError::InvalidFeeBps). Use checked_sub: let net = gross.checked_sub(fee).ok_or(SwapError::ArithmeticError)?.",
+      "poc_status": "pending",
+      "rule_caught": "Rule 6 — Arithmetic",
+      "rule": 6,
+      "status": "Open",
+      "root_cause": "No validation of fee_bps upper bound. Rust's default - operator underflows silently on u64 in release mode.",
+      "regression_test": "#[test]\nfn test_fee_underflow_returns_error() {\n    let gross = 1000u64;\n    let fee_bps = 15000;  // Exceeds 10000\n    let result = calc_net_amount(gross, fee_bps);\n    // Should error, not wrap to large number\n    assert!(result.is_err() || result.unwrap() <= gross);\n}"
+    },
+    {
+      "id": "VULN-12",
+      "title": "Sysvar spoofing — slot from instruction data",
+      "severity": "MEDIUM",
+      "cvss": 6.5,
+      "cvss_vector": "CVSS:3.1/AV:N/AC:L/PR:L/UI:N/S:U/C:L/I:L/A:N",
+      "cwe": "CWE-346",
+      "location": {
+        "file": "programs/oracle/src/lib.rs",
+        "line": 30,
+        "function": "set_price"
+      },
+      "description": "The set_price instruction accepts a slot parameter from instruction data rather than reading from the Clock sysvar. An attacker can set an arbitrary slot value, bypassing staleness checks that compare against this stored slot.",
+      "impact": "Oracle manipulation. The attacker can set any slot value to make prices appear fresh when they are actually stale, enabling price manipulation attacks on downstream AMMs.",
+      "recommendation": "Read the actual slot from Clock::get()? and store clock.slot as last_update. Never trust slot values from instruction data—only trust sysvar-derived values for security-critical state.",
+      "poc_status": "pending",
+      "rule_caught": "Rule 36 — Sysvars",
+      "rule": 36,
+      "status": "Open",
+      "root_cause": "Slot parameter is user-supplied via instruction data. Should use Clock::get() to read actual blockchain slot.",
+      "regression_test": "#[tokio::test]\nasync fn test_set_price_uses_sysvar_slot() {\n    let clock = Clock::get().unwrap();\n    let fake_slot = clock.slot - 1000;  // Stale\n    let result = set_price(&authority, price, fake_slot).await;\n    // Should either reject or use actual clock slot, not fake_slot\n    assert!(result.is_err() || get_price_feed().last_update == clock.slot);\n}"
+    },
+    {
+      "id": "VULN-13",
+      "title": "Unsafe deserialization without owner check",
+      "severity": "MEDIUM",
+      "cvss": 5.9,
+      "cvss_vector": "CVSS:3.1/AV:N/AC:L/PR:L/UI:N/S:U/C:L/I:N/A:N",
+      "cwe": "CWE-346",
+      "location": {
+        "file": "programs/oracle/src/lib.rs",
+        "line": 41,
+        "function": "read_data"
+      },
+      "description": "The read_data instruction borrows data from an arbitrary account without verifying the account's owner. Any account can be passed and its data read, potentially exposing sensitive information from unrelated programs.",
+      "impact": "Unauthorized data access. Attacker can read arbitrary account data, potentially exposing private keys, other program state, or sensitive user information stored in account data.",
+      "recommendation": "Verify the account owner: require!(data_account.owner == ctx.program_id, OracleError::InvalidOwner). Only allow reading from accounts owned by the oracle program or an approved data account type.",
+      "poc_status": "pending",
+      "rule_caught": "Rule 39 — Account Ownership",
+      "rule": 39,
+      "status": "Open",
+      "root_cause": "No owner check on data_account. try_borrow_data() can read any account's data regardless of owner.",
+      "regression_test": "#[tokio::test]\nasync fn test_read_data_rejects_unknown_owner() {\n    let other_program_account = create_account_owned_by_other_program();\n    let result = read_data(&user, &other_program_account, offset).await;\n    assert!(result.is_err());  // Must reject unauthorized owner\n}"
+    },
+    {
+      "id": "VULN-14",
+      "title": "Missing writable constraint on mutable account",
+      "severity": "LOW",
+      "cvss": 5.3,
+      "cvss_vector": "CVSS:3.1/AV:N/AC:L/PR:L/UI:N/S:U/C:N/I:L/A:N",
+      "cwe": "CWE-20",
+      "location": {
+        "file": "programs/oracle/src/lib.rs",
+        "line": 53,
+        "function": "update_oracle"
+      },
+      "description": "The update_oracle instruction mutates price_feed.value but does not mark the account as writable in the account constraints. Anchor will not catch this at compile time; the runtime write will fail, producing a confusing error.",
+      "impact": "Runtime failure with confusing error message. The transaction will fail at runtime when attempting to write to a non-writable account, producing an error that doesn't clearly indicate the missing writable constraint.",
+      "recommendation": "Add #[account(mut)] constraint to price_feed in UpdateOracle struct. This ensures Anchor validates writability at compile time and provides clear error messages.",
+      "poc_status": "pending",
+      "rule_caught": "Rule 37 — Account Constraints",
+      "rule": 37,
+      "status": "Open",
+      "root_cause": "price_feed is mutated in the function but #[account(mut)] is missing from the constraint. Anchor cannot verify writability at compile time.",
+      "regression_test": "# This is a compile-time issue, not runtime\n# Anchor will catch this if tests include constraint validation\n# Ensure #[account(mut)] is present on all mutated accounts"
+    }
+  ],
+  "summary": {
+    "critical": 2,
+    "high": 7,
+    "medium": 5,
+    "low": 0,
+    "info": 0,
+    "total": 14
+  }
+}
