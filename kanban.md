@@ -1,8 +1,8 @@
 # Kanban — Solana Auditor Skill
 
 > **Project Kanban Board**
-> _Superteam Brasil Solana Skills Contest — v1.13.0_
-> Last updated: 2026-06-28
+> _Superteam Brasil Solana Skills Contest — v1.14.0_
+> Last updated: 2026-06-29
 
 ---
 
@@ -114,6 +114,13 @@ audit-report/submissions/MATH-003-3-immunefi-submission.md  (MEDIUM, CVSS 6.5 �
 
 ---
 
+
+### Sprint 50 — Fixture Expansion (Done: 2026-06-29)
+- [x] AMM/DEX fixture — 14 vulns across 3 programs, Rules 14/15/26/13/6/4/8/40/38/36/37
+- [x] Staking Pool fixture — 14 vulns across 3 programs, Rules 14/22/41/6/8/11/5/15/4/38/3/36/37
+- [x] NFT/Candy Machine fixture — 14 vulns across 3 programs, Rules 16/40/2/8/6/14/5/33/22/38/27/39/4/37
+- [x] All 42 new findings: CVSS math verified (brute-forced), severity summaries correct
+- [x] demo.sh + integrity checks patched for 3 new fixtures
 
 ### Sprint 49 — Bug Fix Sprint + CLAUDE.md Rewrite (Done: 2026-06-28)
 - [x] Post-submission code audit — 4 parallel subagents, demo.sh + all fixtures
@@ -241,12 +248,12 @@ Full details: `docs/superpowers/specs/2026-06-27-gap-analysis.md` and `docs/supe
 
 ## Velocity Tracking (FINAL)
 
-| Metric | v1.0 | v1.3 | v1.4 FINAL | v1.8.1 | v1.9.0 | v1.10.0 | v1.11.0 | v1.12.0 | Target |
-|--------|------|------|------------|--------|--------|---------|--------|--------|
-| Integrity checks | 18 | 49 | **62** | **154** | **154** | **158** | **161** | **161** | 62+ |
-| VULN tags | 10 | 16 | **17** | 17 | 17 | 17 | 17 | 17 | 17 |
-| Property-based tests | 0 | 19 | **19** | **22** | **22** | 22 | 22 | 22 | 15+ |
-| Fixtures | 1 | 2 | **3** | 3 | 3 | 3 | 3 | 3 | 3 |
+| Metric | v1.0 | v1.3 | v1.4 FINAL | v1.8.1 | v1.9.0 | v1.10.0 | v1.11.0 | v1.12.0 | v1.13.0 | v1.14.0 | Target |
+|--------|------|------|------------|--------|--------|---------|--------|--------|--------|--------|--------|
+| Integrity checks | 18 | 49 | **62** | **154** | **154** | **158** | **161** | **161** | 161 | **173** | 62+ |
+| VULN tags | 10 | 16 | **17** | 17 | 17 | 17 | 17 | 17 | 17 | **59** | 17 |
+| Property-based tests | 0 | 19 | **19** | **22** | **22** | 22 | 22 | 22 | 22 | 22 | 15+ |
+| Fixtures | 1 | 2 | **3** | 3 | 3 | 3 | 3 | 3 | 3 | **6** | 3 |
 | Rules | 12 | 12 | **17** | **50** | **50** | 50 | 50 | 50 | 15+ |
 | Commands | 5 | 5 | **6** | **9** | **9** | 9 | 9 | 9 | 6 |
 | Phases | 6 | 6 | **6** | **6** | **7** | **7** | **8** | **8** | 6+ |

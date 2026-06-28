@@ -1,0 +1,30 @@
+[profile.release]
+max stabilizing iterations = 1
+number of iterations = 3
+
+[profiles.devnet]
+endpoint = "https://api.devnet.solana.com"
+
+[programs.localnet]
+candy_machine = "Candy111111111111111111111111111111111111111"
+nft_minter = "Minter111111111111111111111111111111111111"
+metadata = "Meta111111111111111111111111111111111111111"
+
+[programs.devnet]
+candy_machine = "Candy111111111111111111111111111111111111111"
+nft_minter = "Minter111111111111111111111111111111111111"
+metadata = "Meta111111111111111111111111111111111111111"
+
+[registry]
+url = "https://anchor.projectserum.com"
+
+[provider]
+cluster = "localnet"
+wallet = "~/.config/solana/id.json"
+
+[workspace]
+programs = [
+  "programs/candy-machine",
+  "programs/nft-minter",
+  "programs/metadata",
+]

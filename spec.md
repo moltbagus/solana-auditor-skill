@@ -1,8 +1,8 @@
 # Spec — Solana Auditor Skill
 
 > **Technical Specification**
-> _Version 1.13.0 — Architecture Review + Report Enhancement_
-> Last updated: 2026-06-28
+> _Version 1.14.0 — Fixture Expansion Sprint_
+> Last updated: 2026-06-29
 
 ---
 
@@ -43,6 +43,8 @@
 **Kit Submission v1.8.1**: Added HTML audit dashboard generator (`scripts/dashboard.py`), standalone report CLI (`scripts/audit-report.py`), `demo.sh` step 7 auto-generates dashboard. All 9 commands have `name:` frontmatter for Claude Code registration.
 
 **v1.12.0**: dashboard, PT-BR guide, benchmark, GH Actions, before/after, live exploit audit.
+
+**v1.14.0**: 3 new audit fixtures — AMM/DEX (14 vulns, Rules 14/15/26/13/6/4/8/40/38/36/37), Staking Pool (14 vulns, Rules 14/22/41/6/8/11/5/15/4/38/3/36/37), NFT/Candy Machine (14 vulns, Rules 16/40/2/8/6/14/5/33/22/38/27/39/4/37). All 42 findings CVSS-math-verified. Total fixtures: 6 (was 3).
 
 ```
 

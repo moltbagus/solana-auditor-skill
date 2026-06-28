@@ -1,8 +1,8 @@
 # Learnings — Solana Auditor Skill
 
 > **Decision Log & Lessons Learned**
-> _Superteam Brasil Solana Skills Contest — v1.13.0_
-> Last updated: 2026-06-28
+> _Superteam Brasil Solana Skills Contest — v1.14.0_
+> Last updated: 2026-06-29
 
 ---
 
@@ -196,6 +196,27 @@ python3 -m pytest fails silently on clean clone because pytest is not on system 
 - [ ] **Multi-program audit aggregation** — Combine findings from multiple Anchor programs.
 - [ ] **Visual diff** — Pre/post-fix audit report comparison.
 - [ ] **Architecture Review module** — Done v1.11.0 (Phase 7 + architecture-reviewer agent).
+
+---
+
+## 2026-06-29 — v1.14.0 Fixture Expansion Sprint
+
+### What we did
+Added 3 new audit fixtures (AMM/DEX, Staking Pool, NFT/Candy Machine) with 42 total vulnerabilities, covering Rules 14/15/26/13/6/4/8/40/38/36/37/22/41/11/5/3/16/2/33/27/39 across diverse protocol types.
+
+### Bugs found and fixed
+| Bug | Severity | File | Issue | Fix |
+|-----|----------|------|-------|-----|
+| CVSS vectors wrong in DEX/Staking | HIGH | findings.json | Subagent used approximate vectors | Brute-forced exact vectors using `severity_counts.py` formula |
+| VULN-12/13/14 DEX wrong severity | MEDIUM | findings.json | 1 finding tagged LOW but counted MEDIUM | Corrected summary; regenerated vectors |
+| NFT fixture output missing | CRITICAL | — | 2 of 3 output agents timed out | Regenerated NFT audit-output via workflow |
+| NFT VULN-05/08/09 CVSS mismatch | MEDIUM | findings.json | Subagent vectors didn't match repo formula | Applied brute-force lookup using repo's exact formula |
+
+### Key lesson
+**CVSS math must use brute-force lookup** — manual CVSS vector selection will always drift from the repo's formula. Use the `compute_cvss_score()` from `severity_counts.py` to generate the lookup table, then apply it to all fixture findings. Never trust approximate vectors from LLM output.
+
+### Key lesson
+**Subagent timeouts on long tasks** — fixture output generation (4 docs × 3 fixtures = 12 files) exceeded agent token budget. Break into smaller batches or use direct Python generation instead of agent delegation for document-heavy tasks.
 
 ---
 

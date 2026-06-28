@@ -1,8 +1,8 @@
 # PRD — Solana Auditor Skill
 
 > **Product Requirements Document**
-> _Superteam Brasil Solana Skills Contest — v1.13.0_
-> Last updated: 2026-06-28
+> _Superteam Brasil Solana Skills Contest — v1.14.0_
+> Last updated: 2026-06-29
 
 ---
 
@@ -118,6 +118,14 @@ Transform Claude Code into the **gold-standard Solana security auditor** — a r
 - [x] CLAUDE.md rewrite: fixed stale version/rule counts, added Two-Tier model, correct agent/phase counts, fixture schema with `rule`+`recommendation` fields, pytest command fix, key gotchas
 - [x] demo.sh: EXIT 0, 161/161 integrity, 22/22 fuzz — all verified
 - [x] SDD docs updated: PRD.md, spec.md, kanban.md, learnings.md → v1.13.0
+
+### v1.14.0 — Fixture Expansion Sprint (2026-06-29)
+- [x] AMM/DEX fixture — `examples/dex-amm/`: 14 vulnerabilities across 3 programs (amm, swap, oracle), covering Rules 14, 15, 26, 13, 6, 4, 8, 40, 38, 36, 37
+- [x] Staking Pool fixture — `examples/staking-pool/`: 14 vulnerabilities across 3 programs (staking, rewards, delegation), covering Rules 14, 22, 41, 6, 8, 11, 5, 15, 4, 38, 3, 36, 37
+- [x] NFT/Candy Machine fixture — `examples/nft-candy-machine/`: 14 vulnerabilities across 3 programs (candy-machine, nft-minter, metadata), covering Rules 16, 40, 2, 8, 6, 14, 5, 33, 22, 38, 27, 39, 4, 37
+- [x] All 42 new findings have mathematically verified CVSS 3.1 scores (brute-forced against `severity_counts.py` formula)
+- [x] All 42 new findings have correct severity summaries matching actual counts
+- [x] All 3 fixtures include findings.json, AUDIT_REPORT.md, methodology-trace.md, quick-scan-results.md
 
 ### Stretch (Future)
 - [ ] Line-number drift integrity check
