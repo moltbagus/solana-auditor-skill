@@ -1,7 +1,7 @@
 # Kanban — Solana Auditor Skill
 
 > **Project Kanban Board**
-> _Superteam Brasil Solana Skills Contest — v1.12.0_
+> _Superteam Brasil Solana Skills Contest — v1.13.0_
 > Last updated: 2026-06-28
 
 ---
@@ -61,6 +61,8 @@ Backlog → To Do → In Progress → Review → Done
 | Before/After comparison — `docs/before-after.md` | Docs | v1.12.0 |
 | Live exploit audit — Kamino Lend 2026-06-25, 4 submissions | BugBounty | v1.12.0 |
 | SDD docs — full project spec synchronized to v1.12.0 | Core | v1.12.0 |
+- [x] CLAUDE.md rewrite — v1.13.0: correct agent count (10), phase files (12), Two-Tier model, fixture schema, pytest command, key gotchas
+
 
 ---
 
@@ -112,6 +114,16 @@ audit-report/submissions/MATH-003-3-immunefi-submission.md  (MEDIUM, CVSS 6.5 �
 
 ---
 
+
+### Sprint 49 — Bug Fix Sprint + CLAUDE.md Rewrite (Done: 2026-06-28)
+- [x] Post-submission code audit — 4 parallel subagents, demo.sh + all fixtures
+- [x] 23 findings fixed: added missing `rule` (integer) field across 5 fixture files
+- [x] klive-live-audit summary corrected: critical=0→1, RESOLVED severity preserved
+- [x] dashboard.py: removed unreachable stdout_mode branch, simplified condition, added .resolve()
+- [x] CLAUDE.md rewrite: v1.13.0, correct agent count (10), phase files (12), Two-Tier model, fixture schema, pytest command
+- [x] demo.sh verified: EXIT 0, 161/161 integrity, 22/22 fuzz
+- [x] PRD, spec, kanban, learnings updated to v1.13.0
+
 ### Sprint 10 — Architecture Review + Report Enhancement (Done: 2026-06-28)
 - [x] Architecture-reviewer agent — `agents/architecture-reviewer.md`, 8-step flow
 - [x] Report template enhanced — Executive Summary, Methodology Trace, Finding Distribution sections
@@ -128,6 +140,8 @@ audit-report/submissions/MATH-003-3-immunefi-submission.md  (MEDIUM, CVSS 6.5 �
 - [x] Before/After comparison — `docs/before-after.md`
 - [x] Live exploit audit — Kamino Lend 2026-06-25, 4 submissions
 - [x] SDD docs — full project spec synchronized to v1.12.0
+- [x] CLAUDE.md rewrite — v1.13.0: correct agent count (10), phase files (12), Two-Tier model, fixture schema, pytest command, key gotchas
+
 - [x] PRD, spec, kanban, learnings updated to v1.12.0
 
 ### Sprint 9 — Phase 7 Architecture + Report Enhancement (Done: 2026-06-27)

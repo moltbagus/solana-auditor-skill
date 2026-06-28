@@ -1,7 +1,7 @@
 # Learnings — Solana Auditor Skill
 
 > **Decision Log & Lessons Learned**
-> _Superteam Brasil Solana Skills Contest — v1.12.0_
+> _Superteam Brasil Solana Skills Contest — v1.13.0_
 > Last updated: 2026-06-28
 
 ---
@@ -32,6 +32,7 @@ python3 -m pytest fails silently on clean clone because pytest is not on system 
 - Native QED 2A CI integration
 - Multi-program audit aggregation
 - Video walkthrough
+- CLAUDE.md staleness (fixed in v1.13.0)
 
 ## Principles
 

@@ -1,7 +1,7 @@
 # PRD — Solana Auditor Skill
 
 > **Product Requirements Document**
-> _Superteam Brasil Solana Skills Contest — v1.12.0_
+> _Superteam Brasil Solana Skills Contest — v1.13.0_
 > Last updated: 2026-06-28
 
 ---
@@ -17,7 +17,7 @@ Transform Claude Code into the **gold-standard Solana security auditor** — a r
 | Solana dApp developer | Quick security check before mainnet deploy | `/audit-quick` — 5 min SAST scan |
 | Solana audit firm | Structured audit methodology + reporting | `/audit` — 7-phase lifecycle |
 | Security researcher | Finding validation + PoC generation | `/audit-poc` — consent-gated exploit |
-| Contest judge | Evaluate skill quality + completeness | Demo script, 75+ integrity checks, 19 fuzz tests |
+| Contest judge | Evaluate skill quality + completeness | Demo script, 161 integrity checks, 22 fuzz tests |
 | Brazilian dev | Solana security in their native language | PT-BR glossary + terminology |
 
 ## 3. Features
@@ -68,7 +68,7 @@ Transform Claude Code into the **gold-standard Solana security auditor** — a r
 - [x] cargo-audit integration for dependency vulnerabilities
 - [x] QED 2A fallback chain: QED → Anchor test → manual assertion
 - [x] Agent safety guardrails: preventing harmful operations during audit
-- [x] 75+ integrity checks (up from 62)
+- [x] 75+ integrity checks (up from 62, now 161)
 - [x] 50 security rules (up from 26)
 - [x] 8 phases (up from 7)
 
@@ -79,6 +79,7 @@ Transform Claude Code into the **gold-standard Solana security auditor** — a r
 - [x] `scripts/audit-report.py`: standalone CLI for markdown + HTML generation
 - [x] All 9 commands: `name:` frontmatter added for Claude Code registration
 - [x] Bug fixes: exit logic, FUZZ_COUNT, heredoc quoting verified clean
+- [x] CLAUDE.md rewrite — v1.13.0: correct agent count (10), phase files (12), rule groups, Two-Tier model, fixture schema with rule/recommendation fields, pytest command fix, key gotchas
 - [x] Post-contest backlog: 8 gaps identified, 5 priority items planned
 - [x] Gap analysis + priority backlog: `docs/superpowers/specs/2026-06-27-gap-analysis.md`
 - [x] `docs/superpowers/specs/2026-06-27-priority-backlog.md`: 5 items, 4 new files
@@ -107,6 +108,16 @@ Transform Claude Code into the **gold-standard Solana security auditor** — a r
 - [x] Before/After dashboard comparison
 - [x] Live exploit audit — historical Solana exploit documented
 - [x] CI fuzz tests verified — 22/22 pass in CI
+
+
+### v1.13.0 — Bug Fix Sprint + CLAUDE.md Rewrite (2026-06-28)
+- [x] Post-submission code audit — 4 parallel subagents, demo.sh + all fixtures
+- [x] 23 findings fixed: added missing `rule` (integer) field across 5 fixture files
+- [x] klive-live-audit summary corrected: critical=0→1, RESOLVED severity preserved
+- [x] dashboard.py: removed unreachable stdout_mode branch, simplified condition, added .resolve()
+- [x] CLAUDE.md rewrite: fixed stale version/rule counts, added Two-Tier model, correct agent/phase counts, fixture schema with `rule`+`recommendation` fields, pytest command fix, key gotchas
+- [x] demo.sh: EXIT 0, 161/161 integrity, 22/22 fuzz — all verified
+- [x] SDD docs updated: PRD.md, spec.md, kanban.md, learnings.md → v1.13.0
 
 ### Stretch (Future)
 - [ ] Line-number drift integrity check

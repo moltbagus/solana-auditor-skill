@@ -73,7 +73,7 @@ Phase 2B Runtime ──► CPI Surface Graph ──► Cross-Program Analysis
                                               + methodology-trace.md
 ```
 
-### 1.3 Three-Tier Execution Model
+### 1.3 Two-Tier Execution Model
 
 | Tier | Mode | Phases | Use Case |
 |------|------|--------|----------|
