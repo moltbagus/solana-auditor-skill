@@ -220,6 +220,27 @@ Added 3 new audit fixtures (AMM/DEX, Staking Pool, NFT/Candy Machine) with 42 to
 
 ---
 
+
+
+## 2026-06-29 — v1.14.1 Raydium CLMM Audit + Severity Correction
+
+### What we did
+Live audit of jup-ag/raydium-clmm (6 confirmed findings). Added --lang pt|en bilingual support to all commands. Fixed README duplicate step numbering, agents badge count, dashboard commands.
+
+### Severity lesson learned
+**RAY-01 initially flagged CRITICAL** — remaining_accounts raw pubkey reads in update_amm_config. Source verification revealed #[account(address = crate::admin::ID)] constraint on the owner field. This enforces the admin key via Anchor's constraint system. The remaining_accounts bug is real (no bounds check, no None arm, panic vector) but requires admin key compromise — not exploitable by "anyone." Severity: CRITICAL → HIGH. Always read the actual struct constraints before assigning CRITICAL on access control findings.
+
+### Key lesson
+**CVSS math must use brute-force lookup** — manual CVSS vector selection drifts from the formula. Always brute-force against the actual compute_cvss_score() function from severity_counts.py. Same lesson as Sprint 50.
+
+### Key lesson
+**Subagent timeouts on document-heavy tasks** — fixture output generation (4 docs × 3 fixtures = 12 files) exceeded agent token budget. Direct Python generation is more reliable for structured document tasks.
+
+### Key lesson
+**Source verification changes severity** — reading the actual #[account] constraints in update_amm_config.rs revealed the admin key gate that saved this from being unauthenticated. Initial scan over-claimed. The tool found the bug correctly; the human corrected the severity. The skill's job is to surface the pattern; human judgment refines the severity.
+
+
+
 ## 2026-06-28 — v1.13.0 Bug Fix Sprint (Post-Contest-Submission Audit)
 
 ### What we did

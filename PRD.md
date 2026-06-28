@@ -127,6 +127,21 @@ Transform Claude Code into the **gold-standard Solana security auditor** — a r
 - [x] All 42 new findings have correct severity summaries matching actual counts
 - [x] All 3 fixtures include findings.json, AUDIT_REPORT.md, methodology-trace.md, quick-scan-results.md
 
+
+### v1.14.1 — Raydium CLMM Live Audit + Bilingual Polish (2026-06-29)
+- [x] Live audit of jup-ag/raydium-clmm — 6 confirmed findings, source-verified with #[account] constraint analysis
+- [x] RAY-01 severity corrected: CRITICAL → HIGH after source verification of admin::ID constraint
+- [x] Bilingual support: --lang pt|en added to all audit commands
+- [x] README polish: duplicate step numbers, agents badge corrected, dashboard commands added
+- [x] Severity lesson: verify #[account] constraints before assigning CRITICAL on access control findings
+
+### v1.14.0 — Fixture Expansion Sprint (2026-06-29)
+- [x] AMM/DEX fixture — examples/dex-amm/: 14 vulnerabilities across 3 programs, Rules 14/15/26/13/6/4/8/40/38/36/37
+- [x] Staking Pool fixture — examples/staking-pool/: 14 vulnerabilities across 3 programs, Rules 14/22/41/6/8/11/5/15/4/38/3/36/37
+- [x] NFT/Candy Machine fixture — examples/nft-candy-machine/: 14 vulnerabilities across 3 programs, Rules 16/40/2/8/6/14/5/33/22/38/27/39/4/37
+- [x] All 42 new findings: CVSS math verified, severity summaries correct, findings.json + AUDIT_REPORT.md + methodology-trace.md + quick-scan-results.md per fixture
+
+
 ### Stretch (Future)
 - [ ] Line-number drift integrity check
 - [ ] Multi-program audit aggregation
