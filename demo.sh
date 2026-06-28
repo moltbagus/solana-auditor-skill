@@ -478,7 +478,8 @@ if [ -f "$FIXED_FINDINGS" ]; then
     if python3 scripts/dashboard.py \
         examples/sample-vulnerable-program/audit-output/findings.json \
         "$FIXED_FINDINGS" \
-        "$COMPARISON_HTML" 2>&1; then
+        "$COMPARISON_HTML" \
+        --compare 2>&1; then
         ok "Comparison dashboard generated at $COMPARISON_HTML"
         echo -e "  ${GREEN}✓${NC} Open in browser: ${CYAN}open $COMPARISON_HTML${NC}"
     else

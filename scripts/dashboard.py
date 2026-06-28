@@ -127,6 +127,18 @@ def compute_comparison(
         d = a - b
         return f"{'+' if d > 0 else ''}{d}"
 
+    # Build status map: norm_id -> 'Fixed'|'Unchanged'|'New'
+    fixed_ids = {norm_id(f) for f in fixed_findings}
+    unchanged_ids = {norm_id(f) for f in unchanged_findings}
+    new_ids = {norm_id(f) for f in new_findings}
+    finding_status: dict[str, str] = {}
+    for fid in fixed_ids:
+        finding_status[fid] = "Fixed"
+    for fid in unchanged_ids:
+        finding_status[fid] = "Unchanged"
+    for fid in new_ids:
+        finding_status[fid] = "New"
+
     return {
         "before_summary": before_summary,
         "after_summary": after_summary,
@@ -149,6 +161,7 @@ def compute_comparison(
         "new": new_findings,
         "new_counts": severity_counts(new_findings),
         "new_cvss": cvss_sum(new_findings),
+        "finding_status": finding_status,
     }
 
 
@@ -216,32 +229,33 @@ def main() -> None:
 Examples:
   python3 scripts/dashboard.py findings.json
   python3 scripts/dashboard.py findings.json report.html
-  python3 scripts/dashboard.py before.json after.json comparison.html
-  cat findings.json | python3 scripts/dashboard.py -
-  cat findings.json | python3 scripts/dashboard.py - > report.html
+  python3 scripts/dashboard.py --compare before.json after.json
+  python3 scripts/dashboard.py --compare before.json after.json comparison.html
 """,
     )
     parser.add_argument(
         "before",
         nargs="?",
         default=None,
-        help="Path to before findings.json (use '-' to read from stdin)",
+        help="Path to findings.json (before findings in compare mode)",
     )
     parser.add_argument(
         "after",
         nargs="?",
         default=None,
-        help="Path to after findings.json (comparison mode; omit for single-file mode)",
+        help="Output HTML path in single-file mode; before findings in --compare mode",
     )
     parser.add_argument(
         "output",
         nargs="?",
         default=None,
-        help=(
-            "Output HTML path.\n"
-            "  Single-file: default is <stem>.dashboard.html\n"
-            "  Comparison:  default is comparison.dashboard.html"
-        ),
+        help="Output HTML path (single-file: second positional; compare: third positional)",
+    )
+    parser.add_argument(
+        "--compare",
+        dest="compare_mode",
+        action="store_true",
+        help="Enable comparison mode: args are before.json after.json [output.html]",
     )
     parser.add_argument(
         "--templates",
@@ -261,8 +275,10 @@ Examples:
     if not templates_dir.is_dir():
         sys.exit(f"ERROR: Templates directory not found: {templates_dir}\n")
 
-    # ── Comparison mode: two positional files ──────────────────────────────────
-    if args.before and args.after:
+    # ── Comparison mode: --compare flag ──────────────────────────────────────
+    if args.compare_mode:
+        if not args.before or not args.after:
+            sys.exit("ERROR: --compare requires two findings.json paths: before and after.\n")
         before_path = Path(args.before).resolve()
         after_path = Path(args.after).resolve()
         if not before_path.is_file():
@@ -275,7 +291,6 @@ Examples:
 
         comparison = compute_comparison(before_findings, after_findings)
 
-        # Build combined metadata
         before_meta = compute_metadata(before_raw, str(before_path))
         after_meta = compute_metadata(after_raw, str(after_path))
         combined_meta = {
@@ -288,11 +303,10 @@ Examples:
             "file_path": f"{before_path} → {after_path}",
         }
 
-        # Render with comparison findings = unchanged + new (fixed shown separately)
         combined_findings = comparison["unchanged"] + comparison["new"]
         combined_summary = compute_summary(combined_findings)
 
-        output_path = Path(args.output) if args.output else Path("comparison.dashboard.html")
+        output_path = Path(args.output) if args.output else before_path.with_name("comparison.dashboard.html")
         html = render(combined_findings, combined_summary, combined_meta, templates_dir, comparison)
 
         output_path.parent.mkdir(parents=True, exist_ok=True)
@@ -300,33 +314,27 @@ Examples:
         print(f"Comparison dashboard written to {output_path}", file=sys.stderr)
         return
 
-    # ── Single-file / stdin mode ────────────────────────────────────────────────
-    input_arg = args.before  # renamed; same positional slot
-    input_path_str: str
+    # ── Single-file mode ────────────────────────────────────────────────────
+    if args.before is None:
+        sys.exit("ERROR: No input file specified. Pass a findings.json path.\n")
 
-    if input_arg is None:
-        sys.exit("ERROR: No input file specified. Pass a findings.json path or '-' for stdin.\n")
-    elif input_arg == "-":
-        raw_text = sys.stdin.read()
-        if not raw_text.strip():
-            sys.exit("ERROR: No input provided on stdin.\n")
-        findings, raw_data = load_findings(raw_text)
-        input_path_str = "<stdin>"
-    else:
-        input_path = Path(input_arg).resolve()
-        if not input_path.is_file():
-            sys.exit(f"ERROR: File not found: {input_path}\n")
-        findings, raw_data = load_findings(input_path)
-        input_path_str = str(input_path)
+    input_path = Path(args.before).resolve()
+    if not input_path.is_file():
+        sys.exit(f"ERROR: File not found: {input_path}\n")
+    findings, raw_data = load_findings(input_path)
+    input_path_str = str(input_path)
 
     summary = compute_summary(findings)
     metadata = compute_metadata(raw_data, input_path_str)
 
     stdout_mode = False
-    if args.output:
+    if args.after and not args.compare_mode:
+        # args.after is the output path in single-file mode
+        output_path = Path(args.after)
+    elif args.output:
         output_path = Path(args.output)
-    elif input_arg and input_arg != "-":
-        output_path = Path(input_arg).with_suffix(".dashboard.html")
+    elif args.before:
+        output_path = input_path.with_suffix(".dashboard.html")
     else:
         stdout_mode = True
 

@@ -424,158 +424,252 @@
 <body>
 <div class="container">
 
-  {# ══════════════════════ HEADER ══════════════════════ #}
+  
   <div class="header">
-    <h1 style="font-size:20px;font-weight:700;">{{ metadata.get('program_name', 'Unknown Program') }}</h1>
+    <h1 style="font-size:20px;font-weight:700;">Unknown Program</h1>
     <div class="header-meta">
-      <span><strong>Repo:</strong> {{ metadata.get('repo', 'N/A') }}</span>
-      <span><strong>Audit Date:</strong> {{ metadata.get('audit_date', metadata.get('generated_at', 'N/A')) }}</span>
-      <span><strong>Skill Version:</strong> {{ metadata.get('version', metadata.get('skill_version', 'N/A')) }}</span>
-      <span><strong>Findings:</strong> <strong style="color:#e2e4ea">{{ summary.get('total', findings|length) }}</strong></span>
+      <span><strong>Repo:</strong> N/A</span>
+      <span><strong>Audit Date:</strong> 2026-06-28T06:42:06Z</span>
+      <span><strong>Skill Version:</strong> N/A</span>
+      <span><strong>Findings:</strong> <strong style="color:#e2e4ea">3</strong></span>
     </div>
   </div>
 
-  {# ══════════════════════ SEVERITY BAR ══════════════════════ #}
-  {% if not comparison %}
-  <div class="severity-bar">
-    <h2>Findings by Severity</h2>
-    <div class="severity-chips">
-      <span class="chip" style="background:#fef2f2;color:#dc2626;border:1px solid #fecaca;">
-        <span class="dot" style="background:#dc2626;"></span>
-        CRITICAL &nbsp;<strong>{{ summary.get('critical', 0) }}</strong>
-      </span>
-      <span class="chip" style="background:#fff7ed;color:#c2410c;border:1px solid #fed7aa;">
-        <span class="dot" style="background:#ea580c;"></span>
-        HIGH &nbsp;<strong>{{ summary.get('high', 0) }}</strong>
-      </span>
-      <span class="chip" style="background:#fefce8;color:#854d0e;border:1px solid #fde68a;">
-        <span class="dot" style="background:#ca8a04;"></span>
-        MEDIUM &nbsp;<strong>{{ summary.get('medium', 0) }}</strong>
-      </span>
-      <span class="chip" style="background:#eff6ff;color:#1d4ed8;border:1px solid #bfdbfe;">
-        <span class="dot" style="background:#2563eb;"></span>
-        LOW &nbsp;<strong>{{ summary.get('low', 0) }}</strong>
-      </span>
-      <span class="chip" style="background:#f9fafb;color:#6b7280;border:1px solid #e5e7eb;">
-        <span class="dot" style="background:#9ca3af;"></span>
-        INFO &nbsp;<strong>{{ summary.get('info', 0) }}</strong>
-      </span>
-    </div>
-  </div>
-  {% endif %}
+  
+  
 
-  {# ══════════════════════ COMPARISON BANNER ══════════════════════ #}
-  {% if comparison %}
+  
+  
   <div class="comparison-banner">
     <h2>Before / After Comparison</h2>
 
     <div class="comparison-meta">
-      <span><strong>Before:</strong> {{ metadata.get('before_audit_date', 'N/A') }}</span>
-      <span><strong>After:</strong> {{ metadata.get('after_audit_date', 'N/A') }}</span>
-      <span><strong>File:</strong> {{ metadata.get('file_path', 'N/A') }}</span>
+      <span><strong>Before:</strong> N/A</span>
+      <span><strong>After:</strong> N/A</span>
+      <span><strong>File:</strong> /Users/colbert1/solana-auditor-skill/examples/sample-vulnerable-program/audit-output/findings.json → /Users/colbert1/solana-auditor-skill/examples/solend-governance-audit/audit-output/findings.json</span>
     </div>
 
-    {# Severity delta row #}
+    
     <div class="comparison-delta-grid">
-      {% set sev_levels = [('CRITICAL', 'critical', '#dc2626'), ('HIGH', 'high', '#ea580c'), ('MEDIUM', 'medium', '#ca8a04'), ('LOW', 'low', '#2563eb'), ('INFO', 'info', '#9ca3af')] %}
-      {% for label, key, color in sev_levels %}
-        {% set d = comparison.severity_delta[key] %}
-        {% set b = comparison.before_summary[key] %}
-        {% set a = comparison.after_summary[key] %}
-        {% set is_improved = (b > 0 and a == 0) or (a < b) %}
+      
+      
+        
+        
+        
+        
         <div class="delta-card">
-          <div class="delta-label" style="color:{{ color }};">{{ label }}</div>
+          <div class="delta-label" style="color:#dc2626;">CRITICAL</div>
           <div class="delta-numbers">
-            <span class="before-val">{{ b }}</span>
+            <span class="before-val">2</span>
             <span class="arrow">&#8594;</span>
-            <span class="after-val {% if b > a %}negative{% elif b == a %}neutral{% endif %}">{{ a }}</span>
+            <span class="after-val negative">1</span>
           </div>
           <div class="severity-reduction">
-            {% if d == '+0' or d == '0' %}{% elif d.startswith('-') %}{{ d }} eliminated{% else %}{{ d }} added{% endif %}
+            -1 eliminated
           </div>
         </div>
-      {% endfor %}
+      
+        
+        
+        
+        
+        <div class="delta-card">
+          <div class="delta-label" style="color:#ea580c;">HIGH</div>
+          <div class="delta-numbers">
+            <span class="before-val">2</span>
+            <span class="arrow">&#8594;</span>
+            <span class="after-val neutral">2</span>
+          </div>
+          <div class="severity-reduction">
+            
+          </div>
+        </div>
+      
+        
+        
+        
+        
+        <div class="delta-card">
+          <div class="delta-label" style="color:#ca8a04;">MEDIUM</div>
+          <div class="delta-numbers">
+            <span class="before-val">6</span>
+            <span class="arrow">&#8594;</span>
+            <span class="after-val negative">0</span>
+          </div>
+          <div class="severity-reduction">
+            -6 eliminated
+          </div>
+        </div>
+      
+        
+        
+        
+        
+        <div class="delta-card">
+          <div class="delta-label" style="color:#2563eb;">LOW</div>
+          <div class="delta-numbers">
+            <span class="before-val">0</span>
+            <span class="arrow">&#8594;</span>
+            <span class="after-val neutral">0</span>
+          </div>
+          <div class="severity-reduction">
+            
+          </div>
+        </div>
+      
+        
+        
+        
+        
+        <div class="delta-card">
+          <div class="delta-label" style="color:#9ca3af;">INFO</div>
+          <div class="delta-numbers">
+            <span class="before-val">0</span>
+            <span class="arrow">&#8594;</span>
+            <span class="after-val neutral">0</span>
+          </div>
+          <div class="severity-reduction">
+            
+          </div>
+        </div>
+      
     </div>
 
-    {# CVSS delta + fixed/unchanged/new summary #}
+    
     <div class="comparison-summary-row">
       <div class="comparison-stat">
         <div class="comparison-stat-label">Total CVSS</div>
         <div class="comparison-stat-value">
-          <span style="color:#6b7280">{{ "%.1f"|format(comparison.before_summary.cvss_total) }}</span>
+          <span style="color:#6b7280">69.2</span>
           <span style="color:#9ca3af;margin:0 6px;">&#8594;</span>
-          <span style="color:#16a34a">{{ "%.1f"|format(comparison.after_summary.cvss_total) }}</span>
-          <span style="font-size:13px;color:#9ca3af;margin-left:6px;">({{ comparison.cvss_delta }})</span>
+          <span style="color:#16a34a">23.9</span>
+          <span style="font-size:13px;color:#9ca3af;margin-left:6px;">(-45.300000000000004)</span>
         </div>
       </div>
       <div class="comparison-stat">
         <div class="comparison-stat-label">Fixed</div>
-        <div class="comparison-stat-value stat-fixed">{{ comparison.fixed|length }}</div>
-        <div style="font-size:12px;color:#9ca3af;">CVSS {{ "%.1f"|format(comparison.fixed_cvss) }} removed</div>
+        <div class="comparison-stat-value stat-fixed">10</div>
+        <div style="font-size:12px;color:#9ca3af;">CVSS 69.2 removed</div>
       </div>
       <div class="comparison-stat">
         <div class="comparison-stat-label">Unchanged</div>
-        <div class="comparison-stat-value stat-unchanged">{{ comparison.unchanged|length }}</div>
-        <div style="font-size:12px;color:#9ca3af;">CVSS {{ "%.1f"|format(comparison.unchanged_cvss) }} persisting</div>
+        <div class="comparison-stat-value stat-unchanged">0</div>
+        <div style="font-size:12px;color:#9ca3af;">CVSS 0.0 persisting</div>
       </div>
       <div class="comparison-stat">
         <div class="comparison-stat-label">New</div>
-        <div class="comparison-stat-value stat-new">{{ comparison.new|length }}</div>
-        <div style="font-size:12px;color:#9ca3af;">CVSS {{ "%.1f"|format(comparison.new_cvss) }} introduced</div>
+        <div class="comparison-stat-value stat-new">3</div>
+        <div style="font-size:12px;color:#9ca3af;">CVSS 23.9 introduced</div>
       </div>
     </div>
   </div>
-  {% endif %}
+  
 
-  {# ══════════════════════ CVSS SUMMARY ══════════════════════ #}
+  
   <div class="summary-row">
     <div class="card">
       <div class="card-label">Total CVSS</div>
-      <div class="card-value">{{ "%.1f"|format(summary.get('cvss_total', 0)) }}</div>
+      <div class="card-value">23.9</div>
     </div>
     <div class="card">
       <div class="card-label">Average CVSS</div>
-      <div class="card-value">{{ "%.2f"|format(summary.get('cvss_avg', 0)) }}</div>
+      <div class="card-value">7.97</div>
     </div>
     <div class="card">
       <div class="card-label">Worst Finding</div>
-      <div class="card-value" style="color:#dc2626;">{{ "%.1f"|format(summary.get('cvss_worst', 0)) }}</div>
+      <div class="card-value" style="color:#dc2626;">9.1</div>
     </div>
   </div>
 
-  {# ══════════════════════ FIX MAP (severity → count bar chart) ══════════════════════ #}
+  
   <div class="fix-map">
     <h2>Severity Distribution</h2>
-    {% for level in ['CRITICAL', 'HIGH', 'MEDIUM', 'LOW', 'INFO'] %}
-      {% set count = summary.get(level|lower, 0) %}
-      {% if count > 0 or level in ['CRITICAL','HIGH','MEDIUM','LOW','INFO'] %}
-        {% set colors = {'CRITICAL': '#dc2626', 'HIGH': '#ea580c', 'MEDIUM': '#ca8a04', 'LOW': '#2563eb', 'INFO': '#9ca3af'} %}
-        {% set max_count = [summary.get('critical',0), summary.get('high',0), summary.get('medium',0), summary.get('low',0), summary.get('info',0)]|max %}
-        {% set width_pct = ((count / max_count * 100) if max_count > 0 else 0)|round|int %}
+    
+      
+      
+        
+        
+        
         <div class="fix-bar-row">
-          <span class="fix-bar-label" style="color: {{ colors[level] }};">{{ level }}</span>
+          <span class="fix-bar-label" style="color: #dc2626;">CRITICAL</span>
           <div class="fix-bar-track">
-            <div class="fix-bar-fill" style="width:{{ width_pct }}%; background:{{ colors[level] }};"></div>
+            <div class="fix-bar-fill" style="width:50%; background:#dc2626;"></div>
           </div>
-          <span class="fix-bar-count">{{ count }}</span>
+          <span class="fix-bar-count">1</span>
         </div>
-      {% endif %}
-    {% endfor %}
+      
+    
+      
+      
+        
+        
+        
+        <div class="fix-bar-row">
+          <span class="fix-bar-label" style="color: #ea580c;">HIGH</span>
+          <div class="fix-bar-track">
+            <div class="fix-bar-fill" style="width:100%; background:#ea580c;"></div>
+          </div>
+          <span class="fix-bar-count">2</span>
+        </div>
+      
+    
+      
+      
+        
+        
+        
+        <div class="fix-bar-row">
+          <span class="fix-bar-label" style="color: #ca8a04;">MEDIUM</span>
+          <div class="fix-bar-track">
+            <div class="fix-bar-fill" style="width:0%; background:#ca8a04;"></div>
+          </div>
+          <span class="fix-bar-count">0</span>
+        </div>
+      
+    
+      
+      
+        
+        
+        
+        <div class="fix-bar-row">
+          <span class="fix-bar-label" style="color: #2563eb;">LOW</span>
+          <div class="fix-bar-track">
+            <div class="fix-bar-fill" style="width:0%; background:#2563eb;"></div>
+          </div>
+          <span class="fix-bar-count">0</span>
+        </div>
+      
+    
+      
+      
+        
+        
+        
+        <div class="fix-bar-row">
+          <span class="fix-bar-label" style="color: #9ca3af;">INFO</span>
+          <div class="fix-bar-track">
+            <div class="fix-bar-fill" style="width:0%; background:#9ca3af;"></div>
+          </div>
+          <span class="fix-bar-count">0</span>
+        </div>
+      
+    
   </div>
 
-  {# ══════════════════════ FINDINGS TABLE ══════════════════════ #}
+  
   <div class="findings-section">
     <div class="findings-header">
-      <h2>Findings ({{ findings|length }})</h2>
+      <h2>Findings (3)</h2>
     </div>
 
-    {% if findings %}
+    
     <table id="findings-table">
       <thead>
         <tr>
-          {% if comparison %}
+          
           <th data-col="status">Status <span class="sort-icon">↕</span></th>
-          {% endif %}
+          
           <th data-col="id">ID <span class="sort-icon">↕</span></th>
           <th data-col="severity">Severity <span class="sort-icon">↕</span></th>
           <th data-col="title">Title <span class="sort-icon">↕</span></th>
@@ -586,110 +680,280 @@
         </tr>
       </thead>
       <tbody>
-        {% for f in findings %}
-        <tr class="finding-row" data-id="{{ f.id }}" onclick="toggleDetail(this)">
-          {% if comparison %}
+        
+        <tr class="finding-row" data-id="SOLEND-01" onclick="toggleDetail(this)">
+          
           <td>
-            {% set status = comparison.finding_status.get(f.id.lstrip('C-'), 'Unchanged') %}
-            <span class="badge-{{ status|lower }}">{{ status }}</span>
+            
+            <span class="badge-new">New</span>
           </td>
-          {% endif %}
-          <td><strong>{{ f.id }}</strong></td>
+          
+          <td><strong>SOLEND-01</strong></td>
           <td class="severity-cell">
-            {% set sev = f.severity|upper %}
-            {% set sev_colors = {'CRITICAL': ('#dc2626','#fef2f2'), 'HIGH': ('#ea580c','#fff7ed'), 'MEDIUM': ('#ca8a04','#fefce8'), 'LOW': ('#2563eb','#eff6ff'), 'INFO': ('#6b7280','#f9fafb')} %}
-            {% set colors = sev_colors.get(sev, ('#6b7280','#f9fafb')) %}
-            <span style="display:inline-block;padding:2px 10px;border-radius:100px;font-size:12px;font-weight:700;color:{{ colors[0] }};background:{{ colors[1] }};">{{ sev }}</span>
+            
+            
+            
+            <span style="display:inline-block;padding:2px 10px;border-radius:100px;font-size:12px;font-weight:700;color:#dc2626;background:#fef2f2;">CRITICAL</span>
           </td>
-          <td class="title-cell">{{ f.title }}</td>
-          <td><code style="font-size:12px;background:#f3f4f6;padding:1px 5px;border-radius:3px;">{{ f.cwe or 'N/A' }}</code></td>
+          <td class="title-cell">Missing signer verification on governance proposal execution</td>
+          <td><code style="font-size:12px;background:#f3f4f6;padding:1px 5px;border-radius:3px;">CWE-306</code></td>
           <td class="cvss-cell">
-            {% set score = f.cvss|float %}
-            {% set badge_color = ('#dc2626' if score >= 9 else ('#ea580c' if score >= 7 else ('#ca8a04' if score >= 4 else '#2563eb'))) %}
-            <span style="display:inline-block;min-width:36px;text-align:center;padding:2px 6px;border-radius:4px;font-size:12px;font-weight:700;color:#fff;background:{{ badge_color }};">{{ "%.1f"|format(score) }}</span>
+            
+            
+            <span style="display:inline-block;min-width:36px;text-align:center;padding:2px 6px;border-radius:4px;font-size:12px;font-weight:700;color:#fff;background:#dc2626;">9.1</span>
           </td>
           <td class="location-cell">
-            {% if f.location %}
-              {{ f.location.file }}:{{ f.location.line }}<br/>
-              <span style="color:#9ca3af;">{{ f.location.function }}</span>
-            {% else %}N/A{% endif %}
+            
+              programs/governance/src/instructions/execute_proposal.rs:42<br/>
+              <span style="color:#9ca3af;">execute_proposal</span>
+            
           </td>
-          <td class="rule-cell">{{ f.rule_caught or 'N/A' }}</td>
+          <td class="rule-cell">Rule 8 — Signer Verification</td>
         </tr>
-        {# Detail row (injected by JS for sort stability) #}
-        <tr class="detail-row" id="detail-{{ f.id }}">
-          <td class="detail-cell" colspan="{{ 8 if comparison else 7 }}">
+        
+        <tr class="detail-row" id="detail-SOLEND-01">
+          <td class="detail-cell" colspan="8">
             <div class="detail-inner">
               <div class="detail-grid">
                 <div class="detail-field">
                   <div class="detail-field-label">ID</div>
-                  <div class="detail-field-value"><strong>{{ f.id }}</strong></div>
+                  <div class="detail-field-value"><strong>SOLEND-01</strong></div>
                 </div>
                 <div class="detail-field">
                   <div class="detail-field-label">CVSS Score</div>
                   <div class="detail-field-value">
-                    <span style="display:inline-block;padding:2px 8px;border-radius:4px;font-weight:700;color:#fff;background:{{ badge_color }};">{{ "%.1f"|format(score) }}</span>
-                    &nbsp;<code style="font-size:11px;">{{ f.cvss_vector or f.get('cvss_vector', 'N/A') }}</code>
+                    <span style="display:inline-block;padding:2px 8px;border-radius:4px;font-weight:700;color:#fff;background:#dc2626;">9.1</span>
+                    &nbsp;<code style="font-size:11px;">CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:N</code>
                   </div>
                 </div>
                 <div class="detail-field">
                   <div class="detail-field-label">CWE</div>
-                  <div class="detail-field-value"><code>{{ f.cwe or 'N/A' }}</code></div>
+                  <div class="detail-field-value"><code>CWE-306</code></div>
                 </div>
                 <div class="detail-field">
                   <div class="detail-field-label">Location</div>
                   <div class="detail-field-value">
-                    {% if f.location %}
-                      <code>{{ f.location.file }}</code> line {{ f.location.line }} &mdash; <em>{{ f.location.function }}</em>
-                    {% else %}N/A{% endif %}
+                    
+                      <code>programs/governance/src/instructions/execute_proposal.rs</code> line 42 &mdash; <em>execute_proposal</em>
+                    
                   </div>
                 </div>
                 <div class="detail-field">
                   <div class="detail-field-label">Rule Caught</div>
-                  <div class="detail-field-value">{{ f.rule_caught or 'N/A' }}</div>
+                  <div class="detail-field-value">Rule 8 — Signer Verification</div>
                 </div>
                 <div class="detail-field">
                   <div class="detail-field-label">Status</div>
                   <div class="detail-field-value">
-                    {% set status = f.status|lower if f.status else 'na' %}
-                    {% set status_map = {'open': 'status-open', 'pending': 'status-pending', 'confirmed': 'status-confirmed', 'closed': 'status-closed'} %}
-                    <span class="status-badge {{ status_map.get(status, 'status-na') }}">{{ f.status or 'N/A' }}</span>
+                    
+                    
+                    <span class="status-badge status-na">Historical (2022)</span>
                   </div>
                 </div>
               </div>
 
               <div class="detail-section">
                 <div class="detail-section-title">Description</div>
-                <div class="detail-section-body">{{ f.description }}</div>
+                <div class="detail-section-body">The execute_proposal instruction does not verify that the caller is a valid governance account or that required signatures are present before executing proposal instructions.</div>
               </div>
               <div class="detail-section">
                 <div class="detail-section-title">Impact</div>
-                <div class="detail-section-body">{{ f.impact or 'N/A' }}</div>
+                <div class="detail-section-body">Complete protocol compromise. Any user can execute any governance proposal including malicious ones that drain protocol treasury.</div>
               </div>
               <div class="detail-section">
                 <div class="detail-section-title">Recommendation</div>
-                <div class="detail-section-body">{{ f.recommendation or 'N/A' }}</div>
+                <div class="detail-section-body">Add require!(ctx.accounts.governance.is_signer) and verify proposal is in executable state before CPI.</div>
               </div>
             </div>
           </td>
         </tr>
-        {% endfor %}
+        
+        <tr class="finding-row" data-id="SOLEND-02" onclick="toggleDetail(this)">
+          
+          <td>
+            
+            <span class="badge-new">New</span>
+          </td>
+          
+          <td><strong>SOLEND-02</strong></td>
+          <td class="severity-cell">
+            
+            
+            
+            <span style="display:inline-block;padding:2px 10px;border-radius:100px;font-size:12px;font-weight:700;color:#ea580c;background:#fff7ed;">HIGH</span>
+          </td>
+          <td class="title-cell">Flash loan susceptible governance voting mechanism</td>
+          <td><code style="font-size:12px;background:#f3f4f6;padding:1px 5px;border-radius:3px;">CWE-841</code></td>
+          <td class="cvss-cell">
+            
+            
+            <span style="display:inline-block;min-width:36px;text-align:center;padding:2px 6px;border-radius:4px;font-size:12px;font-weight:700;color:#fff;background:#ea580c;">7.5</span>
+          </td>
+          <td class="location-cell">
+            
+              programs/governance/src/instructions/cast_vote.rs:28<br/>
+              <span style="color:#9ca3af;">cast_vote</span>
+            
+          </td>
+          <td class="rule-cell">Rule 13 — Flash Loan Attacks</td>
+        </tr>
+        
+        <tr class="detail-row" id="detail-SOLEND-02">
+          <td class="detail-cell" colspan="8">
+            <div class="detail-inner">
+              <div class="detail-grid">
+                <div class="detail-field">
+                  <div class="detail-field-label">ID</div>
+                  <div class="detail-field-value"><strong>SOLEND-02</strong></div>
+                </div>
+                <div class="detail-field">
+                  <div class="detail-field-label">CVSS Score</div>
+                  <div class="detail-field-value">
+                    <span style="display:inline-block;padding:2px 8px;border-radius:4px;font-weight:700;color:#fff;background:#ea580c;">7.5</span>
+                    &nbsp;<code style="font-size:11px;">CVSS:3.1/AV:N/AC:L/PR:L/UI:N/S:U/C:H/I:N/A:N</code>
+                  </div>
+                </div>
+                <div class="detail-field">
+                  <div class="detail-field-label">CWE</div>
+                  <div class="detail-field-value"><code>CWE-841</code></div>
+                </div>
+                <div class="detail-field">
+                  <div class="detail-field-label">Location</div>
+                  <div class="detail-field-value">
+                    
+                      <code>programs/governance/src/instructions/cast_vote.rs</code> line 28 &mdash; <em>cast_vote</em>
+                    
+                  </div>
+                </div>
+                <div class="detail-field">
+                  <div class="detail-field-label">Rule Caught</div>
+                  <div class="detail-field-value">Rule 13 — Flash Loan Attacks</div>
+                </div>
+                <div class="detail-field">
+                  <div class="detail-field-label">Status</div>
+                  <div class="detail-field-value">
+                    
+                    
+                    <span class="status-badge status-na">Historical (2022)</span>
+                  </div>
+                </div>
+              </div>
+
+              <div class="detail-section">
+                <div class="detail-section-title">Description</div>
+                <div class="detail-section-body">Governance voting mechanism does not implement vote-time locks. Tokens can be borrowed via flash loan, voted with, and returned within a single transaction.</div>
+              </div>
+              <div class="detail-section">
+                <div class="detail-section-title">Impact</div>
+                <div class="detail-section-body">Flash loan attack enables attacker to acquire majority voting power within one transaction, pass malicious proposals, and drain protocol funds.</div>
+              </div>
+              <div class="detail-section">
+                <div class="detail-section-title">Recommendation</div>
+                <div class="detail-section-body">Implement vote-time locks requiring tokens to be locked in governance for minimum duration before voting power activates.</div>
+              </div>
+            </div>
+          </td>
+        </tr>
+        
+        <tr class="finding-row" data-id="SOLEND-03" onclick="toggleDetail(this)">
+          
+          <td>
+            
+            <span class="badge-new">New</span>
+          </td>
+          
+          <td><strong>SOLEND-03</strong></td>
+          <td class="severity-cell">
+            
+            
+            
+            <span style="display:inline-block;padding:2px 10px;border-radius:100px;font-size:12px;font-weight:700;color:#ea580c;background:#fff7ed;">HIGH</span>
+          </td>
+          <td class="title-cell">Unchecked CPI to treasury vault without privilege verification</td>
+          <td><code style="font-size:12px;background:#f3f4f6;padding:1px 5px;border-radius:3px;">CWE-347</code></td>
+          <td class="cvss-cell">
+            
+            
+            <span style="display:inline-block;min-width:36px;text-align:center;padding:2px 6px;border-radius:4px;font-size:12px;font-weight:700;color:#fff;background:#ea580c;">7.3</span>
+          </td>
+          <td class="location-cell">
+            
+              programs/governance/src/instructions/execute_proposal.rs:67<br/>
+              <span style="color:#9ca3af;">execute_proposal</span>
+            
+          </td>
+          <td class="rule-cell">Rule 4 — CPI Safety</td>
+        </tr>
+        
+        <tr class="detail-row" id="detail-SOLEND-03">
+          <td class="detail-cell" colspan="8">
+            <div class="detail-inner">
+              <div class="detail-grid">
+                <div class="detail-field">
+                  <div class="detail-field-label">ID</div>
+                  <div class="detail-field-value"><strong>SOLEND-03</strong></div>
+                </div>
+                <div class="detail-field">
+                  <div class="detail-field-label">CVSS Score</div>
+                  <div class="detail-field-value">
+                    <span style="display:inline-block;padding:2px 8px;border-radius:4px;font-weight:700;color:#fff;background:#ea580c;">7.3</span>
+                    &nbsp;<code style="font-size:11px;">CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:H/A:N</code>
+                  </div>
+                </div>
+                <div class="detail-field">
+                  <div class="detail-field-label">CWE</div>
+                  <div class="detail-field-value"><code>CWE-347</code></div>
+                </div>
+                <div class="detail-field">
+                  <div class="detail-field-label">Location</div>
+                  <div class="detail-field-value">
+                    
+                      <code>programs/governance/src/instructions/execute_proposal.rs</code> line 67 &mdash; <em>execute_proposal</em>
+                    
+                  </div>
+                </div>
+                <div class="detail-field">
+                  <div class="detail-field-label">Rule Caught</div>
+                  <div class="detail-field-value">Rule 4 — CPI Safety</div>
+                </div>
+                <div class="detail-field">
+                  <div class="detail-field-label">Status</div>
+                  <div class="detail-field-value">
+                    
+                    
+                    <span class="status-badge status-na">Historical (2022)</span>
+                  </div>
+                </div>
+              </div>
+
+              <div class="detail-section">
+                <div class="detail-section-title">Description</div>
+                <div class="detail-section-body">Proposal execution logic performs CPI to treasury vault without verifying that the proposal has been authorized as a valid operator for those funds.</div>
+              </div>
+              <div class="detail-section">
+                <div class="detail-section-title">Impact</div>
+                <div class="detail-section-body">Malicious proposals can redirect treasury funds to attacker-controlled accounts.</div>
+              </div>
+              <div class="detail-section">
+                <div class="detail-section-title">Recommendation</div>
+                <div class="detail-section-body">Verify proposal PDA is an authorized operator for the treasury vault before CPI. Implement per-account delegation.</div>
+              </div>
+            </div>
+          </td>
+        </tr>
+        
       </tbody>
     </table>
-    {% else %}
-    <div class="empty-state">
-      <p>No findings to display.</p>
-    </div>
-    {% endif %}
+    
   </div>
 
-  {# ══════════════════════ FOOTER ══════════════════════ #}
+  
   <div class="footer">
-    Generated by {{ metadata.get('generator', metadata.get('tool', 'solana-auditor-skill')) }}
+    Generated by solana-auditor-skill dashboard v1.0.0
     &nbsp;&bull;&nbsp;
-    {{ metadata.get('file_path', 'N/A') }}
+    /Users/colbert1/solana-auditor-skill/examples/sample-vulnerable-program/audit-output/findings.json → /Users/colbert1/solana-auditor-skill/examples/solend-governance-audit/audit-output/findings.json
     &nbsp;&bull;&nbsp;
-    {{ metadata.get('generated_at', 'N/A') }}
+    2026-06-28T06:42:06Z
   </div>
 
 </div>
