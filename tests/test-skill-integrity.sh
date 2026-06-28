@@ -1092,6 +1092,28 @@ else
     done
 fi
 
+# Check 50: Solend governance live exploit audit present
+echo ""
+echo "Check 50: Solend governance live exploit audit"
+SOLEND_FINDINGS="examples/solend-governance-audit/audit-output/findings.json"
+if [ -f "$SOLEND_FINDINGS" ]; then
+    SOLEND_COUNT=$(python3 -c "import json; print(len(json.load(open('$SOLEND_FINDINGS')).get('findings', [])))" 2>/dev/null || echo 0)
+    SOLEND_CRIT=$(python3 -c "import json; d=json.load(open('$SOLEND_FINDINGS')); print(d.get('summary',{}).get('critical',0))" 2>/dev/null || echo 0)
+    SOLEND_HIGH=$(python3 -c "import json; d=json.load(open('$SOLEND_FINDINGS')); print(d.get('summary',{}).get('high',0))" 2>/dev/null || echo 0)
+    if [ "$SOLEND_COUNT" -ge 3 ] && [ "$SOLEND_CRIT" -ge 1 ] && [ "$SOLEND_HIGH" -ge 1 ]; then
+        ok "Solend live audit: $SOLEND_COUNT findings ($SOLEND_CRIT CRIT, $SOLEND_HIGH HIGH)"
+    else
+        fail "Solend live audit has unexpected counts: $SOLEND_COUNT findings ($SOLEND_CRIT CRIT, $SOLEND_HIGH HIGH)"
+    fi
+    if [ -f "examples/solend-governance-audit/audit-output/AUDIT_REPORT.md" ]; then
+        ok "Solend AUDIT_REPORT.md present"
+    else
+        fail "Solend AUDIT_REPORT.md missing"
+    fi
+else
+    fail "Solend governance live audit findings.json missing"
+fi
+
 # Summary
 echo ""
 echo "================================"

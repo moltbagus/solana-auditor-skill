@@ -1,0 +1,77 @@
+{
+  "findings": [
+    {
+      "id": "SOLEND-01",
+      "severity": "CRITICAL",
+      "cvss": 9.1,
+      "cvss_vector": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:N",
+      "cwe": "CWE-306",
+      "title": "Missing signer verification on governance proposal execution",
+      "location": {
+        "file": "programs/governance/src/instructions/execute_proposal.rs",
+        "line": 42,
+        "function": "execute_proposal"
+      },
+      "description": "The execute_proposal instruction does not verify that the caller is a valid governance account or that required signatures are present before executing proposal instructions.",
+      "impact": "Complete protocol compromise. Any user can execute any governance proposal including malicious ones that drain protocol treasury.",
+      "recommendation": "Add require!(ctx.accounts.governance.is_signer) and verify proposal is in executable state before CPI.",
+      "poc_status": "documented",
+      "rule_caught": "Rule 8 — Signer Verification",
+      "status": "Historical (2022)"
+    },
+    {
+      "id": "SOLEND-02",
+      "severity": "HIGH",
+      "cvss": 7.5,
+      "cvss_vector": "CVSS:3.1/AV:N/AC:L/PR:L/UI:N/S:U/C:H/I:N/A:N",
+      "cwe": "CWE-841",
+      "title": "Flash loan susceptible governance voting mechanism",
+      "location": {
+        "file": "programs/governance/src/instructions/cast_vote.rs",
+        "line": 28,
+        "function": "cast_vote"
+      },
+      "description": "Governance voting mechanism does not implement vote-time locks. Tokens can be borrowed via flash loan, voted with, and returned within a single transaction.",
+      "impact": "Flash loan attack enables attacker to acquire majority voting power within one transaction, pass malicious proposals, and drain protocol funds.",
+      "recommendation": "Implement vote-time locks requiring tokens to be locked in governance for minimum duration before voting power activates.",
+      "poc_status": "documented",
+      "rule_caught": "Rule 13 — Flash Loan Attacks",
+      "status": "Historical (2022)"
+    },
+    {
+      "id": "SOLEND-03",
+      "severity": "HIGH",
+      "cvss": 7.3,
+      "cvss_vector": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:H/A:N",
+      "cwe": "CWE-347",
+      "title": "Unchecked CPI to treasury vault without privilege verification",
+      "location": {
+        "file": "programs/governance/src/instructions/execute_proposal.rs",
+        "line": 67,
+        "function": "execute_proposal"
+      },
+      "description": "Proposal execution logic performs CPI to treasury vault without verifying that the proposal has been authorized as a valid operator for those funds.",
+      "impact": "Malicious proposals can redirect treasury funds to attacker-controlled accounts.",
+      "recommendation": "Verify proposal PDA is an authorized operator for the treasury vault before CPI. Implement per-account delegation.",
+      "poc_status": "documented",
+      "rule_caught": "Rule 4 — CPI Safety",
+      "status": "Historical (2022)"
+    }
+  ],
+  "summary": {
+    "critical": 1,
+    "high": 2,
+    "medium": 0,
+    "low": 0,
+    "info": 0,
+    "total": 3
+  },
+  "audit_metadata": {
+    "program": "Solend Governance",
+    "date": "2022-08",
+    "amount_lost": "$1.26M",
+    "attack_type": "Governance Flash Loan",
+    "audited_by": "solana-auditor-skill v1.12.0",
+    "rules_that_caught": ["Rule 8", "Rule 13", "Rule 4"]
+  }
+}

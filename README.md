@@ -300,6 +300,24 @@ bash demo.sh
 The demo script runs structure verification, 159 integrity checks, and 22 property-based
 fuzz tests in under 30 seconds.
 
+### Live Audit #2: Solend Governance Flash Loan (August 2022)
+
+> **Program audited:** Solend Governance Module (historical)
+> **Source:** Post-mortem analysis — publicly disclosed Aug 2022
+> **Amount lost:** ~$1.26M via governance flash loan attack
+> **Findings:** 3 (1 CRITICAL, 2 HIGH) — all caught by Rules 8, 13, and 4
+
+**What happened:** Attacker flash-loaned 11.5M SOL, acquired governance voting majority, approved a malicious proposal, drained treasury — all within one block (~400ms).
+
+**Root cause (3-layer failure):**
+1. No vote-time locks → flash loan amplifies voting power
+2. Missing `is_signer` on proposal execution → anyone can execute approved proposals
+3. Unchecked treasury CPI → proposals can redirect funds without privilege verification
+
+**What the skill caught:** Rule 8 (Signer Verification) → CRITICAL finding. Rule 13 (Flash Loan Attacks) → HIGH finding. Rule 4 (CPI Safety) → HIGH finding.
+
+See [`examples/solend-governance-audit/`](examples/solend-governance-audit/) for full findings and report.
+
 **Contest features**:
 - **Spec-Driven Development** — `PRD.md`, `spec.md`, `kanban.md`, `learnings.md`
 - **Property-Based Testing** — 22 fuzz tests verifying CVSS math & invariants

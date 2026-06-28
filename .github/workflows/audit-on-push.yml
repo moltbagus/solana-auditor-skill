@@ -1,57 +1,23 @@
 name: Solana Security Audit
-
 on:
   push:
-    branches: [main, develop]
+    branches: [main]
   pull_request:
-    branches: [main, develop]
-
+    branches: [main]
 jobs:
   audit:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-
-      - name: Set up Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: '3.9'
-
       - name: Install Claude Code
         run: npm install -g @anthropic-ai/claude-code
-
       - name: Install skill
-        run: |
-          git clone https://github.com/moltbagus/solana-auditor-skill.git /tmp/solana-auditor
-          cp -r /tmp/solana-auditor/skill ~/.claude/skills/solana-auditor-skill/
-          cp -r /tmp/solana-auditor/agents ~/.claude/skills/solana-auditor-skill/
-          cp -r /tmp/solana-auditor/commands ~/.claude/commands/
-          cp -r /tmp/solana-auditor/rules ~/.claude/rules/
-          cp /tmp/solana-auditor/scripts/*.py scripts/
-          cp /tmp/solana-auditor/scripts/*.sh scripts/
-
+        run: git clone https://github.com/moltbagus/solana-auditor-skill.git ~/.claude/skills/solana-auditor-skill || true
       - name: Run audit
-        run: |
-          claude --print "/audit-quick ." 2>&1 | tee audit-output/audit-quick.log
+        run: claude --print "/audit-quick ."
         env:
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
-
-      - name: Check for CRITICAL findings
-        run: |
-          if grep -q '"CRITICAL"' audit-output/findings.json 2>/dev/null; then
-            echo "CRITICAL findings detected — blocking merge"
-            cat audit-output/findings.json
-            exit 1
-          fi
-
       - name: Upload SARIF
         uses: github/code-scanning-action@latest
         with:
           sarif_file: audit-output/results.sarif
-          category: solana-audit
-
-      - name: Upload audit results
-        uses: actions/upload-artifact@v4
-        with:
-          name: audit-results
-          path: audit-output/

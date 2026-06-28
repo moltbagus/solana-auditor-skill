@@ -470,6 +470,22 @@ else
     fail "HTML dashboard generation failed"
 fi
 
+# 6b. Generate before/after comparison if fixed fixture exists
+COMPARISON_HTML="/tmp/demo_comparison_dashboard.html"
+FIXED_FINDINGS="examples/sample-vulnerable-program/fixed/audit-output/findings.json"
+if [ -f "$FIXED_FINDINGS" ]; then
+    echo -e "${BLUE}[6b/8]${NC} Generating before/after comparison dashboard..."
+    if python3 scripts/dashboard.py \
+        examples/sample-vulnerable-program/audit-output/findings.json \
+        "$FIXED_FINDINGS" \
+        "$COMPARISON_HTML" 2>&1; then
+        ok "Comparison dashboard generated at $COMPARISON_HTML"
+        echo -e "  ${GREEN}✓${NC} Open in browser: ${CYAN}open $COMPARISON_HTML${NC}"
+    else
+        fail "Comparison dashboard generation failed"
+    fi
+fi
+
 echo ""
 echo -e "${BLUE}[7/8]${NC} Contest readiness summary..."
 
@@ -503,7 +519,11 @@ echo "  cat README.md                          # Full documentation"
 echo "  cat examples/sample-vulnerable-program/programs/vault/src/lib.rs  # See vulnerable program"
 echo "  cat examples/sample-vulnerable-program/REMEDIATION_FIXES.md      # See all fixes"
 echo "  cat examples/sample-vulnerable-program/FIX_VERIFICATION.md       # Verify fixes"
-echo "  open /tmp/demo_audit_dashboard.html   # Browse HTML dashboard of findings"
+echo "  cat examples/solend-governance-audit/README.md                 # Live audit of real exploit"
+echo "  cat examples/solend-governance-audit/audit-output/findings.json | python3 -m json.tool"
+echo "  cat examples/solend-governance-audit/audit-output/AUDIT_REPORT.md"
+echo "  open /tmp/demo_audit_dashboard.html   # Browse HTML dashboard of findings
+  open /tmp/demo_comparison_dashboard.html  # Browse before/after comparison (if fixed fixture present)"
 echo "  bash install.sh -y                     # Install the skill"
 echo ""
 

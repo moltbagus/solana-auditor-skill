@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 """Audit findings dashboard generator.
 
-Reads findings.json and renders a self-contained HTML report via Jinja2.
+Reads one or two findings.json files and renders a self-contained HTML report
+via Jinja2. When two files are given, shows a before/after comparison view.
 """
 
 from __future__ import annotations
@@ -80,6 +81,77 @@ def compute_summary(findings: list[dict[str, Any]]) -> dict[str, Any]:
     }
 
 
+def compute_comparison(
+    before_findings: list[dict[str, Any]],
+    after_findings: list[dict[str, Any]],
+) -> dict[str, Any]:
+    """Diff two findings lists and return comparison stats + per-finding status."""
+    # Build lookup by canonical id (strip leading C- if present)
+    def norm_id(f: dict[str, Any]) -> str:
+        return f.get("id", "").lstrip("C-")
+
+    before_map: dict[str, dict[str, Any]] = {norm_id(f): f for f in before_findings}
+    after_map: dict[str, dict[str, Any]] = {norm_id(f): f for f in after_findings}
+
+    all_ids = set(before_map) | set(after_map)
+    fixed_findings: list[dict[str, Any]] = []
+    unchanged_findings: list[dict[str, Any]] = []
+    new_findings: list[dict[str, Any]] = []
+
+    for fid in sorted(all_ids, key=lambda x: (not x[0].isdigit(), x)):
+        in_before = fid in before_map
+        in_after = fid in after_map
+
+        if in_before and in_after:
+            unchanged_findings.append(after_map[fid])
+        elif in_before:
+            fixed_findings.append(before_map[fid])
+        else:
+            new_findings.append(after_map[fid])
+
+    def severity_counts(findings: list[dict[str, Any]]) -> dict[str, int]:
+        counts = {s: 0 for s in SEVERITY_LEVELS}
+        for f in findings:
+            sev = f.get("severity", "INFO").upper()
+            if sev in counts:
+                counts[sev] += 1
+        return counts
+
+    def cvss_sum(findings: list[dict[str, Any]]) -> float:
+        return round(sum(f["cvss"] for f in findings if isinstance(f.get("cvss"), (int, float))), 1)
+
+    before_summary = compute_summary(before_findings)
+    after_summary = compute_summary(after_findings)
+
+    def delta(b: int, a: int) -> str:
+        d = a - b
+        return f"{'+' if d > 0 else ''}{d}"
+
+    return {
+        "before_summary": before_summary,
+        "after_summary": after_summary,
+        "severity_delta": {
+            "critical": delta(before_summary["critical"], after_summary["critical"]),
+            "high": delta(before_summary["high"], after_summary["high"]),
+            "medium": delta(before_summary["medium"], after_summary["medium"]),
+            "low": delta(before_summary["low"], after_summary["low"]),
+            "info": delta(before_summary["info"], after_summary["info"]),
+        },
+        "cvss_delta": delta(before_summary["cvss_total"], after_summary["cvss_total"]),
+        "before_total": before_summary["total"],
+        "after_total": after_summary["total"],
+        "fixed": fixed_findings,
+        "fixed_counts": severity_counts(fixed_findings),
+        "fixed_cvss": cvss_sum(fixed_findings),
+        "unchanged": unchanged_findings,
+        "unchanged_counts": severity_counts(unchanged_findings),
+        "unchanged_cvss": cvss_sum(unchanged_findings),
+        "new": new_findings,
+        "new_counts": severity_counts(new_findings),
+        "new_cvss": cvss_sum(new_findings),
+    }
+
+
 def compute_metadata(raw: dict[str, Any], input_path: str) -> dict[str, Any]:
     """Extract or derive metadata from the raw findings JSON."""
     summary_block = raw.get(SUMMARY_KEY, {}) or {}
@@ -113,6 +185,7 @@ def render(
     summary: dict[str, Any],
     metadata: dict[str, Any],
     templates_dir: Path,
+    comparison: dict[str, Any] | None = None,
 ) -> str:
     """Render the Jinja2 template and return the HTML string."""
     try:
@@ -127,7 +200,12 @@ def render(
     except Exception as e:
         sys.exit(f"ERROR: Failed to load template: {e}\n")
 
-    return template.render(findings=findings, summary=summary, metadata=metadata)
+    return template.render(
+        findings=findings,
+        summary=summary,
+        metadata=metadata,
+        comparison=comparison,
+    )
 
 
 def main() -> None:
@@ -138,15 +216,22 @@ def main() -> None:
 Examples:
   python3 scripts/dashboard.py findings.json
   python3 scripts/dashboard.py findings.json report.html
+  python3 scripts/dashboard.py before.json after.json comparison.html
   cat findings.json | python3 scripts/dashboard.py -
   cat findings.json | python3 scripts/dashboard.py - > report.html
 """,
     )
     parser.add_argument(
-        "findings",
+        "before",
         nargs="?",
         default=None,
-        help="Path to findings.json (use '-' to read from stdin)",
+        help="Path to before findings.json (use '-' to read from stdin)",
+    )
+    parser.add_argument(
+        "after",
+        nargs="?",
+        default=None,
+        help="Path to after findings.json (comparison mode; omit for single-file mode)",
     )
     parser.add_argument(
         "output",
@@ -154,8 +239,8 @@ Examples:
         default=None,
         help=(
             "Output HTML path.\n"
-            "  Default for files: <stem>.dashboard.html\n"
-            "  Default for stdin: stdout (requires explicit '-' as input)"
+            "  Single-file: default is <stem>.dashboard.html\n"
+            "  Comparison:  default is comparison.dashboard.html"
         ),
     )
     parser.add_argument(
@@ -176,8 +261,47 @@ Examples:
     if not templates_dir.is_dir():
         sys.exit(f"ERROR: Templates directory not found: {templates_dir}\n")
 
-    # Load findings
-    input_arg = args.findings
+    # ── Comparison mode: two positional files ──────────────────────────────────
+    if args.before and args.after:
+        before_path = Path(args.before).resolve()
+        after_path = Path(args.after).resolve()
+        if not before_path.is_file():
+            sys.exit(f"ERROR: Before file not found: {before_path}\n")
+        if not after_path.is_file():
+            sys.exit(f"ERROR: After file not found: {after_path}\n")
+
+        before_findings, before_raw = load_findings(before_path)
+        after_findings, after_raw = load_findings(after_path)
+
+        comparison = compute_comparison(before_findings, after_findings)
+
+        # Build combined metadata
+        before_meta = compute_metadata(before_raw, str(before_path))
+        after_meta = compute_metadata(after_raw, str(after_path))
+        combined_meta = {
+            "program_name": before_meta.get("program_name", "Unknown Program"),
+            "repo": before_meta.get("repo", "N/A"),
+            "before_audit_date": before_meta.get("audit_date", "N/A"),
+            "after_audit_date": after_meta.get("audit_date", "N/A"),
+            "generated_at": before_meta.get("generated_at", "N/A"),
+            "generator": f"solana-auditor-skill dashboard v{SCRIPT_VERSION}",
+            "file_path": f"{before_path} → {after_path}",
+        }
+
+        # Render with comparison findings = unchanged + new (fixed shown separately)
+        combined_findings = comparison["unchanged"] + comparison["new"]
+        combined_summary = compute_summary(combined_findings)
+
+        output_path = Path(args.output) if args.output else Path("comparison.dashboard.html")
+        html = render(combined_findings, combined_summary, combined_meta, templates_dir, comparison)
+
+        output_path.parent.mkdir(parents=True, exist_ok=True)
+        output_path.write_text(html, encoding="utf-8")
+        print(f"Comparison dashboard written to {output_path}", file=sys.stderr)
+        return
+
+    # ── Single-file / stdin mode ────────────────────────────────────────────────
+    input_arg = args.before  # renamed; same positional slot
     input_path_str: str
 
     if input_arg is None:
@@ -195,11 +319,9 @@ Examples:
         findings, raw_data = load_findings(input_path)
         input_path_str = str(input_path)
 
-    # Derive summary and metadata
     summary = compute_summary(findings)
     metadata = compute_metadata(raw_data, input_path_str)
 
-    # Resolve output
     stdout_mode = False
     if args.output:
         output_path = Path(args.output)
@@ -208,7 +330,6 @@ Examples:
     else:
         stdout_mode = True
 
-    # Render
     html = render(findings, summary, metadata, templates_dir)
 
     if stdout_mode:

@@ -316,6 +316,101 @@
       color: #6b7280;
     }
 
+    /* ── Comparison ── */
+    .comparison-banner {
+      background: #fff;
+      border-radius: 8px;
+      padding: 20px 24px;
+      margin-bottom: 24px;
+      box-shadow: 0 1px 3px rgba(0,0,0,.08);
+      border-left: 4px solid #16a34a;
+    }
+    .comparison-banner h2 {
+      font-size: 13px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: .06em;
+      color: #6b7280;
+      margin-bottom: 16px;
+    }
+    .comparison-meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px 24px;
+      font-size: 13px;
+      color: #6b7280;
+      margin-bottom: 16px;
+    }
+    .comparison-meta strong { color: #1a1a2e; }
+    .comparison-delta-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+    .delta-card {
+      background: #f9fafb;
+      border-radius: 6px;
+      padding: 14px 16px;
+      text-align: center;
+    }
+    .delta-label {
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: .06em;
+      color: #9ca3af;
+      margin-bottom: 4px;
+    }
+    .delta-numbers {
+      font-size: 22px;
+      font-weight: 700;
+    }
+    .delta-numbers .before-val { color: #6b7280; }
+    .delta-numbers .arrow { color: #9ca3af; margin: 0 4px; }
+    .delta-numbers .after-val { color: #16a34a; }
+    .delta-numbers .after-val.negative { color: #dc2626; }
+    .delta-numbers .after-val.neutral { color: #6b7280; }
+
+    .comparison-summary-row {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+    .comparison-stat {
+      background: #f9fafb;
+      border-radius: 6px;
+      padding: 12px 16px;
+    }
+    .comparison-stat-label {
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: .06em;
+      color: #9ca3af;
+      margin-bottom: 4px;
+    }
+    .comparison-stat-value { font-size: 20px; font-weight: 700; }
+    .stat-fixed   { color: #16a34a; }
+    .stat-unchanged { color: #b45309; }
+    .stat-new     { color: #dc2626; }
+
+    /* Comparison table status badges */
+    .badge-fixed     { background: #f0fdf4; color: #16a34a; }
+    .badge-unchanged { background: #fffbeb; color: #b45309; }
+    .badge-new       { background: #fef2f2; color: #dc2626; }
+    .badge-fixed, .badge-unchanged, .badge-new {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 4px;
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: .04em;
+    }
+    .severity-reduction { font-size: 12px; color: #6b7280; margin-top: 4px; }
+
     @media (max-width: 640px) {
       body { padding: 12px 8px 32px; }
       .header { padding: 20px 16px; }
@@ -341,6 +436,7 @@
   </div>
 
   {# ══════════════════════ SEVERITY BAR ══════════════════════ #}
+  {% if not comparison %}
   <div class="severity-bar">
     <h2>Findings by Severity</h2>
     <div class="severity-chips">
@@ -366,6 +462,70 @@
       </span>
     </div>
   </div>
+  {% endif %}
+
+  {# ══════════════════════ COMPARISON BANNER ══════════════════════ #}
+  {% if comparison %}
+  <div class="comparison-banner">
+    <h2>Before / After Comparison</h2>
+
+    <div class="comparison-meta">
+      <span><strong>Before:</strong> {{ metadata.get('before_audit_date', 'N/A') }}</span>
+      <span><strong>After:</strong> {{ metadata.get('after_audit_date', 'N/A') }}</span>
+      <span><strong>File:</strong> {{ metadata.get('file_path', 'N/A') }}</span>
+    </div>
+
+    {# Severity delta row #}
+    <div class="comparison-delta-grid">
+      {% set sev_levels = [('CRITICAL', 'critical', '#dc2626'), ('HIGH', 'high', '#ea580c'), ('MEDIUM', 'medium', '#ca8a04'), ('LOW', 'low', '#2563eb'), ('INFO', 'info', '#9ca3af')] %}
+      {% for label, key, color in sev_levels %}
+        {% set d = comparison.severity_delta[key] %}
+        {% set b = comparison.before_summary[key] %}
+        {% set a = comparison.after_summary[key] %}
+        {% set is_improved = (b > 0 and a == 0) or (a < b) %}
+        <div class="delta-card">
+          <div class="delta-label" style="color:{{ color }};">{{ label }}</div>
+          <div class="delta-numbers">
+            <span class="before-val">{{ b }}</span>
+            <span class="arrow">&#8594;</span>
+            <span class="after-val {% if b > a %}negative{% elif b == a %}neutral{% endif %}">{{ a }}</span>
+          </div>
+          <div class="severity-reduction">
+            {% if d == '+0' or d == '0' %}{% elif d.startswith('-') %}{{ d }} eliminated{% else %}{{ d }} added{% endif %}
+          </div>
+        </div>
+      {% endfor %}
+    </div>
+
+    {# CVSS delta + fixed/unchanged/new summary #}
+    <div class="comparison-summary-row">
+      <div class="comparison-stat">
+        <div class="comparison-stat-label">Total CVSS</div>
+        <div class="comparison-stat-value">
+          <span style="color:#6b7280">{{ "%.1f"|format(comparison.before_summary.cvss_total) }}</span>
+          <span style="color:#9ca3af;margin:0 6px;">&#8594;</span>
+          <span style="color:#16a34a">{{ "%.1f"|format(comparison.after_summary.cvss_total) }}</span>
+          <span style="font-size:13px;color:#9ca3af;margin-left:6px;">({{ comparison.cvss_delta }})</span>
+        </div>
+      </div>
+      <div class="comparison-stat">
+        <div class="comparison-stat-label">Fixed</div>
+        <div class="comparison-stat-value stat-fixed">{{ comparison.fixed|length }}</div>
+        <div style="font-size:12px;color:#9ca3af;">CVSS {{ "%.1f"|format(comparison.fixed_cvss) }} removed</div>
+      </div>
+      <div class="comparison-stat">
+        <div class="comparison-stat-label">Unchanged</div>
+        <div class="comparison-stat-value stat-unchanged">{{ comparison.unchanged|length }}</div>
+        <div style="font-size:12px;color:#9ca3af;">CVSS {{ "%.1f"|format(comparison.unchanged_cvss) }} persisting</div>
+      </div>
+      <div class="comparison-stat">
+        <div class="comparison-stat-label">New</div>
+        <div class="comparison-stat-value stat-new">{{ comparison.new|length }}</div>
+        <div style="font-size:12px;color:#9ca3af;">CVSS {{ "%.1f"|format(comparison.new_cvss) }} introduced</div>
+      </div>
+    </div>
+  </div>
+  {% endif %}
 
   {# ══════════════════════ CVSS SUMMARY ══════════════════════ #}
   <div class="summary-row">
@@ -413,6 +573,9 @@
     <table id="findings-table">
       <thead>
         <tr>
+          {% if comparison %}
+          <th data-col="status">Status <span class="sort-icon">↕</span></th>
+          {% endif %}
           <th data-col="id">ID <span class="sort-icon">↕</span></th>
           <th data-col="severity">Severity <span class="sort-icon">↕</span></th>
           <th data-col="title">Title <span class="sort-icon">↕</span></th>
@@ -425,6 +588,18 @@
       <tbody>
         {% for f in findings %}
         <tr class="finding-row" data-id="{{ f.id }}" onclick="toggleDetail(this)">
+          {% if comparison %}
+          <td>
+            {% set norm = f.id|lstrip('C-') %}
+            {% if norm in comparison.fixed|map(attribute='id')|map('lstrip','C-')|list %}
+              <span class="badge-fixed">Fixed</span>
+            {% elif norm in comparison.new|map(attribute='id')|map('lstrip','C-')|list %}
+              <span class="badge-new">New</span>
+            {% else %}
+              <span class="badge-unchanged">Unchanged</span>
+            {% endif %}
+          </td>
+          {% endif %}
           <td><strong>{{ f.id }}</strong></td>
           <td class="severity-cell">
             {% set sev = f.severity|upper %}
@@ -449,7 +624,7 @@
         </tr>
         {# Detail row (injected by JS for sort stability) #}
         <tr class="detail-row" id="detail-{{ f.id }}">
-          <td class="detail-cell" colspan="7">
+          <td class="detail-cell" colspan="{{ 8 if comparison else 7 }}">
             <div class="detail-inner">
               <div class="detail-grid">
                 <div class="detail-field">
