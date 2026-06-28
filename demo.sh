@@ -491,12 +491,15 @@ echo ""
 echo -e "${BLUE}[7/8]${NC} Contest readiness summary..."
 
 echo ""
-DEMO_VERSION=$(git describe --tags 2>/dev/null | sed 's/v//' || echo "1.8.0")
+# Derive version: CHANGELOG.md [X.Y.Z] first (authoritative), then git tag, then hardcoded
+DEMO_VERSION=$(grep -m1 "^\[.*\]" CHANGELOG.md 2>/dev/null | sed "s/[][]//g" | awk "{print \$1}")
+[ -z "$DEMO_VERSION" ] && DEMO_VERSION=$(git describe --tags 2>/dev/null | sed "s/^v//")
+[ -z "$DEMO_VERSION" ] && DEMO_VERSION="1.13.0"
 echo -e "${WHITE}╔════════════════════════════════════════════════════╗${NC}"
 echo -e "${WHITE}║${NC}  ${MAGENTA}Submission Summary — World-Class v${DEMO_VERSION}${NC}                ${WHITE}║${NC}"
 echo -e "${WHITE}╠════════════════════════════════════════════════════╣${NC}"
 echo -e "${WHITE}║${NC}  Skill:       solana-auditor-skill (world-class)    ${WHITE}║${NC}"
-echo -e "${WHITE}║${NC}  Version:     $(git describe --tags 2>/dev/null || echo "v1.8.0")                        ${WHITE}║${NC}"
+echo -e "${WHITE}║${NC}  Version:     v${DEMO_VERSION}                          ${WHITE}║${NC}"
 echo -e "${WHITE}║${NC}  Integrity:   ${IG_PASS:-0} passed, ${IG_FAIL:-0} failed                    ${WHITE}║${NC}"
 echo -e "${WHITE}║${NC}  Phases:      7 (Recon → Remediation + Phase 2B)  ${WHITE}║${NC}"
 echo -e "${WHITE}║${NC}  Execution:   Two-tier (Tier 1 SAST / Tier 2 full)  ${WHITE}║${NC}"
