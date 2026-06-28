@@ -1,6 +1,6 @@
 # Solana Auditor Shiba Skill
 
-**World-class Solana security auditor for Claude Code** — 7-phase audit lifecycle (Phase 0 Safety Guard + Phases 1–6), 45 Solana security rules + 5 agent safety rules (50 total), 9 slash commands, 9 specialist agents, compile-verified example fixture, 159 integrity checks passing, 22 fuzz tests, two-tier execution (SAST + runtime), pre-commit hook, PR auditing, audit history, and inline fix suggestions.
+**World-class Solana security auditor for Claude Code** — 7-phase audit lifecycle (Phase 0 Safety Guard + Phases 1–6), 45 Solana security rules + 5 agent safety rules (50 total), 9 slash commands, 10 specialist agents, 6 compile-verified example fixtures, 173 integrity checks passing, 22 fuzz tests, two-tier execution (SAST + runtime), pre-commit hook, PR auditing, audit history, and inline fix suggestions.
 
 [![CI](https://github.com/moltbagus/solana-auditor-skill/actions/workflows/test.yml/badge.svg)](https://github.com/moltbagus/solana-auditor-skill/actions/workflows/test.yml)
 [![Anchor 0.31.1](https://img.shields.io/badge/anchor-0.31.1-blueviolet)](https://www.anchor-lang.com/)
@@ -20,11 +20,14 @@
 # 1. Run the demo — zero setup, works without Solana toolchain
 bash demo.sh
 
-# 2. Verify integrity — 47 integrity checks, all should pass
+# 2. Verify integrity — 173 integrity checks, all should pass
 bash tests/test-skill-integrity.sh
 
 # 3. Run fuzz tests — 22 Hypothesis strategies
 python3 -c "import pytest; pytest.main(['-v', 'tests/fuzz/test_properties.py'])"
+
+# 4. Run the interactive dashboard on any fixture
+python3 scripts/dashboard.py examples/dex-amm/audit-output/findings.json /tmp/dex_dashboard.html
 
 # 4. Inspect the pre-committed audit fixture
 cat examples/sample-vulnerable-program/audit-output/findings.json | python3 -m json.tool
@@ -150,6 +153,7 @@ The `rules/audit.rules` file auto-activates whenever Claude touches Anchor progr
 | `agents/formal-verifier.md` | Invariant proofs via QED 2A |
 | `agents/report-writer.md` | Structured report generation |
 | `agents/cross-program-agent.md` | Cross-program CPI chain analysis |
+| `agents/safety-anchor.md` | Anchor-specific security patterns |
 | `agents/safety-guard.md` | Pre-flight safety checks and Phase 0 guardrails |
 
 `agents/AUDIT.md` is auto-generated during audits to track agent state.
@@ -423,4 +427,8 @@ Comandos principais:
 
 ## License
 
-MIT — Superteam Brasil, 2026
+## Authors
+
+- **Colbert Low** — [sirshibaninja](https://x.com/sirshibaninja)
+
+## MIT — Superteam Brasil, 2026
