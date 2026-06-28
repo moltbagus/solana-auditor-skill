@@ -1,0 +1,320 @@
+{
+  "findings": [
+    {
+      "id": "VULN-01",
+      "title": "Reentrancy double-claim via CEI pattern violation",
+      "severity": "CRITICAL",
+      "cvss": 9.8,
+      "cvss_vector": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H",
+      "cwe": "CWE-362",
+      "location": {
+        "file": "programs/staking/src/lib.rs",
+        "line": 25,
+        "function": "claim"
+      },
+      "description": "The claim instruction transfers lamports to the user account BEFORE updating the user_position.claimed_rewards state. No reentrancy guard is set before the external call. An attacker can re-enter the program during the lamport transfer and claim rewards a second time before the state update executes, draining the pool.",
+      "impact": "Double-claim of rewards. The attacker claims once in the outer call and again in the re-entered call, doubling their reward extraction per transaction. Repeated calls drain the pool of all reward lamports.",
+      "recommendation": "Follow the Checks-Effects-Interactions (CEI) pattern strictly: update state before any external call. Set a reentrancy guard flag before the lamport transfer and verify it in the instruction entry. Use Anchor's reentrancy guard pattern or a one-time-use bump seed.",
+      "poc_status": "pending",
+      "rule_caught": "Rule 14 — Reentrancy Guards",
+      "rule": 14,
+      "status": "Open",
+      "root_cause": "The lamport transfer (external call) occurs on lines 25-26 before the state update on line 29. With no reentrancy guard flag set before the call, a re-entrant invocation sees the unchanged claimed_rewards and can claim again.",
+      "regression_test": "#[tokio::test]\nasync fn test_reentrancy_guard_prevents_double_claim() {\n    let initial_pool = pool.lamports;\n    let result = program.rpc().process_transaction(&reentrant_claim_tx).await;\n    assert!(result.is_err());\n    let final_pool = pool.lamports;\n    assert_eq!(initial_pool, final_pool, \"pool lamports unchanged — no double-claim\");\n}"
+    },
+    {
+      "id": "VULN-02",
+      "title": "init_if_needed race condition — unbumped PDA reinitialization",
+      "severity": "HIGH",
+      "cvss": 8.2,
+      "cvss_vector": "CVSS:3.1/AV:N/AC:L/PR:L/UI:N/S:U/C:H/I:H/A:N",
+      "cwe": "CWE-665",
+      "location": {
+        "file": "programs/staking/src/lib.rs",
+        "line": 43,
+        "function": "stake"
+      },
+      "description": "The stake instruction uses init_if_needed to create the position account if it does not exist, but the bump parameter is passed as an unverified instruction argument and never compared against ctx.bumps.position. Without bump verification, an attacker who knows the PDA seeds can call stake() repeatedly to reset the virtual_stake to a new value.",
+      "impact": "Virtual stake reset attack. Attacker reinitializes the position to a known virtual_stake value to manipulate the reward distribution or inflate their apparent stake share.",
+      "recommendation": "Use ctx.bumps.position directly instead of the caller-supplied bump. Verify the bump matches: require!(bump == ctx.bumps.position, StakingError::InvalidBump). Anchor's canonical bump should be used. Alternatively, add a one-time discriminator field that prevents reinitialization.",
+      "poc_status": "pending",
+      "rule_caught": "Rule 22 — init_if_needed Race Conditions",
+      "rule": 22,
+      "status": "Open",
+      "root_cause": "The bump is passed as an instruction parameter (line 40) but never validated against the canonical bump returned by ctx.bumps. init_if_needed creates the account if missing without enforcing uniqueness of initialization.",
+      "regression_test": "#[tokio::test]\nasync fn test_stake_rejects_invalid_bump() {\n    let wrong_bump = bump + 1;\n    let result = program.rpc().process_transaction(&stake_with_wrong_bump_tx(wrong_bump)).await;\n    assert!(result.is_err());\n}"
+    },
+    {
+      "id": "VULN-03",
+      "title": "Lamport griefing via unfunded PDA occupation",
+      "severity": "HIGH",
+      "cvss": 7.4,
+      "cvss_vector": "CVSS:3.1/AV:N/AC:L/PR:L/UI:N/S:U/C:N/I:H/A:N",
+      "cwe": "CWE-770",
+      "location": {
+        "file": "programs/staking/src/lib.rs",
+        "line": 60,
+        "function": "register_validator"
+      },
+      "description": "The register_validator instruction creates a validator PDA without verifying that the payer account has sufficient lamports for rent-exemption. An attacker can pre-compute validator PDAs using known name strings and create unfunded accounts at those addresses, blocking legitimate registrations. The program will find the account already exists and refuse to initialize it.",
+      "impact": "Denial of service against the validator registry. Legitimate validators cannot register because their desired name strings map to already-existing (but unfunded) PDA addresses controlled by the attacker.",
+      "recommendation": "Add a rent-exemption check: if validator.lamports() < Rent::get()?.minimum_balance(validator.data_len()) { return Err(...) }. Alternatively, use a registry-counting approach where the program, not the attacker, controls the PDA derivation to prevent pre-computation.",
+      "poc_status": "pending",
+      "rule_caught": "Rule 41 — Lamport Griefing",
+      "rule": 41,
+      "status": "Open",
+      "root_cause": "The instruction creates the validator account via #[account(init, ...)] without verifying the payer has funded the account to rent-exemption. An attacker can pre-derive and create unfunded accounts at target addresses.",
+      "regression_test": "#[tokio::test]\nasync fn test_validator_registration_requires_rent_exempt_balance() {\n    let result = program.rpc().process_transaction(&register_unfunded_validator_tx).await;\n    assert!(result.is_err());\n}"
+    },
+    {
+      "id": "VULN-04",
+      "title": "Arithmetic overflow in reward calculation",
+      "severity": "HIGH",
+      "cvss": 7.1,
+      "cvss_vector": "CVSS:3.1/AV:N/AC:L/PR:L/UI:N/S:U/C:L/I:H/A:N",
+      "cwe": "CWE-190",
+      "location": {
+        "file": "programs/staking/src/lib.rs",
+        "line": 77,
+        "function": "compute_rewards"
+      },
+      "description": "The compute_rewards function computes total = staked_amount + (rate_per_slot * slots_elapsed) using unchecked Rust arithmetic. The multiplication rate_per_slot * slots_elapsed can overflow u64 in release mode (wrapping silently). A wrapped reward value can be stored and later used to over-withdraw from the pool.",
+      "impact": "Reward inflation via overflow. The wrapped total value no longer reflects actual accrual. An attacker who triggers overflow can claim inflated rewards against the pool.",
+      "recommendation": "Replace with checked arithmetic: rate_per_slot.checked_mul(slots_elapsed).ok_or(StakingError::Overflow)?; let total = staked_amount.checked_add(earned).ok_or(StakingError::Overflow)?;",
+      "poc_status": "pending",
+      "rule_caught": "Rule 6 — Arithmetic",
+      "rule": 6,
+      "status": "Open",
+      "root_cause": "Rust's default arithmetic on u64 wraps silently in release mode. The expression rate_per_slot * slots_elapsed is computed without checked_mul.",
+      "regression_test": "#[test]\nfn test_overflow_returns_error() {\n    let rate = 1_000_000_000u64 / 100_000_000u64;\n    let large_elapsed = u64::MAX / rate + 10;\n    assert!(rate.checked_mul(large_elapsed).is_none());\n}"
+    },
+    {
+      "id": "VULN-05",
+      "title": "Missing signer verification on admin update_reward_rate",
+      "severity": "HIGH",
+      "cvss": 7.2,
+      "cvss_vector": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H",
+      "cwe": "CWE-306",
+      "location": {
+        "file": "programs/staking/src/lib.rs",
+        "line": 90,
+        "function": "update_reward_rate"
+      },
+      "description": "The update_reward_rate instruction declares admin: AccountInfo<'info> in the UpdateRate Accounts struct. No Signer constraint is applied and no is_signer check is performed. Any caller can pass any pubkey as the admin field and update the pool's reward_rate to any value, including 0 (denial of service) or an astronomical value.",
+      "impact": "Complete reward rate manipulation. An attacker sets reward_rate to 0, disabling all reward accrual (DoS). Or sets it to an enormous value to inflate rewards beyond pool capacity.",
+      "recommendation": "Change admin: AccountInfo<'info> to admin: Signer<'info> in the UpdateRate struct. Anchor will enforce signer verification at deserialization. Optionally add #[account(has_one = admin)] on the pool account.",
+      "poc_status": "pending",
+      "rule_caught": "Rule 8 — Signer Verification",
+      "rule": 8,
+      "status": "Open",
+      "root_cause": "The admin field was declared as AccountInfo instead of Signer. Anchor's AccountInfo type accepts any account regardless of whether it signed the transaction.",
+      "regression_test": "#[tokio::test]\nasync fn test_update_reward_rate_requires_admin_signer() {\n    let malicious_tx = Transaction::new_signed_with_payer(\n        &[instruction::update_reward_rate(&program_id, 0)],\n        Some(&attacker.pubkey()),\n        &[&attacker],\n        recent_blockhash,\n    );\n    let result = program.rpc().process_transaction(&malicious_tx).await;\n    assert!(result.is_err());\n}"
+    },
+    {
+      "id": "VULN-06",
+      "title": "Reinit attack — position account zeroed and reset",
+      "severity": "MEDIUM",
+      "cvss": 6.5,
+      "cvss_vector": "CVSS:3.1/AV:N/AC:L/PR:L/UI:N/S:U/C:N/I:H/A:N",
+      "cwe": "CWE-665",
+      "location": {
+        "file": "programs/staking/src/lib.rs",
+        "line": 102,
+        "function": "reinit_position"
+      },
+      "description": "The reinit_position instruction writes to the position account without verifying the Anchor 8-byte discriminator or any one-time initialization guard. If the position account is closed (lamports refunded) and re-funded by an attacker, reinit_position can be called again to zero virtual_stake and claimed_rewards.",
+      "impact": "Position drain via reinitialization. The user loses their staked amount because virtual_stake is reset to 0. The attacker captures the freed lamports.",
+      "recommendation": "Add a discriminator check: require!(ctx.accounts.position.is_initialized(), StakingError::NotInitialized). Use Anchor's reinit guard pattern or store a version/initialized flag.",
+      "poc_status": "pending",
+      "rule_caught": "Rule 11 — Reinitialization Attacks",
+      "rule": 11,
+      "status": "Open",
+      "root_cause": "The reinit_position instruction writes to the position account without checking if it was previously initialized. Anchor's discriminator is not verified.",
+      "regression_test": "#[tokio::test]\nasync fn test_reinit_position_rejects_reinit() {\n    program.rpc().process_transaction(&init_position_tx).await.unwrap();\n    program.rpc().process_transaction(&close_position_tx).await.unwrap();\n    let result = program.rpc().process_transaction(&reinit_tx).await;\n    assert!(result.is_err());\n}"
+    },
+    {
+      "id": "VULN-07",
+      "title": "Token mint without amount validation — dust attack",
+      "severity": "MEDIUM",
+      "cvss": 5.8,
+      "cvss_vector": "CVSS:3.1/AV:N/AC:L/PR:L/UI:N/S:U/C:L/I:L/A:N",
+      "cwe": "CWE-20",
+      "location": {
+        "file": "programs/staking/src/lib.rs",
+        "line": 114,
+        "function": "mint_shares"
+      },
+      "description": "The mint_shares instruction accepts an amount parameter with no minimum threshold check. Dust amounts (1 lamport) can be minted to any user_shares account. There is also no maximum cap, enabling inflation of the total share supply.",
+      "impact": "State bloating via dust minting. An attacker mints 1-lamport shares to thousands of accounts, diluting existing share holders and wasting rent-exemption lamports.",
+      "recommendation": "Add minimum and maximum amount checks: require!(amount >= MIN_SHARE_AMOUNT, StakingError::BelowMinimum); require!(amount <= MAX_SHARE_AMOUNT, StakingError::ExceedsMaximum);",
+      "poc_status": "pending",
+      "rule_caught": "Rule 5 — Token Operations",
+      "rule": 5,
+      "status": "Open",
+      "root_cause": "The mint_shares function accepts any u64 amount with no bounds checking. No minimum prevents dust; no maximum caps inflation.",
+      "regression_test": "#[test]\nfn test_mint_shares_rejects_dust() {\n    let dust_amount: u64 = 1;\n    let result = program.rpc().process_transaction(&mint_shares_tx(dust_amount)).await;\n    assert!(result.is_err());\n}"
+    },
+    {
+      "id": "VULN-08",
+      "title": "remaining_accounts CPI injection — attacker-controlled CPI accounts",
+      "severity": "CRITICAL",
+      "cvss": 8.6,
+      "cvss_vector": "CVSS:3.1/AV:N/AC:L/PR:L/UI:N/S:U/C:H/I:H/A:H",
+      "cwe": "CWE-862",
+      "location": {
+        "file": "programs/rewards/src/lib.rs",
+        "line": 33,
+        "function": "distribute"
+      },
+      "description": "The distribute instruction forwards ctx.remaining_accounts directly to the system program's transfer instruction without validating which accounts appear in the remaining_accounts slice. An attacker can craft a transaction where remaining_accounts contains different (mutable) accounts than from and to, injecting arbitrary lamport transfers into the CPI call.",
+      "impact": "Arbitrary lamport transfer via CPI injection. The attacker redirects the system program's transfer to any account pair of their choosing, draining lamports from the program's from account to an attacker-controlled destination.",
+      "recommendation": "Never forward remaining_accounts to a CPI without validation. Build the account metas array explicitly: &[from.to_account_info(), to.to_account_info(), system_program.to_account_info()]. If remaining_accounts are genuinely needed, validate each account key against an allowlist before forwarding.",
+      "poc_status": "pending",
+      "rule_caught": "Rule 15 — remaining_accounts in CPI",
+      "rule": 15,
+      "status": "Open",
+      "root_cause": "The remaining_accounts slice was forwarded directly to invoke() without any validation of its contents.",
+      "regression_test": "#[tokio::test]\nasync fn test_distribute_rejects_injected_accounts() {\n    let result = program.rpc().process_transaction(&cpi_injection_tx).await;\n    assert!(result.is_err());\n}"
+    },
+    {
+      "id": "VULN-09",
+      "title": "Arbitrary CPI via unverified callback instruction",
+      "severity": "HIGH",
+      "cvss": 8.1,
+      "cvss_vector": "CVSS:3.1/AV:N/AC:L/PR:L/UI:N/S:U/C:H/I:H/A:N",
+      "cwe": "CWE-347",
+      "location": {
+        "file": "programs/rewards/src/lib.rs",
+        "line": 46,
+        "function": "exec_reward_callback"
+      },
+      "description": "The exec_reward_callback instruction accepts arbitrary data: Vec<u8> and arbitrary remaining accounts, then invokes an arbitrary target program via invoke(). The target program ID is read from ctx.accounts.target (an unverified AccountInfo) with no allowlist check. This is a complete arbitrary CPI gadget.",
+      "impact": "Total privilege escalation. The attacker can call any program with any instruction data and any accounts in the context of this program's signer privileges.",
+      "recommendation": "Remove the arbitrary CPI capability entirely. If callbacks are required, use a signed instruction data format with a domain-specific schema. Validate the target program against an on-chain allowlist PDA.",
+      "poc_status": "pending",
+      "rule_caught": "Rule 4 — CPI Safety",
+      "rule": 4,
+      "status": "Open",
+      "root_cause": "The target program ID and instruction data are fully user-controlled. invoke() is called with attacker-supplied values.",
+      "regression_test": "#[tokio::test]\nasync fn test_callback_rejects_arbitrary_program() {\n    let malicious_target = Pubkey::new_unique();\n    let result = program.rpc().process_transaction(&callback_tx(&malicious_target)).await;\n    assert!(result.is_err());\n}"
+    },
+    {
+      "id": "VULN-10",
+      "title": "Unchecked arithmetic compound interest calculation — wrapping overflow",
+      "severity": "HIGH",
+      "cvss": 6.8,
+      "cvss_vector": "CVSS:3.1/AV:N/AC:L/PR:L/UI:N/S:U/C:L/I:H/A:N",
+      "cwe": "CWE-190",
+      "location": {
+        "file": "programs/rewards/src/lib.rs",
+        "line": 73,
+        "function": "compound"
+      },
+      "description": "The compound function computes (principal * (1 + rate/10000)^periods using wrapping_pow on u128 before casting to u64. While u128 provides more headroom than u64, wrapping_pow still silently wraps on overflow. A sufficiently large principal with many compounding periods can wrap the u128 result, producing a small compounded value that loses the user's funds.",
+      "impact": "Fund loss via compound overflow. The wrapped compounded value is smaller than the correct compound interest, causing the user to receive fewer rewards than earned.",
+      "recommendation": "Use checked_pow instead of wrapping_pow: (1_u128 + rate / 10000).checked_pow(periods_u128 as u32).ok_or(RewardsError::Overflow)?. Add a maximum period check to prevent unbounded exponentiation.",
+      "poc_status": "pending",
+      "rule_caught": "Rule 6 — Arithmetic",
+      "rule": 6,
+      "status": "Open",
+      "root_cause": "The wrapping_pow call silently wraps when the exponentiation overflows u128. Even though u128 is used, a large principal with many compounding periods can exceed u128::MAX.",
+      "regression_test": "#[test]\nfn test_compound_overflow_returns_error() {\n    let large_periods: u64 = u64::MAX;\n    let result = (1_u128 + 1000u128 / 10000).checked_pow(large_periods as u32);\n    assert!(result.is_none());\n}"
+    },
+    {
+      "id": "VULN-11",
+      "title": "Duplicate mutable account reference — effective credit doubling",
+      "severity": "HIGH",
+      "cvss": 7.5,
+      "cvss_vector": "CVSS:3.1/AV:N/AC:L/PR:L/UI:N/S:U/C:L/I:H/A:N",
+      "cwe": "CWE-366",
+      "location": {
+        "file": "programs/rewards/src/lib.rs",
+        "line": 89,
+        "function": "split_rewards"
+      },
+      "description": "The split_rewards function borrows account_a as mutable twice: first to subtract amount, then to add amount back. When account_a == account_b, the same account is debited and credited in the same instruction. The accounting results in the amount being effectively doubled and credited to account_a.",
+      "impact": "Reward inflation via double credit. When account_a == account_b, the net effect is a zero-sum change (debit then credit) PLUS a credit of amount to account_b. The program loses the extra amount.",
+      "recommendation": "Enforce that account_a != account_b: require!(account_a.key() != account_b.key(), RewardsError::DuplicateAccount). Use separate temporary variables for the debit and credit amounts.",
+      "poc_status": "pending",
+      "rule_caught": "Rule 38 — Duplicate Mutable Account",
+      "rule": 38,
+      "status": "Open",
+      "root_cause": "The Rust borrow checker allows two mutable borrows of the same account in sequence. In Solana/Anchor, a single account can appear multiple times in the mutable accounts list, causing double accounting.",
+      "regression_test": "#[tokio::test]\nasync fn test_split_rewards_rejects_duplicate_accounts() {\n    let dup_tx = Transaction::new_signed_with_payer(\n        &[instruction::split_rewards(&program_id, amount)],\n        Some(&payer.pubkey()),\n        &[&payer],\n        recent_blockhash,\n    );\n    let result = program.rpc().process_transaction(&dup_tx).await;\n    assert!(result.is_err());\n}"
+    },
+    {
+      "id": "VULN-12",
+      "title": "Hardcoded bump in PDA derivation — non-canonical bump stored",
+      "severity": "MEDIUM",
+      "cvss": 6.5,
+      "cvss_vector": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:L/I:L/A:N",
+      "cwe": "CWE-330",
+      "location": {
+        "file": "programs/delegation/src/lib.rs",
+        "line": 27,
+        "function": "create_validator_stake"
+      },
+      "description": "The create_validator_stake instruction accepts bump as an instruction parameter and stores it directly in stake_account.bump without verifying it against ctx.bumps.stake_account. The stored bump may not be the canonical bump. An attacker who finds a colliding bump/seed combination can derive the same PDA address.",
+      "impact": "PDA collision risk. If the stored bump is non-canonical, an attacker may find an alternative bump that produces the same PDA address, bypassing the program's access control.",
+      "recommendation": "Use ctx.bumps.stake_account directly instead of the caller-supplied bump. Anchor 0.30+ canonicalizes bumps automatically.",
+      "poc_status": "pending",
+      "rule_caught": "Rule 3 — PDA Canonical Bump",
+      "rule": 3,
+      "status": "Open",
+      "root_cause": "The bump parameter is accepted as untrusted input and stored without validation against the canonical bump from ctx.bumps.",
+      "regression_test": "#[test]\nfn test_hardcoded_bump_collision() {\n    let canonical_bump = Pubkey::find_program_address(&[b\"stake\", validator.as_ref()], &program_id).1;\n    let attacker_bump = (0u8..255).find(|&b| {\n        Pubkey::create_program_address(&[b\"stake\", validator.as_ref(), &[b]], &program_id).is_ok()\n    });\n    assert_ne!(canonical_bump, attacker_bump.unwrap());\n}"
+    },
+    {
+      "id": "VULN-13",
+      "title": "Sysvar spoofing via instruction-supplied slot — clock not validated",
+      "severity": "MEDIUM",
+      "cvss": 5.9,
+      "cvss_vector": "CVSS:3.1/AV:N/AC:L/PR:L/UI:N/S:U/C:L/I:L/A:N",
+      "cwe": "CWE-20",
+      "location": {
+        "file": "programs/delegation/src/lib.rs",
+        "line": 42,
+        "function": "record_vote"
+      },
+      "description": "The record_vote instruction takes slot as an instruction parameter and uses it directly without validating it against the clock sysvar. The weak threshold check (slot > clock.slot + 100) is insufficient to prevent manipulation. The clock AccountInfo is not validated via #[account(address = clock::id())].",
+      "impact": "Stale vote bypass. An attacker passes a slot value slightly ahead of the current clock slot but within the +100 threshold, making a stale vote appear valid.",
+      "recommendation": "Remove the instruction-supplied slot parameter. Use clock.slot from the verified clock sysvar directly. Add the constraint #[account(address = clock::ID)] on the clock account field.",
+      "poc_status": "pending",
+      "rule_caught": "Rule 36 — Sysvar Validation",
+      "rule": 36,
+      "status": "Open",
+      "root_cause": "The slot value is taken from instruction data rather than from the verified clock sysvar. The weak +100 threshold is insufficient to prevent manipulation.",
+      "regression_test": "#[tokio::test]\nasync fn test_record_vote_rejects_future_slot() {\n    let clock = Clock::get().unwrap();\n    let attacker_slot = clock.slot + 50;\n    let result = program.rpc().process_transaction(&record_vote_tx(attacker_slot)).await;\n    assert!(result.is_err());\n}"
+    },
+    {
+      "id": "VULN-14",
+      "title": "Missing writable enforcement — account mutated without mut constraint",
+      "severity": "MEDIUM",
+      "cvss": 5.3,
+      "cvss_vector": "CVSS:3.1/AV:N/AC:L/PR:L/UI:N/S:U/C:L/I:L/A:N",
+      "cwe": "CWE-283",
+      "location": {
+        "file": "programs/delegation/src/lib.rs",
+        "line": 60,
+        "function": "deactivate_stake"
+      },
+      "description": "The deactivate_stake instruction mutates stake_account.status = 1, but the stake_account field in the Deactivate Accounts struct is declared as Account<StakeAccount> without the #[account(mut)] attribute. In Anchor, accounts not marked #[account(mut)] cannot be written to. The code will fail at runtime.",
+      "impact": "Instruction failure / constraint bypass. The instruction fails with a runtime error, causing a denial of service for the deactivate operation. The missing mut could indicate an intended constraint bypass path.",
+      "recommendation": "Add #[account(mut)] to the stake_account field in the Deactivate struct to make the mutation intent explicit.",
+      "poc_status": "pending",
+      "rule_caught": "Rule 37 — Missing Writable Enforcement",
+      "rule": 37,
+      "status": "Open",
+      "root_cause": "The stake_account field was declared without #[account(mut)], but the instruction body attempts to mutate it. Anchor enforces the mut constraint at runtime.",
+      "regression_test": "#[tokio::test]\nasync fn test_deactivate_stake_requires_mut() {\n    let account_struct = get_account_struct(\"Deactivate\");\n    assert!(account_struct.has_mut_constraint(\"stake_account\"));\n}"
+    }
+  ],
+  "summary": {
+    "critical": 2,
+    "high": 7,
+    "medium": 5,
+    "low": 0,
+    "info": 0,
+    "total": 14
+  }
+}
