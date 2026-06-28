@@ -16,6 +16,7 @@
       "impact": "Complete protocol compromise. Any user can execute any governance proposal including malicious ones that drain protocol treasury.",
       "recommendation": "Add require!(ctx.accounts.governance.is_signer) and verify proposal is in executable state before CPI.",
       "poc_status": "documented",
+      "rule": 8,
       "rule_caught": "Rule 8 — Signer Verification",
       "status": "Historical (2022)"
     },
@@ -35,6 +36,7 @@
       "impact": "Flash loan attack enables attacker to acquire majority voting power within one transaction, pass malicious proposals, and drain protocol funds.",
       "recommendation": "Implement vote-time locks requiring tokens to be locked in governance for minimum duration before voting power activates.",
       "poc_status": "documented",
+      "rule": 13,
       "rule_caught": "Rule 13 — Flash Loan Attacks",
       "status": "Historical (2022)"
     },
@@ -54,6 +56,7 @@
       "impact": "Malicious proposals can redirect treasury funds to attacker-controlled accounts.",
       "recommendation": "Verify proposal PDA is an authorized operator for the treasury vault before CPI. Implement per-account delegation.",
       "poc_status": "documented",
+      "rule": 4,
       "rule_caught": "Rule 4 — CPI Safety",
       "status": "Historical (2022)"
     }

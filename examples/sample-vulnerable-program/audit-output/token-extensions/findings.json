@@ -2,7 +2,7 @@
   "findings": [
     {
       "id": "VULN-11",
-      "title": "Wrong token program \u2014 Token vs Token-2022",
+      "title": "Wrong token program — Token vs Token-2022",
       "severity": "HIGH",
       "cvss": 8.1,
       "cvss_vector": "CVSS:3.1/AV:N/AC:L/PR:L/UI:N/S:U/C:H/I:H/A:N",
@@ -16,7 +16,8 @@
       "impact": "Protocol-level incompatibility with Token-2022. Transfers against Token-2022 mints will be rejected or processed without extension enforcement, undermining fee deduction, non-transferable restrictions, and metadata pointer rules. The protocol must be ported to use `anchor_spl::token_2022` to support Token-2022 mints.",
       "recommendation": "Replace `anchor_spl::token::Token` and `anchor_spl::token::transfer` with `anchor_spl::token_2022::Token2022` and `anchor_spl::token_2022::transfer`. Verify the token_program account ID matches the Token-2022 program address (TokenzQdBNbLqP5VEhdkAS6EPFLC1PHnBqCXEpPxuEb) before executing CPI transfers.",
       "poc_status": "pending",
-      "rule_caught": "Rule 5 \u2014 Token Operations (SPL vs Token-2022 Distinction)",
+      "rule": 5,
+      "rule_caught": "Rule 5 — Token Operations (SPL vs Token-2022 Distinction)",
       "status": "Open",
       "root_cause": "Token program distinction was absent. The code assumed SPL Token behavior without checking whether the mint/token program was SPL or Token-2022, causing incompatibility or silent failures."
     },
@@ -36,7 +37,8 @@
       "impact": "Accounting drift enables token theft. After enough fee-bearing deposits, the program's liability ledger exceeds actual token holdings. A user can withdraw against the inflated balance, draining tokens from other depositors.",
       "recommendation": "Pre-calculate the transfer fee using the TransferFeeConfig extension data before recording the deposit. Use `spl_token_2022::extension::transfer_fee::TransferFeeConfig` to read the fee parameters, compute `actual_received = amount - fee`, and store only that value. Alternatively, use the `transfer_checked_with_fee` instruction and record the post-fee amount.",
       "poc_status": "pending",
-      "rule_caught": "Rule 5 \u2014 Token Operations (Token-2022 extensions)",
+      "rule": 5,
+      "rule_caught": "Rule 5 — Token Operations (Token-2022 extensions)",
       "status": "Open",
       "root_cause": "Token program distinction was absent. The code assumed SPL Token behavior without checking whether the mint/token program was SPL or Token-2022, causing incompatibility or silent failures."
     },
@@ -52,17 +54,18 @@
         "line": 85,
         "function": "close_mint_no_verify"
       },
-      "description": "The close_mint_no_verify instruction accepts a `close_authority: Signer` but never verifies that this signer matches the `mint_close_authority` stored in the mint's extension data. Token-2022 mints with the `mint_close_authority` extension designate a specific authority that can close the mint (when total supply is zero). Any signer can call this instruction \u2014 if supply is zero, the CPI to close the mint succeeds even if the caller is not the designated close authority.",
+      "description": "The close_mint_no_verify instruction accepts a `close_authority: Signer` but never verifies that this signer matches the `mint_close_authority` stored in the mint's extension data. Token-2022 mints with the `mint_close_authority` extension designate a specific authority that can close the mint (when total supply is zero). Any signer can call this instruction — if supply is zero, the CPI to close the mint succeeds even if the caller is not the designated close authority.",
       "impact": "Unauthorized mint closure. If the mint's total supply reaches zero (e.g., after a burn event), any user can close the mint account and claim its lamports. This disrupts the token's permanence and can break downstream protocols that depend on the mint existing.",
       "recommendation": "Read the mint's `mint_close_authority` extension data using `StateWithExtensions` and verify: `require_keys_eq!(close_authority.key(), mint_close_authority, TokenExtensionsError::WrongCloseAuthority)`. Only proceed with the close CPI if the authority matches.",
       "poc_status": "pending",
-      "rule_caught": "Rule 5 \u2014 Token Operations (Token-2022 extensions)",
+      "rule": 5,
+      "rule_caught": "Rule 5 — Token Operations (Token-2022 extensions)",
       "status": "Open",
       "root_cause": "Token program distinction was absent. The code assumed SPL Token behavior without checking whether the mint/token program was SPL or Token-2022, causing incompatibility or silent failures."
     },
     {
       "id": "VULN-14",
-      "title": "Permanent delegate not verified \u2014 unauthorized burn",
+      "title": "Permanent delegate not verified — unauthorized burn",
       "severity": "CRITICAL",
       "cvss": 10.0,
       "cvss_vector": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:C/C:N/I:H/A:H",
@@ -76,13 +79,14 @@
       "impact": "Complete token destruction. An attacker can burn arbitrary amounts of tokens from any holder's account, permanently destroying value and undermining the token's integrity. If this mint is used in a DeFi protocol (lending, AMM), burning held tokens can liquidate positions and drain pools.",
       "recommendation": "Before accepting a delegate for permanent_delegate operations: (1) verify the mint has the `permanent_delegate` extension, (2) read the extension's authority field, (3) verify `require_keys_eq!(delegate.key(), permanent_delegate_authority)`, and (4) verify the token account is for the expected mint. For most protocols, the permanent delegate should be a multisig or timelock PDA, never a single signer.",
       "poc_status": "pending",
-      "rule_caught": "Rule 5 + Rule 8 \u2014 Token Operations + Signer Verification",
+      "rule": 5,
+      "rule_caught": "Rule 5 + Rule 8 — Token Operations + Signer Verification",
       "status": "Open",
       "root_cause": "Token program distinction was absent. The code assumed SPL Token behavior without checking whether the mint/token program was SPL or Token-2022, causing incompatibility or silent failures."
     },
     {
       "id": "VULN-15",
-      "title": "Metadata pointer not verified \u2014 fake metadata injection",
+      "title": "Metadata pointer not verified — fake metadata injection",
       "severity": "MEDIUM",
       "cvss": 5.4,
       "cvss_vector": "CVSS:3.1/AV:N/AC:L/PR:L/UI:N/S:U/C:L/I:L/A:N",
@@ -92,11 +96,12 @@
         "line": 133,
         "function": "read_metadata_unverified"
       },
-      "description": "The read_metadata_unverified instruction accepts a `metadata_account: UncheckedAccount` but never verifies it against the mint's `metadata_pointer` extension. The metadata_pointer extension can point to ANY account \u2014 an attacker can create a mint with a metadata_pointer that points to a fake metadata account controlled by the attacker. If the program uses metadata for authorization decisions (e.g., whitelisting certain token names, checking symbol), the attacker can bypass these checks.",
+      "description": "The read_metadata_unverified instruction accepts a `metadata_account: UncheckedAccount` but never verifies it against the mint's `metadata_pointer` extension. The metadata_pointer extension can point to ANY account — an attacker can create a mint with a metadata_pointer that points to a fake metadata account controlled by the attacker. If the program uses metadata for authorization decisions (e.g., whitelisting certain token names, checking symbol), the attacker can bypass these checks.",
       "impact": "Metadata-based authorization bypass. If the program uses token metadata for any security-relevant decision (e.g., 'only transfer tokens with symbol XYZ'), an attacker can deploy a mint whose metadata points to a fake account with spoofed values, bypassing the restriction.",
       "recommendation": "Read the mint's `metadata_pointer` extension data and verify: (1) `require_keys_eq!(metadata_account.key(), metadata_pointer)`, (2) verify the metadata account is owned by the Token Metadata program (META...), (3) verify the metadata account's mint field matches the instruction's mint. Use the Token Metadata SDK to deserialize the metadata fields.",
       "poc_status": "pending",
-      "rule_caught": "Rule 5 \u2014 Token Operations (Token-2022 extensions)",
+      "rule": 5,
+      "rule_caught": "Rule 5 — Token Operations (Token-2022 extensions)",
       "status": "Open",
       "root_cause": "Token program distinction was absent. The code assumed SPL Token behavior without checking whether the mint/token program was SPL or Token-2022, causing incompatibility or silent failures."
     },
@@ -116,7 +121,8 @@
       "impact": "Non-transferable restriction bypass. Tokens that should be permanently non-transferable (soulbound NFTs, identity credentials, locked vesting tokens) can be wrapped into a vault and then transferred, defeating the purpose of the non-transferable extension. This can break regulatory compliance, identity verification, and tokenomics designed around non-transferability.",
       "recommendation": "Before accepting deposits, read the mint's extension data using `StateWithExtensions` and check for the `non_transferable` extension. If present, reject the deposit: `require!(!has_non_transferable_extension, TokenExtensionsError::NonTransferable)`. Alternatively, check the mint's extension bitmask.",
       "poc_status": "pending",
-      "rule_caught": "Rule 5 \u2014 Token Operations (Token-2022 extensions)",
+      "rule": 5,
+      "rule_caught": "Rule 5 — Token Operations (Token-2022 extensions)",
       "status": "Open",
       "root_cause": "Token program distinction was absent. The code assumed SPL Token behavior without checking whether the mint/token program was SPL or Token-2022, causing incompatibility or silent failures."
     }

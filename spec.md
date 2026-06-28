@@ -1,7 +1,7 @@
 # Spec — Solana Auditor Skill
 
 > **Technical Specification**
-> _Version 1.12.0 — Architecture Review + Report Enhancement_
+> _Version 1.13.0 — Architecture Review + Report Enhancement_
 > Last updated: 2026-06-28
 
 ---

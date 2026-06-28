@@ -195,3 +195,31 @@ python3 -m pytest fails silently on clean clone because pytest is not on system 
 - [ ] **Multi-program audit aggregation** — Combine findings from multiple Anchor programs.
 - [ ] **Visual diff** — Pre/post-fix audit report comparison.
 - [ ] **Architecture Review module** — Done v1.11.0 (Phase 7 + architecture-reviewer agent).
+
+---
+
+## 2026-06-28 — v1.13.0 Bug Fix Sprint (Post-Contest-Submission Audit)
+
+### What we did
+Post-submission code audit of demo.sh and all skill fixtures, spawned 4 parallel subagents, found and fixed 4 bugs before contest deadline (July 8, 2026).
+
+### Bugs found and fixed
+
+| Bug | Severity | File | Issue | Fix |
+|-----|----------|------|-------|-----|
+| Missing `rule` field | CRITICAL | 5 fixture JSON files | 23 findings had `rule_caught` (text) but not `rule` (canonical integer) | Derived rule number from `rule_caught`, added `rule: N` or `rule: null` |
+| Klive summary mismatch | HIGH | klive-live-audit/findings.json | Summary said `critical:0` but KAM-001 is CRITICAL; `RESOLVED` severity non-standard | Fixed summary counts, preserved RESOLVED status |
+| Dead code in dashboard.py | MEDIUM | scripts/dashboard.py | `stdout_mode = True` unreachable; `not args.compare_mode` always True | Removed unreachable branch, simplified condition |
+| Path traversal risk | LOW | scripts/dashboard.py | Single-file output paths not `.resolve()`'d | Added `.resolve()` to both output branches |
+
+### Subagent audit findings that were FALSE POSITIVES
+- code-reviewer flagged `--compare` accidental triggering as CRITICAL — but the argparse is intentionally designed with `--compare` as a flag appended at the END, matching the demo.sh call pattern. The fix in v1.12.0 already handled this correctly.
+- security-reviewer flagged 5 TODOs in skill code — confirmed intentional (unimplemented features, template placeholders).
+
+### Key pattern: fixture data integrity
+Every fixture findings.json must have: `id`, `title`, `severity`, `cvss`, `cvss_vector`, `cwe`, `rule` (integer or null), `rule_caught` (text). Missing canonical fields = skill's own test data is incomplete, even if the dashboard still renders.
+
+### Subagent reliability notes
+- code-reviewer subagent: excellent at structural analysis, found argparse dead code and unreachable branch
+- security-reviewer subagent: thorough JSON integrity scan, found summary mismatches
+- general-purpose subagent: good at edge case testing and file operations

@@ -304,3 +304,16 @@ Initial submission for the Superteam Brasil Solana skills contest.
   generates macro warnings that cascade into errors when the target is unverified.
 - Example fixture is build-verified but not deployed to devnet/mainnet. Run
   `anchor test` against the example to add runtime coverage.
+
+## [1.13.0] — 2026-06-28
+
+### Fixed
+- 23 findings across 5 fixture files: added missing `rule` (integer) field derived from `rule_caught`
+- klive-live-audit/findings.json: fixed summary critical count (0→1), corrected RESOLVED severity handling
+- dashboard.py: removed unreachable `stdout_mode = True` branch
+- dashboard.py: simplified redundant `not args.compare_mode` condition
+- dashboard.py: added `.resolve()` to single-file output paths (path traversal hardening)
+
+### Verified
+- demo.sh: EXIT_CODE 0, 161/161 integrity checks, 22/22 fuzz tests
+- All findings.json fixtures: JSON valid, rule field complete, severity counts consistent

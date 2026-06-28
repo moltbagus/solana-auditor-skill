@@ -328,15 +328,13 @@ Examples:
     metadata = compute_metadata(raw_data, input_path_str)
 
     stdout_mode = False
-    if args.after and not args.compare_mode:
+    if args.after:
         # args.after is the output path in single-file mode
-        output_path = Path(args.after)
+        output_path = Path(args.after).resolve()
     elif args.output:
-        output_path = Path(args.output)
+        output_path = Path(args.output).resolve()
     elif args.before:
         output_path = input_path.with_suffix(".dashboard.html")
-    else:
-        stdout_mode = True
 
     html = render(findings, summary, metadata, templates_dir)
 
