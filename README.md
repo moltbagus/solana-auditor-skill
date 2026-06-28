@@ -14,6 +14,15 @@
 
 > :brazil: [Guia de auditoria em Portugues Brasileiro](guides/pt-BR/AUDITORIA_GUIA.md)
 
+Auditorias podem ser conduzidas em **Ingles** ou **Portugues Brasileiro**: pasar `--lang pt` em qualquer comando de audit.
+Todos os 9 comandos, agentes e 50 regras funcionam em ambos os idiomas.
+
+```bash
+# Ejemplo en portugues:
+/audit <repo> --lang pt
+/audit-quick <repo> --lang pt
+```
+
 ## ⚡ Judges Quick Start (5 Minutes)
 
 ```bash
@@ -26,13 +35,13 @@ bash tests/test-skill-integrity.sh
 # 3. Run fuzz tests — 22 Hypothesis strategies
 python3 -c "import pytest; pytest.main(['-v', 'tests/fuzz/test_properties.py'])"
 
-# 4. Run the interactive dashboard on any fixture
+# 5. Run the interactive dashboard on any fixture
 python3 scripts/dashboard.py examples/dex-amm/audit-output/findings.json /tmp/dex_dashboard.html
 
-# 4. Inspect the pre-committed audit fixture
+# 6. Inspect the pre-committed audit fixture
 cat examples/sample-vulnerable-program/audit-output/findings.json | python3 -m json.tool
 
-# 5. Verify CVSS math — every score recomputed from vector
+# 7. Verify CVSS math — every score recomputed from vector
 python3 tests/severity_counts.py
 ```
 
