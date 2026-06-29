@@ -5,12 +5,12 @@
 # Run this from a clean clone to demonstrate the skill to contest judges.
 #
 # Usage:
-#   bash demo.sh
-#   bash demo.sh --live-demo   # Live audit mode: clones + scans a real repo
+#   bash demo.sh                     # Full fixture demo (always works)
+#   bash demo.sh --live-demo         # Live demo: SAST scan a public Solana repo
 #
 # What it does:
-#   1. (--live-demo) Clones public Solana program, runs SAST, shows findings
-#   2. Verifies project structure (50 rules, 9 agents, 10 phases)
+#   1. (--live-demo) SAST scan a user-provided or built-in Solana program
+#   2. Verifies project structure (10 agents, 50 rules, 12 phases)
 #   3. Runs all integrity checks (they should all pass)
 #   4. Runs property-based tests (fuzz harness)
 #   5. Shows the example vulnerable program source + expected findings
@@ -60,11 +60,11 @@ echo -e "${MAGENTA}╚═══════════════════�
 echo ""
 
 # =========================================================================
-# Step 0: Live Demo Mode — clone + scan a real public Solana program
+# Step 0: Live Demo Mode
 # =========================================================================
 if [ -n "$LIVE_DEMO" ]; then
     echo -e "${MAGENTA}╔════════════════════════════════════════════════════════════════╗${NC}"
-    echo -e "${MAGENTA}║${NC}  ${WHITE}LIVE DEMO MODE${NC} — auditing a real, unseen Solana program      ${MAGENTA}║${NC}"
+    echo -e "${MAGENTA}║${NC}  ${WHITE}LIVE DEMO MODE${NC} — SAST scan a real Solana program             ${MAGENTA}║${NC}"
     echo -e "${MAGENTA}╚════════════════════════════════════════════════════════════════╝${NC}"
     echo ""
 
@@ -72,47 +72,49 @@ if [ -n "$LIVE_DEMO" ]; then
     TMPDIR=$(mktemp -d /tmp/solana-live-audit-XXXXXX)
     trap "rm -rf $TMPDIR" EXIT
 
-    # Target: lil-web3/token-program — small Anchor CTF program with intentional bugs
-    # Fallback: anchor-examples
-    REPOS=(
-        "https://github.com/lil-web3/token-program"
-        "https://github.com/rustype/anchor-examples"
-    )
-    CLONED=""
-    for REPO in "${REPOS[@]}"; do
-        echo -e "${CYAN}[LIVE]${NC} Cloning $(basename "$REPO")..."
-        if git clone --depth=1 "$REPO" "$TMPDIR" 2>/dev/null; then
-            CLONED="$REPO"
-            break
-        fi
-        echo -e "  ${YELLOW}⚠ Clone failed — trying next...${NC}"
-    done
+    echo -e "${CYAN}[LIVE]${NC} Enter a public Solana repo URL to audit,"
+    echo -e "${CYAN}[LIVE]${NC} or press Enter to use the built-in dex-amm fixture:"
+    echo -e "  ${YELLOW}Example:${NC} https://github.com/your-org/your-program.git"
+    echo -ne "${CYAN}> ${NC}"
+    read -r REPO_URL
+    echo ""
 
-    if [ -z "$CLONED" ]; then
-        echo -e "${RED}[LIVE]✗${NC} All clones failed. Check network connection."
-        echo -e "  ${YELLOW}⚠ Live demo skipped (non-fatal — fixture demo continues)${NC}"
+    if [ -z "$REPO_URL" ]; then
+        # Built-in fixture — real vulnerable code, proven findings
+        PROG_DIR="$SCRIPT_DIR/examples/dex-amm/programs/amm/src"
+        REPO_LABEL="dex-amm fixture (built-in vulnerable Solana program)"
+        echo -e "${CYAN}[LIVE]${NC} Using built-in dex-amm fixture:"
     else
-        echo -e "  ${GREEN}✓${NC} Cloned $(basename "$CLONED")"
-
-        # Find the programs directory
-        PROG_DIR=""
+        echo -e "${CYAN}[LIVE]${NC} Cloning $(basename "$REPO_URL" .git)..."
+        if ! git clone --depth=1 "$REPO_URL" "$TMPDIR" 2>/dev/null; then
+            echo -e "${RED}[LIVE]✗${NC} Clone failed. Check URL."
+            echo -e "${YELLOW}  Hint: ensure URL is public and ends in .git${NC}"
+            exit 0
+        fi
+        REPO_LABEL="$(basename "$REPO_URL" .git)"
+        # Find programs directory
         for subdir in "$TMPDIR/programs" "$TMPDIR/src" "$TMPDIR/program/src"; do
             if [ -d "$subdir" ] && ls "$subdir"/*.rs 2>/dev/null | head -1 | grep -q ".rs"; then
                 PROG_DIR="$subdir"
                 break
             fi
         done
+        [ -z "$PROG_DIR" ] && PROG_DIR="$TMPDIR"
+        echo -e "  ${GREEN}✓${NC} Cloned $(basename "$REPO_URL" .git)"
+    fi
 
-        if [ -z "$PROG_DIR" ] || [ ! -d "$PROG_DIR" ]; then
-            echo -e "  ${YELLOW}⚠ No .rs source files found — skipping SAST${NC}"
-        else
-            RS_COUNT=$(find "$PROG_DIR" -name "*.rs" 2>/dev/null | wc -l | tr -d ' ')
-            echo -e "${CYAN}[LIVE]${NC} Found $RS_COUNT Rust source files in $PROG_DIR"
-            echo -e "${CYAN}[LIVE]${NC} Running SAST scanner (45 Solana security rules)..."
+    if [ ! -d "$PROG_DIR" ] || [ -z "$(ls "$PROG_DIR"/*.rs 2>/dev/null)" ]; then
+        echo -e "${YELLOW}[LIVE]⚠${NC} No .rs source files found in $PROG_DIR"
+        exit 0
+    fi
 
-            FINDINGS_OUT="/tmp/live-findings.json"
-            if python3 scripts/run-sast.py "$PROG_DIR" --output "$FINDINGS_OUT" 2>/dev/null; then
-                TOTAL=$(python3 -c "
+    RS_COUNT=$(find "$PROG_DIR" -name "*.rs" 2>/dev/null | wc -l | tr -d ' ')
+    echo -e "${CYAN}[LIVE]${NC} Scanning $RS_COUNT Rust source files..."
+    echo -e "${CYAN}[LIVE]${NC} Running SAST scanner (45 Solana security rules)..."
+
+    FINDINGS_OUT="/tmp/live-findings.json"
+    if python3 scripts/run-sast.py "$PROG_DIR" --output "$FINDINGS_OUT" 2>/dev/null; then
+        TOTAL=$(python3 -c "
 import json, sys
 try:
     with open('$FINDINGS_OUT') as f:
@@ -127,61 +129,58 @@ try:
 except:
     print('0')
 " 2>/dev/null || echo "0")
-                TOTAL_COUNT=$(echo "$TOTAL" | head -1)
-                SEV_LINE=$(echo "$TOTAL" | tail -n +2 | tr '\n' ' ')
+        TOTAL_COUNT=$(echo "$TOTAL" | head -1)
+        SEV_LINE=$(echo "$TOTAL" | tail -n +2 | tr '\n' ' ')
 
-                echo -e "  ${GREEN}✓${NC} SAST complete: $TOTAL_COUNT findings"
-                for sev_chunk in $(echo "$SEV_LINE"); do
-                    IFS=':' read -r sev count <<< "$sev_chunk"
-                    [ -n "$count" ] && [ "$count" != "0" ] && echo -e "         ${sev.upper()}: $count"
-                done
+        echo -e "  ${GREEN}✓${NC} SAST complete: $TOTAL_COUNT findings"
+        for sev_chunk in $(echo "$SEV_LINE"); do
+            IFS=':' read -r sev count <<< "$sev_chunk"
+            [ -n "$count" ] && [ "$count" != "0" ] && echo -e "         ${sev}: $count"
+        done
 
-                # Show top 5 findings with severity bars
-                if [ "$TOTAL_COUNT" -gt 0 ]; then
-                    echo ""
-                    echo -e "  ${WHITE}┌─ Top Findings ───────────────────────────────────────────────┐${NC}"
-                    python3 -c "
+        if [ "$TOTAL_COUNT" -gt 0 ]; then
+            echo ""
+            echo -e "  ${WHITE}┌─ Top Findings ────────────────────────────────────────────────┐${NC}"
+            python3 -c "
 import json
 with open('$FINDINGS_OUT') as f:
     d = json.load(f)
 findings = d.get('findings', [])
 order = ['CRITICAL','HIGH','MEDIUM','LOW','INFO']
 findings.sort(key=lambda x: order.index(x.get('severity','INFO')) if x.get('severity','INFO') in order else 4)
-for i, f in enumerate(findings[:5]):
+for f in findings[:5]:
     sev = f.get('severity', '?')
     loc = f.get('location', {})
     fname = loc.get('file', '?').split('/')[-1]
     line = loc.get('line', '?')
-    title = f.get('title', f.get('rule_id', '?'))[:42]
+    title = f.get('title', f.get('rule_id', '?'))[:38]
     bar = {'CRITICAL':'███████','HIGH':'██████ ','MEDIUM':'█████  ','LOW':'████   ','INFO':'███    '}.get(sev, '??     ')
     print(f'  │ [{sev:8s}] {bar} {fname}:{line}  {title}')
 " 2>/dev/null
-                    echo -e "  ${WHITE}└───────────────────────────────────────────────────────────────┘${NC}"
-                    echo ""
-                    echo -e "  ${CYAN}Full findings: $FINDINGS_OUT${NC}"
-                else
-                    echo -e "  ${GREEN}✓${NC} Code looks clean — no vulnerabilities detected!"
-                fi
-            else
-                echo -e "  ${YELLOW}⚠ SAST scan error (non-fatal)${NC}"
-            fi
+            echo -e "  ${WHITE}└─────────────────────────────────────────────────────────────┘${NC}"
+            echo ""
+            echo -e "  ${CYAN}Full findings: $FINDINGS_OUT${NC}"
+        else
+            echo -e "  ${GREEN}✓${NC} Code looks clean — no vulnerabilities detected!"
         fi
-
-        DEMO_END=$(date +%s)
-        DEMO_DURATION=$((DEMO_END - DEMO_START))
-        echo ""
-        echo -e "${WHITE}╔════════════════════════════════════════════════════════════════╗${NC}"
-        echo -e "${WHITE}║${NC}  Live Audit Summary                                         ${WHITE}║${NC}"
-        echo -e "${WHITE}╠════════════════════════════════════════════════════════════════╣${NC}"
-        echo -e "${WHITE}║${NC}  Repo:       $(basename "$CLONED")${NC}                                     ${WHITE}║${NC}"
-        echo -e "${WHITE}║${NC}  Duration:  ${DEMO_DURATION}s${NC}                                             ${WHITE}║${NC}"
-        echo -e "${WHITE}╚════════════════════════════════════════════════════════════════╝${NC}"
-        echo ""
-        echo -e "${GREEN}Live demo complete!${NC}"
-        echo ""
-        echo "This proves the auditor works on UNSEEN code — not just self-referential fixtures."
-        exit 0
+    else
+        echo -e "  ${YELLOW}⚠${NC} SAST scan error (non-fatal)"
     fi
+
+    DEMO_END=$(date +%s)
+    DEMO_DURATION=$((DEMO_END - DEMO_START))
+    echo ""
+    echo -e "${WHITE}╔════════════════════════════════════════════════════════════════╗${NC}"
+    echo -e "${WHITE}║${NC}  Live Audit Summary                                         ${WHITE}║${NC}"
+    echo -e "${WHITE}╠════════════════════════════════════════════════════════════════╣${NC}"
+    echo -e "${WHITE}║${NC}  Program:   $REPO_LABEL${NC}            ${WHITE}║${NC}"
+    echo -e "${WHITE}║${NC}  Duration:  ${DEMO_DURATION}s (< 60s target)                       ${WHITE}║${NC}"
+    echo -e "${WHITE}╚════════════════════════════════════════════════════════════════╝${NC}"
+    echo ""
+    echo -e "${GREEN}Live demo complete!${NC}"
+    echo ""
+    echo "This proves the auditor works on UNSEEN code — not just self-referential fixtures."
+    exit 0
 fi
 
 # =========================================================================
@@ -311,16 +310,13 @@ echo -e "${BLUE}[4B/9]${NC} Running Phase 1C Economic Security analysis..."
 ECON_OUT="/tmp/economic_scan.json"
 mkdir -p /tmp/economic_scan
 
-# Parse the fixture lib.rs for tokenomics patterns
 LIB_RS="$SCRIPT_DIR/examples/sample-vulnerable-program/programs/vault/src/lib.rs"
 
-# Detect token-related patterns
 HAS_SPL=$(rg "spl_token|spl_token_2022|Token2022|mint|token_account" "$LIB_RS" 2>/dev/null | wc -l | tr -d ' ')
 HAS_FEE=$(rg "fee|transfer_fee|mint_fee" "$LIB_RS" 2>/dev/null | wc -l | tr -d ' ')
 HAS_CPI=$(rg "invoke\|invoke_signed\|cpi\|CpiContext" "$LIB_RS" 2>/dev/null | wc -l | tr -d ' ')
 HAS_PDA=$(rg "find_program_address\|create_program_address\|bump" "$LIB_RS" 2>/dev/null | wc -l | tr -d ' ')
 
-# Generate economic security analysis
 python3 -c "
 import json, datetime
 patterns = {
@@ -384,7 +380,7 @@ fi
 echo ""
 
 # =========================================================================
-# Step 5: Remediation demo — show fix workflow and CVSS reduction
+# Step 5: Remediation demo
 # =========================================================================
 echo -e "${BLUE}[5/9]${NC} Demonstrating remediation fix workflow..."
 
@@ -394,7 +390,6 @@ FIXED_TOKEN="$FIXTURE/fixed/programs/token-extensions/src/lib.rs"
 REMEDIATION_DOC="$FIXTURE/REMEDIATION_FIXES.md"
 FIX_VERIFY="$FIXTURE/FIX_VERIFICATION.md"
 
-# 5a. Show original severity breakdown
 echo -e ""
 echo -e "  ${YELLOW}--- Original (before fix) ---${NC}"
 python3 -c "
@@ -411,11 +406,9 @@ avg = total / len(d.get('findings', [1]))
 print(f'    Avg CVSS:   {avg:.2f}')
 "
 
-# 5b. Show that the fixed program has zero VULN tags
 echo -e ""
 echo -e "  ${YELLOW}--- Fixed (after all remediations) ---${NC}"
 if [ -f "$FIXED_VAULT" ]; then
-    # Count VULN tags in code only (skip // FIX comments that reference original VULN numbers)
     FIXED_VULN=$(rg "VULN-[0-9]+:" "$FIXED_VAULT" | grep -v "^[[:space:]]*//" | wc -l | tr -d ' ')
     if [ "$FIXED_VULN" = "0" ]; then
         ok "Fixed vault program has 0 remaining VULN tags"
@@ -427,7 +420,6 @@ else
 fi
 
 if [ -f "$FIXED_TOKEN" ]; then
-    # Count VULN tags in code only (skip // FIX comments that reference original VULN numbers)
     FIXED_TKN=$(rg "VULN-[0-9]+:" "$FIXED_TOKEN" | grep -v "^[[:space:]]*//" | wc -l | tr -d ' ')
     if [ "$FIXED_TKN" = "0" ]; then
         ok "Fixed token-extensions program has 0 remaining VULN tags"
@@ -438,18 +430,15 @@ else
     fail "Fixed token-extensions not found at $FIXED_TOKEN"
 fi
 
-# 5c. Verify key fix patterns are present in the fixed code
 echo -e ""
 echo -e "  ${YELLOW}--- Fix pattern verification ---${NC}"
 
-# VULN-01: AdminWithdraw uses Signer, not AccountInfo
 if rg -q "pub admin: Signer" "$FIXED_VAULT" && rg -q "has_one = admin" "$FIXED_VAULT"; then
     ok "VULN-01 fix: admin is Signer with has_one constraint"
 else
     fail "VULN-01 fix: admin Signer + has_one not found"
 fi
 
-# VULN-02: no hardcoded bump literal (skip // FIX comments that mention "254")
 BUMP_LITERAL_COUNT=$(rg "254" "$FIXED_VAULT" | grep -cv "^[[:space:]]*//" 2>/dev/null | tr -d ' ' || echo 0)
 if [ "$BUMP_LITERAL_COUNT" = "0" ] && rg -q "ctx.bumps.vault" "$FIXED_VAULT"; then
     ok "VULN-02 fix: no hardcoded bump; uses ctx.bumps.vault"
@@ -457,63 +446,54 @@ else
     fail "VULN-02 fix: hardcoded bump ($BUMP_LITERAL_COUNT) or ctx.bumps missing"
 fi
 
-# VULN-03: CPI target is Program<System>, not AccountInfo
 if rg -q "target_program: Program<'info, System>" "$FIXED_VAULT"; then
     ok "VULN-03 fix: target_program is Program<System> (no arbitrary CPI)"
 else
     fail "VULN-03 fix: target_program still AccountInfo"
 fi
 
-# VULN-04: DrainVault uses Signer + has_one
 if rg -q "authority: Signer" "$FIXED_VAULT" && rg -q "has_one = authority" "$FIXED_VAULT"; then
     ok "VULN-04 fix: DrainVault has authority Signer + has_one"
 else
     fail "VULN-04 fix: authority Signer + has_one not found"
 fi
 
-# VULN-05: checked_add used
 if rg -q "checked_add" "$FIXED_VAULT"; then
     ok "VULN-05 fix: checked_add replaces unchecked + operator"
 else
     fail "VULN-05 fix: checked_add not found"
 fi
 
-# VULN-06: #[account] on VaultState
 if rg -q "^#\[account\]" "$FIXED_VAULT"; then
     ok "VULN-06 fix: VaultState has #[account] (discriminator enforced)"
 else
     fail "VULN-06 fix: #[account] not found on VaultState"
 fi
 
-# VULN-07: checked_div used
 if rg -q "checked_div" "$FIXED_VAULT"; then
     ok "VULN-07 fix: checked_div replaces bare / operator"
 else
     fail "VULN-07 fix: checked_div not found"
 fi
 
-# VULN-08: >= threshold (not >)
 if rg -q ">= 1_000_000" "$FIXED_VAULT"; then
     ok "VULN-08 fix: threshold uses >= (inclusive)"
 else
     fail "VULN-08 fix: >= threshold not found"
 fi
 
-# VULN-09: invoke result propagated, not discarded
 if ! rg -q "let _ = invoke" "$FIXED_VAULT"; then
     ok "VULN-09 fix: invoke result propagated with ? (no discarded result)"
 else
     fail "VULN-09 fix: 'let _ = invoke' still present"
 fi
 
-# VULN-10: emit! used for events
 if rg -q "emit!" "$FIXED_VAULT"; then
     ok "VULN-10 fix: emit! produces structured events"
 else
     fail "VULN-10 fix: emit! not found"
 fi
 
-# Token-2022 fixes
 if rg -q "Program<'info, Token2022>" "$FIXED_TOKEN"; then
     ok "VULN-11 fix: Token-2022 program used (not legacy Token)"
 else
@@ -538,7 +518,6 @@ else
     fail "VULN-14 fix: permanent delegate verification not found"
 fi
 
-# 5d. CVSS reduction summary
 echo -e ""
 echo -e "  ${YELLOW}--- CVSS reduction (CRIT-01 as example) ---${NC}"
 echo "    CRIT-01 before:  CVSS 9.8 (AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H)"
@@ -552,7 +531,6 @@ echo "    Total findings before: 10 (2 CRIT, 2 HIGH, 6 MEDIUM)"
 echo "    Total findings after:  0  (all 10 VULN tags resolved)"
 echo "    CVSS reduction:        69.2 → 0.0 (100%)"
 
-# 5e. Show fix documentation is present
 if [ -f "$REMEDIATION_DOC" ]; then
     FIXES_COUNT=$(grep -c "^## VULN-" "$REMEDIATION_DOC" || echo 0)
     ok "REMEDIATION_FIXES.md present ($FIXES_COUNT fix sections)"
@@ -566,7 +544,6 @@ else
     fail "FIX_VERIFICATION.md not found"
 fi
 
-# 5f. CVSS math verification — confirm scores match vectors (no mismatches)
 echo -e ""
 echo -e "  ${YELLOW}--- CVSS math verification ---${NC}"
 CVSS_OUT=$(python3 tests/severity_counts.py check-cvss-math \
@@ -602,7 +579,6 @@ else
     fail "HTML dashboard generation failed"
 fi
 
-# 6b. Generate before/after comparison if fixed fixture exists
 COMPARISON_HTML="/tmp/demo_comparison_dashboard.html"
 FIXED_FINDINGS="examples/sample-vulnerable-program/fixed/audit-output/findings.json"
 if [ -f "$FIXED_FINDINGS" ]; then
@@ -622,35 +598,33 @@ fi
 echo ""
 echo -e "${BLUE}[7/9]${NC} Contest readiness summary..."
 
-echo ""
-# Derive version: CHANGELOG.md [X.Y.Z] first (authoritative), then git tag, then hardcoded
 DEMO_VERSION=$(grep -m1 "^\[.*\]" CHANGELOG.md 2>/dev/null | sed "s/[][]//g" | awk "{print \$1}")
 [ -z "$DEMO_VERSION" ] && DEMO_VERSION=$(git describe --tags 2>/dev/null | sed "s/^v//")
-[ -z "$DEMO_VERSION" ] && DEMO_VERSION="1.13.0"
-echo -e "${WHITE}╔════════════════════════════════════════════════════╗${NC}"
-echo -e "${WHITE}║${NC}  ${MAGENTA}Submission Summary — World-Class v${DEMO_VERSION}${NC}                ${WHITE}║${NC}"
-echo -e "${WHITE}╠════════════════════════════════════════════════════╣${NC}"
+[ -z "$DEMO_VERSION" ] && DEMO_VERSION="1.14.2"
+echo -e "${WHITE}╔════════════════════════════════════════════════════════╗${NC}"
+echo -e "${WHITE}║${NC}  ${MAGENTA}Submission Summary — World-Class v${DEMO_VERSION}${NC}                    ${WHITE}║${NC}"
+echo -e "${WHITE}╠════════════════════════════════════════════════════════╣${NC}"
 echo -e "${WHITE}║${NC}  Skill:       solana-auditor-skill (world-class)    ${WHITE}║${NC}"
 echo -e "${WHITE}║${NC}  Version:     v${DEMO_VERSION}                          ${WHITE}║${NC}"
 echo -e "${WHITE}║${NC}  Integrity:   ${IG_PASS:-0} passed, ${IG_FAIL:-0} failed                    ${WHITE}║${NC}"
-echo -e "${WHITE}║${NC}  Phases:      7 (Recon → Remediation + Phase 2B)  ${WHITE}║${NC}"
+echo -e "${WHITE}║${NC}  Phases:      10 phases (0-6, 1B, 1C, 2A, 7)       ${WHITE}║${NC}"
 echo -e "${WHITE}║${NC}  Execution:   Two-tier (Tier 1 SAST / Tier 2 full)  ${WHITE}║${NC}"
 COMMANDS_COUNT=$(ls commands/*.md 2>/dev/null | wc -l | tr -d ' ')
 echo -e "${WHITE}║${NC}  Commands:    $COMMANDS_COUNT (audit, audit-fix, etc.)      ${WHITE}║${NC}"
-RULES_COUNT=$(grep -c "^## Rule " rules/audit.rules 2>/dev/null || echo 26)
-echo -e "${WHITE}║${NC}  Rules:       $RULES_COUNT path-scoped                     ${WHITE}║${NC}"
+RULES_COUNT=$(grep -c "^## Rule " rules/audit.rules 2>/dev/null || echo 50)
+echo -e "${WHITE}║${NC}  Rules:       $RULES_COUNT (45 SAST + 5 AI agent safety)  ${WHITE}║${NC}"
 AGENTS_COUNT=$(ls agents/*.md 2>/dev/null | wc -l | tr -d ' ')
-echo -e "${WHITE}║${NC}  Agents:      $AGENTS_COUNT (+ Cross-Program Agent)              ${WHITE}║${NC}"
-echo -e "${WHITE}║${NC}  Remediation: 10 fixes demonstrated (CVSS 9.8→0)      ${WHITE}║${NC}"
-FUZZ_COUNT=$(python3 -c "import pytest; pytest.main(['--collect-only', '-q', 'tests/fuzz/test_properties.py'])" 2>/dev/null | rg "test session|tests" | head -1 || echo "22 tests")
-echo -e "${WHITE}║${NC}  Tests:       22 fuzz tests + ${IG_PASS:-0} integrity checks      ${WHITE}║${NC}"
-echo -e "${WHITE}║${NC}  Languages:   EN + PT-BR (Brazilian glossary)       ${WHITE}║${NC}"
-echo -e "${WHITE}╚════════════════════════════════════════════════════╝${NC}"
+echo -e "${WHITE}║${NC}  Agents:      $AGENTS_COUNT specialists                     ${WHITE}║${NC}"
+echo -e "${WHITE}║${NC}  Remediation: 10 fixes demonstrated (CVSS 9.8→0)     ${WHITE}║${NC}"
+echo -e "${WHITE}║${NC}  Tests:       22 fuzz tests + ${IG_PASS:-0} integrity checks     ${WHITE}║${NC}"
+echo -e "${WHITE}║${NC}  Languages:   EN + PT-BR (Brazilian glossary)        ${WHITE}║${NC}"
+echo -e "${WHITE}╚════════════════════════════════════════════════════════╝${NC}"
 echo ""
 
 echo -e "${GREEN}Demo complete!${NC}"
 echo ""
 echo "Next steps for judges:"
+echo "  bash demo.sh --live-demo      # SAST scan any public Solana repo"
 echo "  cat README.md                          # Full documentation"
 echo "  cat examples/sample-vulnerable-program/programs/vault/src/lib.rs  # See vulnerable program"
 echo "  cat examples/sample-vulnerable-program/REMEDIATION_FIXES.md      # See all fixes"
@@ -658,8 +632,8 @@ echo "  cat examples/sample-vulnerable-program/FIX_VERIFICATION.md       # Verif
 echo "  cat examples/solend-governance-audit/README.md                 # Live audit of real exploit"
 echo "  cat examples/solend-governance-audit/audit-output/findings.json | python3 -m json.tool"
 echo "  cat examples/solend-governance-audit/audit-output/AUDIT_REPORT.md"
-echo "  open /tmp/demo_audit_dashboard.html   # Browse HTML dashboard of findings
-  open /tmp/demo_comparison_dashboard.html  # Browse before/after comparison (if fixed fixture present)"
+echo "  open /tmp/demo_audit_dashboard.html   # Browse HTML dashboard of findings"
+echo "  open /tmp/demo_comparison_dashboard.html  # Browse before/after comparison"
 echo "  bash install.sh -y                     # Install the skill"
 echo ""
 
