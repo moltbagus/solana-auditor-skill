@@ -1,7 +1,7 @@
 # Learnings — Solana Auditor Skill
 
 > **Decision Log & Lessons Learned**
-> _Superteam Brasil Solana Skills Contest — v1.14.1_
+> _Superteam Brasil Solana Skills Contest — v1.14.2_
 > Last updated: 2026-06-29
 
 ---
@@ -188,7 +188,7 @@ python3 -m pytest fails silently on clean clone because pytest is not on system 
 
 ## Future Improvements
 
-- [x] **Line-number drift check (Check 20)** — implemented in `severity_counts.py check_line_numbers()`. Verified 161/161 pass. ✅ v1.14.1
+- [x] **Line-number drift check (Check 20)** — implemented in `severity_counts.py check_line_numbers()`. Verified 161/161 pass. ✅ v1.14.2
 - [x] **Architecture Review module** — Done v1.11.0 (Phase 7 + architecture-reviewer agent). ✅ v1.11.0
 - [ ] **Flake8 config + lint CI** — pyproject.toml has black + mypy but no flake8.
 - [ ] **Runtime tests** — Solana test validator in CI (~3 min extra per run).
@@ -199,10 +199,10 @@ python3 -m pytest fails silently on clean clone because pytest is not on system 
 
 ---
 
-## 2026-06-29 — Sprint 51: Check 20 Verification + SDD Sync (v1.14.1)
+## 2026-06-29 — Sprint 51: Check 20 Verification + SDD Sync (v1.14.2)
 
 ### What we did
-Subagent analysis reported Check 20 as "never implemented." Direct code inspection proved it was already fully implemented — `check_line_numbers()` in `severity_counts.py:284` with bash wiring in `test-skill-integrity.sh:399-419`. All 3 fixtures pass. SDD docs updated to v1.14.1.
+Subagent analysis reported Check 20 as "never implemented." Direct code inspection proved it was already fully implemented — `check_line_numbers()` in `severity_counts.py:284` with bash wiring in `test-skill-integrity.sh:399-419`. All 3 fixtures pass. SDD docs updated to v1.14.2.
 
 ### Key lessons
 1. **Subagent findings need independent verification** — P107's post-daughter rule applies: for multi-file verification tasks, inline inspection beats subagent delegation. Subagents time out or give false negatives on long analysis.
@@ -236,7 +236,7 @@ Added 3 new audit fixtures (AMM/DEX, Staking Pool, NFT/Candy Machine) with 42 to
 
 
 
-## 2026-06-29 — v1.14.1 Raydium CLMM Audit + Severity Correction
+## 2026-06-29 — v1.14.2 Raydium CLMM Audit + Severity Correction
 
 ### What we did
 Live audit of jup-ag/raydium-clmm (6 confirmed findings). Added --lang pt|en bilingual support to all commands. Fixed README duplicate step numbering, agents badge count, dashboard commands.

@@ -1,7 +1,7 @@
 # PRD — Solana Auditor Skill
 
 > **Product Requirements Document**
-> _Superteam Brasil Solana Skills Contest — v1.14.1_
+> _Superteam Brasil Solana Skills Contest — v1.14.2_
 > Last updated: 2026-06-29
 
 ---
@@ -128,7 +128,7 @@ Transform Claude Code into the **gold-standard Solana security auditor** — a r
 - [x] All 3 fixtures include findings.json, AUDIT_REPORT.md, methodology-trace.md, quick-scan-results.md
 
 
-### v1.14.1 — Raydium CLMM Live Audit + Bilingual Polish (2026-06-29)
+### v1.14.2 — Raydium CLMM Live Audit + Bilingual Polish (2026-06-29)
 - [x] Live audit of jup-ag/raydium-clmm — 6 confirmed findings, source-verified with #[account] constraint analysis
 - [x] RAY-01 severity corrected: CRITICAL → HIGH after source verification of admin::ID constraint
 - [x] Bilingual support: --lang pt|en added to all audit commands
@@ -143,7 +143,7 @@ Transform Claude Code into the **gold-standard Solana security auditor** — a r
 
 
 ### Stretch (Future)
-- [x] Line-number drift integrity check (Check 20) — implemented v1.14.1
+- [x] Line-number drift integrity check (Check 20) — implemented v1.14.2
 - [ ] Multi-program audit aggregation
 - [ ] Native qed-solana CI integration (dependency of QED 2A)
 - [ ] Economic Security module (standalone DeFi attack analysis)

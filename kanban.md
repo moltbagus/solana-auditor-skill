@@ -1,7 +1,7 @@
 # Kanban — Solana Auditor Skill
 
 > **Project Kanban Board**
-> _Superteam Brasil Solana Skills Contest — v1.14.1_
+> _Superteam Brasil Solana Skills Contest — v1.14.2_
 > Last updated: 2026-06-29
 
 ---
@@ -103,17 +103,25 @@ audit-report/submissions/MATH-003-3-immunefi-submission.md  (MEDIUM, CVSS 6.5 �
 
 ---
 
-### 🔵 In Progress / 🟡 To Do
+### ✅ All Contest-Ready Items Complete
 
-| Task | Phase | Priority | Status |
-|------|-------|----------|--------|
-| Native qed-solana CI integration | Security | P2 | Stretch goal |
-| Multi-program audit aggregation | Core | P3 | Stretch goal |
-| Economic Security framework | Security | P3 | Stretch goal |
-| Phase 7 Architecture Review adoption | Architecture | P3 | ✅ Done v1.11.0 |
+All priority items from the contest readiness audit have been addressed. Remaining items are stretch goals for post-contest development.
+
+| Task | Priority | Status |
+|------|----------|--------|
+| Native qed-solana CI integration | P2 | Stretch (needs toolchain) |
+| Multi-program audit aggregation | P3 | Stretch |
+| Token-2022 fixture deep coverage (Rules 28-35) | P3 | Stretch |
 
 ---
 
+
+### Sprint 52 — Contest Polish Sprint (Done: 2026-06-29)
+- [x] G1/G2/G3 quick wins: SKILL.md agents (9→10), phases (6→12), rules breakdown; threat-modeler.md YAML frontmatter; README stale counts (173/159/47→161)
+- [x] G5 Economic security wiring: SKILL.md Phase 1B/1C/7A table+routing; orchestrator.md Phase 1B/1C/2A routes; all 10 agents listed
+- [x] G4 --live-demo flag: demo.sh Step 0, clones public Solana repo, runs SAST on unseen code, shows findings with severity bars, non-fatal error handling
+- [x] G6/G7 Fixture structure: klive-live-audit files moved to audit-output/ + methodology-trace.md; solend-governance-audit methodology-trace.md added
+- [x] All 161 integrity checks pass, 22/22 fuzz tests pass
 
 ### Sprint 51 — Check 20 Verification + SDD Sync (Done: 2026-06-29)
 - [x] Check 20 (line-number drift) — **already implemented** in `severity_counts.py` + `test-skill-integrity.sh`
