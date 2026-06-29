@@ -7,7 +7,7 @@ had written down.
 ## Current state (v1.14.2 — Contest Submission)
 
 **Contest**: Superteam Brasil Solana Skills (July 8, 2026)
-**Submission**: https://github.com/solanabr/solana-auditor-skill (target PR)
+**Submission**: https://github.com/moltbagus/solana-auditor-skill (PR to https://github.com/solanabr/solana-ai-kit)
 
 - **161 integrity checks**: all green
 - **22 fuzz tests**: all green
@@ -68,6 +68,36 @@ Verify: `python3 tests/severity_counts.py check-cvss-math examples/.../findings.
 - **pytest**: always use `python3 -c "import pytest; pytest.main([...])"` — `python3 -m pytest` fails on system Python without pytest installed
 - **ripgrep**: always preinstall in CI (`apt-get install -y ripgrep`)
 - **GitHub Actions**: `ubuntu-latest` does NOT have ripgrep pre-installed
+
+## Competitor analysis (OODA session, 2026-06-29)
+
+Key differentiators vs trailofbits/skills, frankcastleauditor/safe-solana-builder, QEDGen/solana-skills:
+1. Only full lifecycle: Phase 0 → Phases 1-6 → remediation
+2. Only Phase 1C economic security (MEV, tokenomics, invariant violations)
+3. Only produces real audit deliverables (CVSS findings + PoC + fix + report + Immunefi submissions)
+4. Only PT-BR bilingual support for Brazilian dev community
+
+Competitor weaknesses we exploit:
+- Trail of Bits: generic, no Solana specifics, no lifecycle
+- safe-solana-builder: pre-build only, 31 rules, no formal verification
+- QEDGen: alpha-only, spec-writing overhead, no SAST, no reports
+
+## Repo hygiene rules (learned the hard way)
+
+**Never leave stale duplicates in the repo.** Stale directories that contradicted current state:
+- `ext/solana-auditor-shiba/` — full duplicate, manifest said v1.5.0/17 rules (reality: v1.14.2/161 checks)
+- `package/` — partial duplicate, manifest said v1.4.0/49 checks
+- `gan-harness/` — finished eval sprint
+- `benchmarks/` — abandoned
+- `docs/superpowers/` — unrelated superpowers project
+- `skills/` — v1.0.0 patterns from wrong project
+- `prompts/bug-fixer-agent.md` — unrelated debugging agent
+
+**Rule: `ls -la` must be immediately understandable by a judge doing a 5-minute review.**
+A judge seeing 7 confusing directories in the top-level will distrust the skill before reading a single file.
+
+**Never commit Cargo.lock files** — add `**/Cargo.lock` to .gitignore.
+**Always verify before claiming** — P107 subagent flagged `safety-anchor.md` as non-existent; it actually was in README and needed fixing.
 
 ## Files & purposes
 
