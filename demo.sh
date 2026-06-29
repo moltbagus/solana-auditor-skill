@@ -21,7 +21,7 @@
 
 # HOW TO USE THE AUDIT COMMANDS (after install: bash install.sh -y)
 # Claude Code slash commands available:
-#   /audit <repo>                  Full 8-phase audit (recon → remediation)
+#   /audit <repo>                  Full 7-phase audit (Phase 0 safety guard + Phases 1 → remediation)
 #   /audit-quick <repo>            Fast SAST scan (~5 min, no toolchain needed)
 #   /audit-report <repo>        Generate markdown + HTML report
 #   /audit-resume                 Resume last audit from checkpoint
@@ -39,6 +39,33 @@
 set -e
 
 RED='\033[0;31m'
+
+# =========================================================================
+# Print commands guide (visible during demo run, not just in source)
+# =========================================================================
+cat << 'EOF'
+
+  ┌─────────────────────────────────────────────────────────────┐
+  │              AUDIT COMMANDS — after install.sh -y            │
+  ├─────────────────────────────────────────────────────────────┤
+  │  /audit <repo>          Full 7-phase audit (Phase 0 safety guard + Phases 1→remediation)
+  │  /audit-quick <repo>    Fast SAST scan (~5 min, no toolchain)
+  │  /audit-report <repo>   Markdown + HTML report               │
+  │  /audit-resume          Resume last audit from checkpoint     │
+  │  /audit-poc <finding>   Consent-gated PoC exploit generator  │
+  │  /audit-findings <repo> Findings list with CVSS + CWE       │
+  │  /audit-fix <repo>      Fix suggestions + regression tests    │
+  │  /audit-history         Audit history DB                     │
+  │  /audit-pr <pr-url>     Audit a GitHub PR's changed files     │
+  ├─────────────────────────────────────────────────────────────┤
+  │  Append --lang pt to any command for Brazilian Portuguese     │
+  │  Examples:                                                   │
+  │    /audit ./programs --lang pt    Full audit in PT-BR        │
+  │    /audit-quick ./dex-amm         Fast SAST, no toolchain    │
+  └─────────────────────────────────────────────────────────────┘
+
+EOF
+
 GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
 BLUE='\033[0;34m'

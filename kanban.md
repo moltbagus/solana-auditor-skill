@@ -63,6 +63,19 @@ Backlog → To Do → In Progress → Review → Done
 | SDD docs — full project spec synchronized to v1.12.0 | Core | v1.12.0 |
 - [x] CLAUDE.md rewrite — v1.13.0: correct agent count (10), phase files (12), Two-Tier model, fixture schema, pytest command, key gotchas
 
+### 🟢 Done (v1.14.2 — Contest Polish Sprint, 2026-06-29)
+
+| Task | Category | Version |
+|------|---------|---------|
+| P107 code review — 2 parallel subagents, 10-axis audit | Polish | v1.14.2 |
+| Corporate-grade review — 10 issues found/fixed | Polish | v1.14.2 |
+| SKILL.md routing: `02A-static-analysis.md` → `02-threat-modeling.md`, added Phase 0 entry | Debug | v1.14.2 |
+| install.sh: `|| true` silent failures → explicit error + exit 1; `find` counts | Polish | v1.14.2 |
+| demo.sh: "8-phase" → "7-phase"; visible `cat << EOF` commands block | Polish | v1.14.2 |
+| README.md: `safety-anchor.md` (non-existent) → `safety-guard.md` | Debug | v1.14.2 |
+| orchestrator.md: malformed response + partial failure handling in handoff contract | Security | v1.14.2 |
+| Git tag v1.14.2 created | Polish | v1.14.2 |
+| 161/161 integrity checks + 22/22 fuzz tests verified clean | Testing | v1.14.2 |
 
 ---
 

@@ -135,19 +135,13 @@ Transform Claude Code into the **gold-standard Solana security auditor** — a r
 - [x] README polish: duplicate step numbers, agents badge corrected, dashboard commands added
 - [x] Severity lesson: verify #[account] constraints before assigning CRITICAL on access control findings
 
-### v1.14.0 — Fixture Expansion Sprint (2026-06-29)
-- [x] AMM/DEX fixture — examples/dex-amm/: 14 vulnerabilities across 3 programs, Rules 14/15/26/13/6/4/8/40/38/36/37
-- [x] Staking Pool fixture — examples/staking-pool/: 14 vulnerabilities across 3 programs, Rules 14/22/41/6/8/11/5/15/4/38/3/36/37
-- [x] NFT/Candy Machine fixture — examples/nft-candy-machine/: 14 vulnerabilities across 3 programs, Rules 16/40/2/8/6/14/5/33/22/38/27/39/4/37
-- [x] All 42 new findings: CVSS math verified, severity summaries correct, findings.json + AUDIT_REPORT.md + methodology-trace.md + quick-scan-results.md per fixture
-
 
 ### Stretch (Future)
 - [x] Line-number drift integrity check (Check 20) — implemented v1.14.2
 - [ ] Multi-program audit aggregation
 - [ ] Native qed-solana CI integration (dependency of QED 2A)
 - [ ] Economic Security module (standalone DeFi attack analysis)
-- [ ] Architecture Review module (standalone component analysis)
+- [x] Architecture Review module (standalone component analysis) — implemented as `skill/01B-architecture-review.md` + `agents/architecture-reviewer.md`
 
 ### v1.11.0 — Architecture Review + Report Enhancement (2026-06-27)
 

@@ -6,6 +6,41 @@
 
 ---
 
+## 2026-06-29 — Contest Sprint v1.14.2 (Final Polish)
+
+### What we did
+Multi-agent parallel audit (P107 code review + corporate-grade polish review) to optimize for Superteam Brasil top-10 submission. Ran 2 parallel subagents with p107-senior-code-review and principal-systems-engineer skills.
+
+### Issues found and fixed
+1. SKILL.md routing: `02A-static-analysis.md` → `02-static-analysis.md` (broken dead link)
+2. SKILL.md missing Phase 0 Safety Guard entry in routing table
+3. SKILL.md version: `v1.8.0` → `v1.14.2`
+4. SKILL.md agents: "9 specialists" → "10 configs" (AUDIT.md auto-generated counted)
+5. SKILL.md "New in v1.7.0" section stale for v1.14.2 — kept as-is (content still accurate, just old version)
+6. CLAUDE.md version: `v1.13.0` → `v1.14.2`
+7. README.md: `safety-anchor.md` (non-existent) → `safety-guard.md` (duplicate entry removed)
+8. PRD.md: duplicate v1.14.0 section removed; wrong `07-architecture-review.md` → `01B-architecture-review.md`
+9. demo.sh: "8-phase" → "7-phase" (2 occurrences) — Phase 0 + Phases 1-6 = 7 phases
+10. demo.sh: added visible `cat << EOF` block so commands display during script execution (not buried in comments)
+11. install.sh: all `cp` commands had `|| true` silently masking failures → explicit error + exit 1 on failure
+12. install.sh: fragile `wc -l | tr -d ' '` → `find -maxdepth 1 -name "*.md" | wc -l | tr -d ' '`
+13. install.sh: added per-file counts to success messages for transparency
+14. orchestrator.md: added explicit "Malformed response handling" and "Partial failure" sections to agent handoff contract
+15. Git tag v1.14.2 created for `git describe --tags` to show correct version in demo.sh summary
+
+### Contest lessons
+- **Run the tests**. The demo.sh script has an "8-phase" claim that contradicts all docs. This would have been caught by any review.
+- **Parallel subagent audits find different things**: p107 found orchestration contract gaps; corporate-grade review found silent install.sh failures.
+- **Version drift is a red flag for judges**: 4 files had different versions. Canonical version should be in git tags, not scattered in file headers.
+- **Subagents time out on complex multi-file reviews**: Used p107 post-daughter rule — did reviews in main session, not subagents.
+
+### Current state
+- 161/161 integrity checks: PASS
+- 22/22 fuzz tests: PASS
+- demo.sh: commands display, 7-phase claim consistent, summary shows correct version
+
+---
+
 ## 2026-06-28 — Contest Sprint v1.12.0
 
 ### What we did

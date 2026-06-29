@@ -3,7 +3,7 @@ name: solana-auditor-skill
 description: All-in-one Solana security auditor — recon, static analysis, formal verification, triage, report, and remediation guidance
 ---
 
-# Solana Auditor Skill (Shiba) v1.8.0
+# Solana Auditor Skill (Shiba) v1.14.2
 
 Auditor-lifecycle skill for comprehensive Solana program security review. Runs from initial recon to final report.
 
@@ -18,7 +18,7 @@ Auditor-lifecycle skill for comprehensive Solana program security review. Runs f
 5. Report Generation
 6. Remediation Guidance
 
-**Agents** (9 specialists): orchestrator (entry-point router), auditor (primary), architecture-reviewer, economic-security-analyst, threat-modeler, formal-verifier, report-writer, cross-program-agent, safety-guard
+**Agents** (10 configs): orchestrator (entry-point router), auditor (primary), architecture-reviewer, economic-security-analyst, threat-modeler, formal-verifier, report-writer, cross-program-agent, safety-guard + AUDIT.md (auto-generated)
 
 **Commands** (9): /audit, /audit-quick, /audit-resume, /audit-report, /audit-poc, /audit-findings, /audit-fix, /audit-history, /audit-pr
 
@@ -41,6 +41,7 @@ Auditor-lifecycle skill for comprehensive Solana program security review. Runs f
 | Report Generation | `skill/05-report-generation.md` | Final audit deliverable |
 | Remediation | `skill/06-remediation.md` | After triage, during fix verification |
 | Reference | `skill/00-terminology.md` | Always available |
+| Safety Guard | `skill/00-safety-guard.md` | Phase 0 — always run first |
 
 ### Two-Tier Execution Model
 
@@ -72,11 +73,16 @@ Auditor-lifecycle skill for comprehensive Solana program security review. Runs f
 ### User wants Tier 2 runtime verification
 → Load `skill/02B-runtime-testing.md` (requires anchor + solana CLI)
 
-### User wants threat modeling (STRIDE enumeration)
-→ Load `skill/02-threat-modeling.md` (Phase 2A — run after Phase 1 recon, before static analysis)
-
 ### User wants a full audit report
-→ Load `skill/05-report-generation.md` + `skill/01-recon.md` + `skill/02A-static-analysis.md`
+→ Load `skill/05-report-generation.md` + `skill/01-recon.md` + `skill/02-static-analysis.md`
+
+### User wants Phase 2A threat modeling (STRIDE enumeration)
+→ Load `skill/02-threat-modeling.md`
+→ Invoke `threat-modeler` agent
+
+### User wants Phase 0 safety guard (consent, scope, cluster)
+→ Load `skill/00-safety-guard.md`
+→ Invoke `safety-guard` agent
 
 ### User wants to verify a fix
 → Load `skill/06-remediation.md` + `skill/03-formal-verification.md`

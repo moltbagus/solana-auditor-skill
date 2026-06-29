@@ -69,6 +69,13 @@ Specialist returns:
 }
 ```
 
+**Malformed response handling**: If the specialist returns non-JSON or is missing `status`/`outputs`:
+- Block the audit and report to the user immediately
+- Print the raw output so the user can inspect the failure
+- Do not silently skip or continue — partial audits produce misleading reports
+
+**Partial failure**: If a secondary agent (architecture-reviewer, economic-security-analyst, formal-verifier) fails, the primary audit path (Phase 1 → Phase 2 → Phase 4 → Phase 5) continues. Each phase's failure is logged. The final report includes a "Phase Completeness" table so the operator knows which phases completed.
+
 ## Constraints
 
 - Never auto-apply fixes (delegated to specialist agents which enforce this).

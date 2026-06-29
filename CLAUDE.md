@@ -6,7 +6,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 World-class Solana security auditor — 7-phase lifecycle, 50 path-scoped rules (auto-activate), 10 specialist agents, 9 commands, compile-verified fixture, 161 integrity checks, 22 fuzz tests.
 
-**Version**: v1.13.0 | **Contest**: Superteam Brasil Solana Skills (July 8, 2026)
+**Version**: v1.14.2 | **Contest**: Superteam Brasil Solana Skills (July 8, 2026)
 
 ---
 

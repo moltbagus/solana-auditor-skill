@@ -166,8 +166,7 @@ The `rules/audit.rules` file auto-activates whenever Claude touches Anchor progr
 | `agents/formal-verifier.md` | Invariant proofs via QED 2A |
 | `agents/report-writer.md` | Structured report generation |
 | `agents/cross-program-agent.md` | Cross-program CPI chain analysis |
-| `agents/safety-anchor.md` | Anchor-specific security patterns |
-| `agents/safety-guard.md` | Pre-flight safety checks and Phase 0 guardrails |
+| `agents/safety-guard.md` | Anchor-specific security patterns + Phase 0 pre-flight safety guard |
 
 `agents/AUDIT.md` is auto-generated during audits to track agent state.
 

@@ -4,196 +4,104 @@ Durable lessons from the multi-loop build of this skill. Read this before
 touching the repo again. These are the things future-me will wish past-me
 had written down.
 
-## Current state (v1.4.0 FINAL — world-class complete)
+## Current state (v1.14.2 — Contest Submission)
 
-- 11 tags: v1.0.0 through v1.4.0
-- 62 integrity check categories (PASS count), all green
-- 19 property-based (fuzz) tests using Hypothesis
-- 17 security rules (Rules 1-17), up from 12
-- 3 vulnerable fixtures: vault (10 VULN) + token-extensions (6 VULN) + real Token-2022 (1 VULN) = 17 total
-- 6 commands (added /audit-resume)
-- 3 PoC exploit walkthroughs (admin-drain, reinit, flash-loan)
-- 5 formal verification invariant patterns (fv-invariant-pattern.ts)
-- SARIF export script (scripts/export-sarif.py)
-- Concurrent-run lock file + checkpoint/resume system
-- 3 CI jobs all green on every commit
-- Corporate-grade Python: type hints, magic numbers extracted, utf-8 encoding
-- CWE references corrected across Rules 3, 5, 7, 10, 14
-- Python 3.9 compatible (no PEP 604 union syntax)
-- Bilingual glossary: EN + PT-BR in skill/00-terminology.md
+**Contest**: Superteam Brasil Solana Skills (July 8, 2026)
+**Submission**: https://github.com/solanabr/solana-auditor-skill (target PR)
 
-## Toolchain / environment
+- **161 integrity checks**: all green
+- **22 fuzz tests**: all green
+- **10 agents**: orchestrator, auditor, safety-guard, architecture-reviewer, economic-security-analyst, threat-modeler, formal-verifier, report-writer, cross-program-agent + AUDIT.md (auto-generated)
+- **9 commands**: /audit, /audit-quick, /audit-resume, /audit-report, /audit-poc, /audit-findings, /audit-fix, /audit-history, /audit-pr
+- **50 rules**: Rules 1-26 Anchor Core, 27-35 Token-2022 Transfer Hook, 36-45 Pinocchio/Native Solana, 46-50 AI Agent Safety
+- **12 phases**: 00-safety-guard, 00-terminology, 01-recon, 01B-architecture-review, 01C-economic-security, 02-static-analysis, 02-threat-modeling, 02B-runtime-testing, 03-formal-verification, 04-findings-triage, 05-report-generation, 06-remediation
+- **6 fixtures**: vault (10 VULN), token-2022-real (14 VULN), dex-amm (14 VULN), staking-pool (14 VULN), nft-candy-machine (14 VULN), live audits (Kamino, Raydium, Solend)
+- **demo.sh**: zero toolchain, < 60s, shows commands box, 161 checks + 22 fuzz
+- **install.sh**: idempotent, explicit error on cp failure, per-file counts
+- **git tag**: v1.14.2
 
-- **Host**: macOS (26.5.1), user `colbert1`. Working dir on this skill is
-  `/Users/colbert1/solana-auditor-skill`. Branch: main → origin/main.
-- **Hermes CLI** is the only reliable surface for `~/.hermes/config.yaml`
-  writes. Direct file writes get blocked by tirith/defense-in-depth. Use:
-  - `hermes config set <key> <value>` for dotted keys (works correctly
-    only when each call sets ONE leaf).
-  - `hermes chat -q "..." --provider openrouter --model X` to verify
-    a model via one-shot before committing to it as default.
-  - Avoid JSON-string values via `hermes config set model '{...}'` —
-    they end up as a YAML string under `model:` instead of nested keys.
-- **9Router** runs at `localhost:20128` and is the `minimax` provider.
-  Hangs repeatedly with `tail -f`/interrupted bash; recovery is to
-  kill PID + node, restart `9router -t -l &`. Don't `kill -9` Agave.
-- **GitHub CLI** (`gh`) is preconfigured. Use `gh api ... --jq ...` for
-  pipeline-friendly JSON; `--json field` is the field whitelist.
+## Contest submission checklist
 
-## Repo conventions
+Before pushing, verify ALL of these:
+- [ ] `bash demo.sh` runs clean (161/161 + 22/22)
+- [ ] `git describe --tags` returns v1.14.2 (if not, `git tag -a v1.14.2`)
+- [ ] SKILL.md version = v1.14.2
+- [ ] CLAUDE.md version = v1.14.2
+- [ ] PRD.md header = v1.14.2
+- [ ] No `02A-static-analysis.md` references (should be `02-threat-modeling.md`)
+- [ ] No `safety-anchor.md` references (should be `safety-guard.md`)
+- [ ] No "8-phase" claims (should be "7-phase": Phase 0 + Phases 1-6)
+- [ ] install.sh has no `|| true` on cp commands
+- [ ] demo.sh shows the commands box during execution
 
-- **Skill name**: `solana-auditor-skill` (everywhere — SKILL.md, install.sh,
-  README, CHANGELOG, CLAUDE.md).
-- **Workflow file**: `.github/workflows/test.yml`. 3 jobs:
-  `skill-integrity`, `anchor-build`, `lint-install`.
-- **Integrity script**: `tests/test-skill-integrity.sh` with helpers
-  in `tests/severity_counts.py`. Pass/fail tally at end of stdout
-  (PASS: N / FAIL: N).
-- **Commits must keep CI green**. Subagent findings about CI env are
-  not verified — always trigger CI before declaring done.
+## Bug classes that bit us (and how to catch them)
 
-## Hard-won CI lessons (these bit me at least once each)
+| Bug class | Detection | Prevention |
+|---|---|---|
+| **Stale version numbers** | 4 files had different versions in v1.14.2 | Git tag is canonical; every header should say "v{tag}" or derive from `git describe --tags` |
+| **Broken SKILL.md routing** | `02A-static-analysis.md` doesn't exist; dead link kills Phase 2A | Check that every file path in SKILL.md actually exists: `rg -l "skill/0[0-9][A-Za-z-]*\.md" skill/SKILL.md \| xargs -I{} sh -c 'test -f {}'` |
+| **Silent install failures** | `cp ... || true` masks errors; operator sees green but files missing | Replace `|| true` with `|| { echo RED "[!] Failed"; exit 1; }` |
+| **File count drift** | `wc -l` on glob returns wrong count if `.DS_Store` present | Use `find DIR -maxdepth 1 -name "*.md" \| wc -l` |
+| **Agent list drift** | README said "9 agents", CLAUDE.md said "10 agents", SKILL.md said "9 specialists" | Count with `ls agents/*.md \| wc -l` and propagate to all docs |
+| **Duplicate changelog sections** | PRD.md had v1.14.0 listed twice | Search for `### v1\.1[0-9]\.` with `rg -c` before shipping |
+| **Wrong architecture-review path** | PRD referenced `07-architecture-review.md` (doesn't exist) | Always cross-check file names in documentation against `ls skill/` |
+| **Subagent findings not verified** | P107 review flagged `safety-anchor.md` — file didn't exist but wasn't verified before claiming | Run `ls agents/` to count and verify before accepting claims |
+| **Commands not visible during demo** | `cat << EOF` block was buried in `#` comments; invisible during script execution | Run `bash demo.sh \| head -30` to verify visible output |
 
-1. **`anchor build` alone does NOT produce `target/deploy/<prog>.so` in
-   CI on anchor 0.31.1 + Agave solana-cli ≥2.x.** Either run
-   `anchor test --skip-local-validator` (which still tries to connect
-   to a validator and fails) or use `cargo check` (the strongest
-   compile-clean proof that survives CI). Pinned approach:
-   `cargo check` in `examples/sample-vulnerable-program/programs/vault/`.
-
-2. **`Swatinem/rust-cache@v2`** does an early `exit(101)` if the
-   `workspaces:` path has no Cargo.toml. Anchor projects have the
-   Cargo.toml at `programs/<name>/Cargo.toml`, not at the workspace
-   root. Use `workspaces: programs/vault -> target` and `cd` into it.
-
-3. **`ubuntu-latest` GitHub Actions runners do NOT ship ripgrep.**
-   Subagent reviewer claimed it was preinstalled. It isn't. Always
-   `apt-get install -y ripgrep` in the workflow.
-
-4. **Pinned `solana-cli` to v4.0.2** via `release.anza.xyz/v4.0.2/install`.
-   `stable` rolls forward and breaks the build.
-
-5. **`examples/sample-vulnerable-program/programs/vault/Cargo.toml`**
-   has `solana-program = "2.3"` as a dependency. Anchor 0.31.1 emits a
-   warning ("Adding solana-program as a separate dependency might cause
-   conflicts") but the build still succeeds.
-
-## Data integrity (v1.2.0–v1.3.1)
-
-The example vault fixture has 10 VULN findings; the Token-2022 fixture has 6.
-
-After v1.3.1:
-- **47 PASS / 0 FAIL** integrity checks — every check green
-- **19 fuzz tests passing** — CVSS math, severity bins, fixture regression, bidirectional source tag matching
-- All vault CVSS scores recomputed from vectors and verified via `tests/severity_counts.py check-cvss-math`
-- All Token-2022 CVSS scores verified same way — including methodology-trace.md (fixed from stale 9.3/7.5 to 10.0/8.1)
-- Methodology-trace.md CVSS consistency now enforced by integrity Check 19
-- Vault severity summary: `CRITICAL=2 HIGH=2 MEDIUM=6 LOW=0`
-- Token-2022 severity summary: `CRITICAL=1 HIGH=3 MEDIUM=2 LOW=0`
-- Total: `CRITICAL=3 HIGH=5 MEDIUM=8 LOW=0 INFO=0`
-
-## CVSS 3.1 quick reference (for recomputing scores)
+## CVSS 3.1 quick reference
 
 ```
 ISS = 1 - (1 - C) * (1 - I) * (1 - A)
 Impact = 6.42 * ISS
 Exploitability = 8.22 * AV * AC * PR * UI
 Base = roundUp(min(Impact + Exploitability, 10))
-
-AV: N=0.85, A=0.62, L=0.55, P=0.2
-AC: L=0.77, H=0.44
-UI: N=0.85, R=0.62
-PR: N=0.85 always; L=0.62 (Scope U) or 0.68 (Scope C); H=0.5
-C/I/A: H=0.56, L=0.22, N=0.0
-
 roundUp(x) = ceil(x * 10) / 10
+
+Severity: CRITICAL ≥ 9.0 | HIGH ≥ 7.0 | MEDIUM ≥ 4.0 | LOW ≥ 0.1
 ```
 
-Severity scale (CLAUDE.md):
-- CRITICAL ≥ 9.0
-- HIGH ≥ 7.0
-- MEDIUM ≥ 4.0
-- LOW ≥ 0.1
+Verify: `python3 tests/severity_counts.py check-cvss-math examples/.../findings.json`
 
-## Subagent-driven development gotchas
+## Toolchain / environment
 
-- **Subagent reviewer confidence ≠ verified correctness.** Always
-  trigger CI after applying reviewer findings.
-- **Don't fan out >3 reviewers** — cost grows, conflicts multiply.
-- **Save subagent results if context compresses.** Subagent summaries
-  arrive as a single message when ALL children finish; if context
-  compresses mid-batch, results are lost.
-- **Unicode characters in tool calls** — the `→` arrow (U+2192) and
-  backtick characters fail silently in str_replace when embedded in
-  JSON strings. Use sed via basher or write_file to replace these.
-- **Dead code detection false positives** — code-reviewer-deepseek-flash
-  flagged `TOKEN_FIXTURE_SOURCE_PATH` as dead code, but it's used by
-  P18. Always verify reviewer claims before acting on them.
+- **Host**: macOS (26.5.1), user `colbert1`. Working dir: `/Users/colbert1/solana-auditor-skill`
+- **pytest**: always use `python3 -c "import pytest; pytest.main([...])"` — `python3 -m pytest` fails on system Python without pytest installed
+- **ripgrep**: always preinstall in CI (`apt-get install -y ripgrep`)
+- **GitHub Actions**: `ubuntu-latest` does NOT have ripgrep pre-installed
 
 ## Files & purposes
 
-| Path | Purpose | Last touched |
-|---|---|---|
-| `skill/SKILL.md` | Skill frontmatter + phase routing | v1.1.0 |
-| `skill/00-terminology.md` | Glossary (EN + PT-BR) | v1.0.0 |
-| `skill/01-recon.md`..`06-remediation.md` | Phase procedures | v1.0.0 |
-| `commands/*.md` | 6 slash commands | v1.0.0 |
-| `agents/*.md` | 4 specialist agents + AUDIT.md status | v1.0.0 |
-| `rules/audit.rules` | 12 path-scoped rules + 24 CWE refs | v1.0.0 |
-| `examples/sample-vulnerable-program/programs/vault/` | Anchor vault fixture (VULN-01..10) | v1.2.0 |
-| `examples/sample-vulnerable-program/programs/token-extensions/` | Token-2022 fixture (VULN-11..16) | v1.3.0 |
-| `templates/poc-template-*` | 3 PoC templates (anchor.rs, typescript.ts, manual.md) | v1.1.1 |
-| `tests/test-skill-integrity.sh` | 19-check integrity script with 47 PASS points | v1.3.1 |
-| `tests/severity_counts.py` | Python helpers (summary, report, cvss, cvss-math modes) | v1.2.0 |
-| `tests/fuzz/test_properties.py` | 19 property-based tests (P1-P19) | v1.3.1 |
-| `install.sh` | Copies skill/, commands/, rules/, templates/, CLAUDE.md | v1.2.0 |
-| `.github/workflows/test.yml` | 3-job CI, pinned solana v4.0.2 | v1.2.0 |
-| `pyproject.toml` | Black, mypy, pytest config (corporate-grade) | v1.3.1 |
-| `MEMORY.md` | This file | v1.3.1 |
+| Path | Purpose |
+|---|---|
+| `skill/SKILL.md` | Progressive routing entry point; routes user intent → phase/agent |
+| `skill/00-safety-guard.md` | Phase 0: consent, scope, cluster boundary |
+| `skill/00-terminology.md` | EN + PT-BR glossary |
+| `skill/01B-architecture-review.md` | Phase 1B: structural topology (NOT `07-*`) |
+| `skill/01C-economic-security.md` | Phase 1C: tokenomics, MEV, economic invariants |
+| `skill/02-threat-modeling.md` | Phase 2A: STRIDE enumeration (NOT `02A-*`) |
+| `skill/02B-runtime-testing.md` | Phase 2B: CPI surface graph, BanksClient |
+| `agents/orchestrator.md` | Entry-point router; handoff protocol (status/outputs/next_agent) |
+| `agents/safety-guard.md` | Phase 0 pre-flight; NOT `safety-anchor.md` |
+| `commands/*.md` | 9 slash commands with `name:` YAML frontmatter |
+| `rules/audit.rules` | 50 path-scoped rules; auto-activate on file match |
+| `install.sh` | Idempotent installer; explicit error on failure; no `|| true` |
+| `demo.sh` | Zero-toolchain demo; shows commands box + runs integrity/fuzz |
+| `tests/test-skill-integrity.sh` | 161-point verification; PASS/FAIL tally at end |
+| `tests/fuzz/test_properties.py` | 22 Hypothesis property-based tests |
+| `scripts/dashboard.py` | HTML dashboard from findings.json |
 
-## Bug classes to watch for
+## Key gotchas
 
-- **Stale doc counts**: any time files are added/removed, CLAUDE.md,
-  SKILL.md, README.md, and CHANGELOG.md counts can drift. Check 9
-  in `tests/test-skill-integrity.sh` catches agent-list drift.
-- **Documentation drift between data files**: findings.json vs
-  AUDIT_REPORT.md. Check 8 catches CVSS drift, Check 7 catches
-  severity-count drift.
-- **Math vs claim**: a method that produces numbers (CVSS, severity,
-  etc.) needs an integrity check that recomputes from input data.
-  Check 10 catches CVSS math drift.
-- **CI tool assumption drift**: things that work locally (ripgrep
-  preinstalled, stable solana-cli) may not work in CI. Pin
-  everything versioned.
-- **Install path drift**: when install.sh copies files, the destination
-  directory name MUST match the skill name in SKILL.md. Claude Code
-  registers skills by directory name under `~/.claude/skills/<name>/`.
-  Copying into `~/.claude/skills/skill/` (literal dir name) or
-  `~/.claude/skills/` (no skill subdir) silently breaks the install.
-  install.sh:85 was doing this in v1.2.0-v1.2.2 — fixed in v1.2.3.
-  Always end-to-end test `bash install.sh -y` against an isolated HOME
-  (e.g. `HOME=/tmp/test-home`) and assert files land at the expected
-  skill path.
-- **Line number drift**: when source code is edited, findings.json
-  and AUDIT_REPORT.md line numbers go stale. In v1.2.0 → v1.2.3, 10/10
-  findings had drifted by 1-12 lines because the lib.rs grew during
-  iterative development but the audit report wasn't re-run. Detection
-  by eye is unreliable; a future integrity check (Check 13 candidate)
-  could `rg -n "VULN-\d+" examples/.../src/lib.rs` and verify each
-  finding's claimed line falls within the VULN's enclosing function.
-- **Ghost struct / function references**: when vulnerabilities are
-  re-implemented (e.g., VULN-04 was rewritten from `close = user_...`
-  to `drain_vault`), description text referencing the original
-  implementation can survive. v1.2.3 fixed one instance but the bug
-  class recurs.
-- **Methodology-trace CVSS drift**: when findings.json CVSS scores
-  are corrected, the methodology-trace.md scores must be updated
-  in sync. In v1.3.1, VULN-14 (9.3→10.0) and VULN-16 (7.5→8.1)
-  were fixed in findings.json and AUDIT_REPORT.md but NOT in
-  methodology-trace.md, causing silent data drift. Check 19 now
-  catches this.
-- **Unicode edge cases in tool calls**: CVSS vector strings contain
-  forward slashes and backtick characters that can break str_replace
-  when used with JSON parameter encoding. When replacing lines with
-  `→` arrows, backticks, or slashes, prefer sed via basher or write
-  the entire file with write_file.
+- **VULN tag ↔ finding 1:1**: Every `// VULN-XX:` in source must have a matching finding in findings.json
+- **argparse in dashboard.py**: `--compare` is a flag appended at END of positional args
+- **Rules auto-activate**: Path-scoped rules fire when Claude opens matching files; commands kick off full audits
+- **Phase 0 is mandatory**: Safety guard always runs first before any analysis
+
+## CI pipeline
+
+3 jobs in `.github/workflows/test.yml`:
+1. `skill-integrity` — `bash tests/test-skill-integrity.sh`
+2. `fuzz-tests` — `python3 -c "import pytest; pytest.main(['-v', 'tests/fuzz/test_properties.py'])"`
+3. `lint-install` — `bash install.sh --dry-run` + syntax check
+
+CI pinned solana-cli v4.0.2 via `release.anza.xyz/v4.0.2/install`.

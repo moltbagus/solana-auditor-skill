@@ -101,37 +101,60 @@ install_skill() {
     # Copy agents
     if [[ -d "$AGENTS_DIR" ]]; then
         mkdir -p "$AUDIT_SKILL_PATH/agents"
-        cp -r "$AGENTS_DIR"/* "$AUDIT_SKILL_PATH/agents/" 2>/dev/null || true
-        echo -e "${GREEN}[+] Agent configs copied${NC}"
+        if ! cp -r "$AGENTS_DIR"/* "$AUDIT_SKILL_PATH/agents/"; then
+            echo -e "${RED}[!] Failed to copy agents${NC}"
+            exit 1
+        fi
+        echo -e "${GREEN}[+] Agent configs copied ($(ls "$AGENTS_DIR"/*.md 2>/dev/null | wc -l | tr -d ' ') files)${NC}"
     fi
 
     # Copy slash commands to ~/.claude/commands/
     if [[ -d "$COMMANDS_DIR" ]]; then
         mkdir -p "$COMMANDS_PATH"
-        cp "$COMMANDS_DIR"/*.md "$COMMANDS_PATH/" 2>/dev/null || true
-        echo -e "${GREEN}[+] Slash commands installed ($(ls "$COMMANDS_DIR"/*.md 2>/dev/null | wc -l | tr -d ' ') commands)${NC}"
+        if ! cp "$COMMANDS_DIR"/*.md "$COMMANDS_PATH/"; then
+            echo -e "${RED}[!] Failed to copy commands${NC}"
+            exit 1
+        fi
+        local cmd_count
+        cmd_count=$(find "$COMMANDS_DIR" -maxdepth 1 -name "*.md" | wc -l | tr -d ' ')
+        echo -e "${GREEN}[+] Slash commands installed ($cmd_count commands)${NC}"
     fi
 
     # Copy path-scoped rules to ~/.claude/rules/
     if [[ -d "$RULES_DIR" ]]; then
         mkdir -p "$RULES_PATH"
-        cp "$RULES_DIR"/*.rules "$RULES_PATH/" 2>/dev/null || true
-        echo -e "${GREEN}[+] Path-scoped rules installed${NC}"
+        if ! cp "$RULES_DIR"/*.rules "$RULES_PATH/"; then
+            echo -e "${RED}[!] Failed to copy rules${NC}"
+            exit 1
+        fi
+        echo -e "${GREEN}[+] Path-scoped rules installed ($(ls "$RULES_DIR"/*.rules 2>/dev/null | wc -l | tr -d ' ') files)${NC}"
     fi
 
     # Copy PoC templates to ~/.claude/templates/solana-auditor-skill/
     if [[ -d "$TEMPLATES_DIR" ]]; then
         mkdir -p "$TEMPLATES_PATH/solana-auditor-skill"
-        cp "$TEMPLATES_DIR"/* "$TEMPLATES_PATH/solana-auditor-skill/" 2>/dev/null || true
-        echo -e "${GREEN}[+] PoC templates installed${NC}"
+        if ! cp "$TEMPLATES_DIR"/* "$TEMPLATES_PATH/solana-auditor-skill/"; then
+            echo -e "${RED}[!] Failed to copy templates${NC}"
+            exit 1
+        fi
+        echo -e "${GREEN}[+] PoC templates installed ($(ls "$TEMPLATES_DIR"/* 2>/dev/null | wc -l | tr -d ' ') files)${NC}"
     fi
 
     # Copy helper scripts to $AUDIT_SKILL_PATH/scripts/
     if [[ -d "$SCRIPTS_DIR" ]]; then
         mkdir -p "$AUDIT_SKILL_PATH/scripts"
-        cp "$SCRIPTS_DIR"/*.sh "$AUDIT_SKILL_PATH/scripts/" 2>/dev/null || true
-        cp "$SCRIPTS_DIR"/*.py "$AUDIT_SKILL_PATH/scripts/" 2>/dev/null || true
-        echo -e "${GREEN}[+] Helper scripts installed ($(ls "$SCRIPTS_DIR"/*.sh 2>/dev/null | wc -l | tr -d ' ') bash + $(ls "$SCRIPTS_DIR"/*.py 2>/dev/null | wc -l | tr -d ' ') python)${NC}"
+        if ! cp "$SCRIPTS_DIR"/*.sh "$AUDIT_SKILL_PATH/scripts/"; then
+            echo -e "${RED}[!] Failed to copy bash scripts${NC}"
+            exit 1
+        fi
+        if ! cp "$SCRIPTS_DIR"/*.py "$AUDIT_SKILL_PATH/scripts/"; then
+            echo -e "${RED}[!] Failed to copy python scripts${NC}"
+            exit 1
+        fi
+        local sh_count py_count
+        sh_count=$(find "$SCRIPTS_DIR" -maxdepth 1 -name "*.sh" | wc -l | tr -d ' ')
+        py_count=$(find "$SCRIPTS_DIR" -maxdepth 1 -name "*.py" | wc -l | tr -d ' ')
+        echo -e "${GREEN}[+] Helper scripts installed ($sh_count bash + $py_count python)${NC}"
         # Offer pre-commit hook installation
         if [[ -f "$SCRIPTS_DIR/pre-commit-audit.sh" ]]; then
             echo -e "${YELLOW}[!] Run '$AUDIT_SKILL_PATH/scripts/pre-commit-audit.sh --install' to enable the pre-commit hook${NC}"
