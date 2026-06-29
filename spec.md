@@ -1,7 +1,7 @@
 # Spec — Solana Auditor Skill
 
 > **Technical Specification**
-> _Version 1.14.0 — Fixture Expansion Sprint_
+> _Version 1.14.1 — Raydium Audit + Bilingual Polish Sprint_
 > Last updated: 2026-06-29
 
 ---

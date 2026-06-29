@@ -1,7 +1,7 @@
 # PRD — Solana Auditor Skill
 
 > **Product Requirements Document**
-> _Superteam Brasil Solana Skills Contest — v1.14.0_
+> _Superteam Brasil Solana Skills Contest — v1.14.1_
 > Last updated: 2026-06-29
 
 ---
@@ -143,7 +143,7 @@ Transform Claude Code into the **gold-standard Solana security auditor** — a r
 
 
 ### Stretch (Future)
-- [ ] Line-number drift integrity check
+- [x] Line-number drift integrity check (Check 20) — implemented v1.14.1
 - [ ] Multi-program audit aggregation
 - [ ] Native qed-solana CI integration (dependency of QED 2A)
 - [ ] Economic Security module (standalone DeFi attack analysis)

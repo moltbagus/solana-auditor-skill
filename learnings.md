@@ -1,7 +1,7 @@
 # Learnings — Solana Auditor Skill
 
 > **Decision Log & Lessons Learned**
-> _Superteam Brasil Solana Skills Contest — v1.14.0_
+> _Superteam Brasil Solana Skills Contest — v1.14.1_
 > Last updated: 2026-06-29
 
 ---

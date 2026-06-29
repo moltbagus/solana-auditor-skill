@@ -1,7 +1,7 @@
 # Kanban — Solana Auditor Skill
 
 > **Project Kanban Board**
-> _Superteam Brasil Solana Skills Contest — v1.14.0_
+> _Superteam Brasil Solana Skills Contest — v1.14.1_
 > Last updated: 2026-06-29
 
 ---
@@ -115,12 +115,14 @@ audit-report/submissions/MATH-003-3-immunefi-submission.md  (MEDIUM, CVSS 6.5 �
 ---
 
 
+### Sprint 51 — Check 20 Verification + SDD Sync (Done: 2026-06-29)
+- [x] Check 20 (line-number drift) — **already implemented** in `severity_counts.py` + `test-skill-integrity.sh`
+- [x] Verified 161/161 integrity checks pass, including Check 20 for vault/token-ext/token-2022-real
+- [x] Updated SDD doc headers: kanban.md, PRD.md, learnings.md, spec.md → v1.14.1
+- [x] PRD stretch goals: Check 20 marked done, spec.md version header corrected
+- [x] MCP melone conflict resolved: removed project-scope entry from `~/.mcp.json`
+
 ### Sprint 50 — Fixture Expansion (Done: 2026-06-29)
-- [x] AMM/DEX fixture — 14 vulns across 3 programs, Rules 14/15/26/13/6/4/8/40/38/36/37
-- [x] Staking Pool fixture — 14 vulns across 3 programs, Rules 14/22/41/6/8/11/5/15/4/38/3/36/37
-- [x] NFT/Candy Machine fixture — 14 vulns across 3 programs, Rules 16/40/2/8/6/14/5/33/22/38/27/39/4/37
-- [x] All 42 new findings: CVSS math verified (brute-forced), severity summaries correct
-- [x] demo.sh + integrity checks patched for 3 new fixtures
 
 ### Sprint 49 — Bug Fix Sprint + CLAUDE.md Rewrite (Done: 2026-06-28)
 - [x] Post-submission code audit — 4 parallel subagents, demo.sh + all fixtures
