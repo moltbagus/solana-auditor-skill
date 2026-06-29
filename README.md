@@ -26,20 +26,24 @@ Todos os 9 comandos, agentes e 50 regras funcionam em ambos os idiomas.
 ## ⚡ Judges Quick Start (5 Minutes)
 
 ```bash
-# 1. Run the demo — zero setup, works without Solana toolchain
+# 1. Run the live demo — SAST scan a real Solana program
+#    Press Enter to use the built-in fixture, or paste any public repo URL
+bash demo.sh --live-demo
+
+# 2. Run the full demo — fixture-based verification (always works)
 bash demo.sh
 
-# 2. Verify integrity — 161 integrity checks, all should pass
+# 3. Verify integrity — 161 integrity checks, all should pass
 bash tests/test-skill-integrity.sh
 
-# 3. Run fuzz tests — 22 Hypothesis strategies
+# 4. Run fuzz tests — 22 Hypothesis strategies
 python3 -c "import pytest; pytest.main(['-v', 'tests/fuzz/test_properties.py'])"
 
-# 5. Run the interactive dashboard on any fixture
-python3 scripts/dashboard.py examples/dex-amm/audit-output/findings.json /tmp/dex_dashboard.html
-
-# 6. Inspect the pre-committed audit fixture
+# 5. Inspect the pre-committed audit fixture
 cat examples/sample-vulnerable-program/audit-output/findings.json | python3 -m json.tool
+
+# 6. Run the interactive dashboard
+python3 scripts/dashboard.py examples/dex-amm/audit-output/findings.json /tmp/dex_dashboard.html
 
 # 7. Verify CVSS math — every score recomputed from vector
 python3 tests/severity_counts.py
@@ -297,7 +301,10 @@ The fixture ships without a Solana toolchain dependency — it is intended as a 
 This skill is submitted to the **Superteam Brasil Solana Skills Contest**. For judges:
 
 ```bash
-# Quick evaluation — no Solana toolchain needed, just Python 3
+# Live demo — SAST scan any public Solana repo (press Enter for built-in fixture)
+bash demo.sh --live-demo
+
+# Full demo — all fixtures, 161 checks, 22 fuzz tests
 bash demo.sh
 ```
 
@@ -336,8 +343,8 @@ See [`examples/solend-governance-audit/`](examples/solend-governance-audit/) for
 - **Property-Based Testing** — 22 fuzz tests verifying CVSS math & invariants
 - **Bilingual security glossary (EN + PT-BR)** — `skill/00-terminology.md`
 - **CVSS Math Verification** — All scores recomputed from vectors (not hand-entered)
-- **47 Integrity Checks** — Shell checks (47 categories) + fuzz tests (22) + fixture assertions + PT-BR + SDD docs + demo script
-- **Demo Script** — `bash demo.sh` for instant judge evaluation
+- **161 Integrity Checks** — shell checks + fuzz tests (22) + CVSS math + fixture assertions + PT-BR + SDD docs + demo script
+- **Demo Script** — `bash demo.sh` for fixture demo; `bash demo.sh --live-demo` to SAST scan any public repo
 
 ### Tested Against Real Solana Vulnerabilities
 
