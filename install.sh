@@ -35,13 +35,13 @@ CLAUDE_MD_PATH="$HOME/.claude/CLAUDE.md"
 SKIP_CONFIRM=false
 
 print_banner() {
-    local version="${1:-v1.8.0}"
+    local version="${1:-v1.14.2}"
     local mode_tag="${2:-Standard}"
     echo ""
     echo -e "${MAGENTA}╔════════════════════════════════════════════════════════════════╗${NC}"
     echo -e "${MAGENTA}║${NC}  ${WHITE}Solana Auditor Shiba Skill for Claude Code${NC}              ${MAGENTA}║${NC}"
     echo -e "${MAGENTA}║${NC}  ${CYAN}World-Class Security Auditor — ${version}${NC}"
-    echo -e "${MAGENTA}║${NC}  ${CYAN}50 rules, 6 agents, 9 commands, pre-commit hook${NC}         ${MAGENTA}║${NC}"
+    echo -e "${MAGENTA}║${NC}  ${CYAN}50 rules (45 SAST + 5 AI), 10 agents, 9 commands${NC}         ${MAGENTA}║${NC}"
     echo -e "${MAGENTA}║${NC}  ${CYAN}Mode: ${mode_tag}${NC}"
     echo -e "${MAGENTA}╚════════════════════════════════════════════════════════════════╝${NC}"
     echo ""
@@ -154,7 +154,7 @@ install_skill() {
     echo -e "${GREEN}╔════════════════════════════════════════════════════════════════╗${NC}"
     echo -e "${GREEN}║${NC}  ${WHITE}Install complete!${NC}                                                ${GREEN}║${NC}"
     echo -e "${GREEN}║${NC}  ${CYAN}Skill: $AUDIT_SKILL_PATH${NC}                          ${GREEN}║${NC}"
-    echo -e "${GREEN}║${NC}  ${CYAN}v1.8.0: 50 rules, 9 commands, pre-commit hook${NC}            ${GREEN}║${NC}"
+    echo -e "${GREEN}║${NC}  ${CYAN}v1.14.2: 50 rules (45 SAST + 5 AI), 10 agents, 9 commands${NC} ${GREEN}║${NC}"
     echo -e "${GREEN}╚════════════════════════════════════════════════════════════════╝${NC}"
     echo ""
 }
