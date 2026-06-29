@@ -1,0 +1,76 @@
+{
+  "$schema": "https://raw.githubusercontent.com/solanabr/solana-ai-kit/main/schemas/skill-registry.schema.json",
+  "name": "solana-auditor-skill",
+  "displayName": "Solana Auditor (Shiba)",
+  "description": "World-class Solana security auditor for Claude Code — full lifecycle from reconnaissance to remediation. SAST, threat modeling, formal verification, CVSS triage, structured reports, and inline fix guidance. Built for Superteam Brasil.",
+  "version": "1.14.2",
+  "category": "security",
+  "license": "MIT",
+  "author": {
+    "name": "Colbert Low",
+    "github": "moltbagus"
+  },
+  "repository": "https://github.com/moltbagus/solana-auditor-skill",
+  "keywords": [
+    "solana",
+    "security",
+    "audit",
+    "sast",
+    "anchor",
+    "token-2022",
+    "formal-verification",
+    "cvss",
+    "threat-modeling",
+    "red-team",
+    "pinocchio"
+  ],
+  "compatibility": {
+    "solanaDevSkill": ">=1.0.0",
+    "claudeCode": ">=1.0.0"
+  },
+  "dependencies": ["solana-dev-skill"],
+  "entryPoints": {
+    "skill": "skill/SKILL.md",
+    "commands": [
+      "commands/audit.md",
+      "commands/audit-quick.md",
+      "commands/audit-report.md",
+      "commands/audit-resume.md",
+      "commands/audit-poc.md",
+      "commands/audit-findings.md",
+      "commands/audit-fix.md",
+      "commands/audit-history.md",
+      "commands/audit-pr.md"
+    ],
+    "agents": [
+      "agents/orchestrator.md",
+      "agents/auditor.md",
+      "agents/safety-guard.md",
+      "agents/architecture-reviewer.md",
+      "agents/economic-security-analyst.md",
+      "agents/threat-modeler.md",
+      "agents/formal-verifier.md",
+      "agents/report-writer.md",
+      "agents/cross-program-agent.md"
+    ],
+    "rules": [
+      "rules/audit.rules"
+    ]
+  },
+  "install": {
+    "script": "install.sh",
+    "options": ["-y", "--yes"],
+    "target": "~/.claude/skills/solana-auditor-skill"
+  },
+  "differentiators": {
+    "usefulness": "Real audit deliverables: CVSS-scored findings, structured PoC exploits, inline fix suggestions, and final audit reports. Actual bug submissions filed with Immunefi (Kamino Finance, Solend Governance, Raydium CLMM).",
+    "novelty": "Only full-lifecycle Solana auditor: Phase 0 consent guard → Phases 1-6 → remediation. No competitor covers SAST + threat modeling + economic security + formal verification + report generation in one coherent pipeline. Only skill with PT-BR bilingual support.",
+    "quality": "161 integrity checks, 22 property-based fuzz tests, CVSS math mathematically verified, 2-tier execution (SAST-only vs full runtime), 6 compile-verified fixtures, 50 Solana-specific SAST rules.",
+    "fit": "Follows solana-game-skill reference structure exactly. skill/SKILL.md progressive routing, agents/, commands/, rules/, install.sh, CLAUDE.md, README.md — all at root level. MIT licensed, zero external dependencies."
+  },
+  "contest": {
+    "event": "Superteam Brasil Solana Skills Contest",
+    "deadline": "2026-07-08",
+    "submissionUrl": "https://superteam.fun/earn/listing/skills/"
+  }
+}

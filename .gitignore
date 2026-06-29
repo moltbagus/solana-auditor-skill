@@ -3,7 +3,10 @@ target/
 **/*.rs.bk
 test-ledger/
 .anchor/
-Cargo.lock.bak
+**/Cargo.lock
+**/Cargo.lock.bak
+examples/*/target/
+examples/*/keys/
 
 # Node (used by some Anchor tooling)
 node_modules/
