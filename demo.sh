@@ -19,28 +19,22 @@
 # Expected runtime: < 60 seconds on a modern machine (no Solana toolchain needed)
 # =========================================================================
 
-# ---------------------------------------------------------------------------
-# HOW TO USE THE AUDIT COMMANDS
-# ---------------------------------------------------------------------------
-# Claude Code slash commands available once the skill is installed:
-#
-#   /audit <repo>                  Full 12-phase audit (recon → report → fix)
-#   /audit-quick <repo>            Fast SAST scan (no Phase 2B/3 runtime/QED)
-#   /audit-resume                  Resume last audit from last checkpoint
-#   /audit-report                  Regenerate report from existing findings.json
-#   /audit-findings                Triage findings: CVSS scoring, dedup, accept
-#   /audit-poc                     Generate proof-of-concept for a finding ID
-#   /triage <file.json>            Score & classify findings from any scan tool
-#   /security-scan <path>          Run SAST rules on a file or directory
-#   /intel <query>                 Search exploit intel (Telegram, GitHub, Pap)
-#   /chain <finding>               Trace CPI chain for a cross-program finding
-#
+# HOW TO USE THE AUDIT COMMANDS (after install: bash install.sh -y)
+# Claude Code slash commands available:
+#   /audit <repo>                  Full 8-phase audit (recon → remediation)
+#   /audit-quick <repo>            Fast SAST scan (~5 min, no toolchain needed)
+#   /audit-report <repo>        Generate markdown + HTML report
+#   /audit-resume                 Resume last audit from checkpoint
+#   /audit-poc <finding-id>     Generate consent-gated PoC exploit
+#   /audit-findings <repo>      List findings with CVSS scores + CWE
+#   /audit-fix <repo>           Generate fix suggestions + regression tests
+#   /audit-history              Show audit history DB
+#   /audit-pr <pr-url>         Audit a GitHub PR's changed files
+# Append --lang pt to any command for Portuguese
 # Examples:
-#   /audit-quick raydium-labs/raydium-clmm
-#   /triage my-scanner-output.json
-#   /security-scan programs/vault/src/lib.rs
-#   /audit-findings
-# ---------------------------------------------------------------------------
+#   /audit ./programs --lang pt    Full audit in Brazilian Portuguese
+#   /audit-quick ./dex-amm          Fast SAST, no toolchain needed
+
 
 set -e
 
