@@ -105,12 +105,12 @@ audit-report/submissions/MATH-003-3-immunefi-submission.md  (MEDIUM, CVSS 6.5 �
 
 ### 🔵 In Progress / 🟡 To Do
 
-| Task | Phase | Priority |
-|------|-------|----------|
-| Native qed-solana CI integration | Security | P2 |
-| Multi-program audit aggregation | Core | P3 |
-| Economic Security framework | Security | P3 |
-| Architecture Review (Phase 7) adoption | Architecture | P3 |
+| Task | Phase | Priority | Status |
+|------|-------|----------|--------|
+| Native qed-solana CI integration | Security | P2 | Stretch goal |
+| Multi-program audit aggregation | Core | P3 | Stretch goal |
+| Economic Security framework | Security | P3 | Stretch goal |
+| Phase 7 Architecture Review adoption | Architecture | P3 | ✅ Done v1.11.0 |
 
 ---
 
@@ -248,39 +248,41 @@ Full details: `docs/superpowers/specs/2026-06-27-gap-analysis.md` and `docs/supe
 
 ---
 
-## Velocity Tracking (FINAL)
+## Velocity Tracking (v1.14.1)
 
-| Metric | v1.0 | v1.3 | v1.4 FINAL | v1.8.1 | v1.9.0 | v1.10.0 | v1.11.0 | v1.12.0 | v1.13.0 
-|--------|------|------|------------|--------|--------|---------|--------|--------|--------|--------|--------|
-| Integrity checks | 18 | 49 | **62** | **154** | **154** | **158** | **161** | **161** | 161 | **173** | 62+ |
-| VULN tags | 10 | 16 | **17** | 17 | 17 | 17 | 17 | 17 | 17 | **59** | 17 |
-| Property-based tests | 0 | 19 | **19** | **22** | **22** | 22 | 22 | 22 | 22 | 22 | 15+ |
-| Fixtures | 1 | 2 | **3** | 3 | 3 | 3 | 3 | 3 | 3 | **6** | 3 |
-| Rules | 12 | 12 | **17** | **50** | **50** | 50 | 50 | 50 | 15+ |
-| Commands | 5 | 5 | **6** | **9** | **9** | 9 | 9 | 9 | 6 |
-| Phases | 6 | 6 | **6** | **6** | **7** | **7** | **8** | **8** | 6+ |
-| Agents | 4 | 4 | **4** | **4** | **7** | **7** | **8** | **8** | 6+ |
-| Languages | 1 | 2 | **2** | 2 | 2 | 2 | 2 | 2 | 2 |
-| PoC walkthroughs | 0 | 0 | **3** | 3 | 3 | 3 | 3 | 3 | 3 |
-| Formal verification | 0 | 0 | **5 patterns** | **5 patterns** | **5 patterns** | **5 patterns** | **5 patterns** | **5 patterns** | 5+ |
-| SARIF export | No | No | **Yes** | **Yes** | **Yes** | **Yes** | **Yes** | **Yes** | Yes |
-| Lock file / resume | No | No | **Yes** | **Yes** | **Yes** | **Yes** | **Yes** | **Yes** | Yes |
-| HTML dashboard | No | No | No | **Yes** | **Yes** | **Yes** | **Yes** | **Yes** | Yes |
-| Commands frontmatter | No | No | No | **Yes** | **Yes** | **Yes** | **Yes** | **Yes** | Yes |
-| Threat Modeling (STRIDE) | No | No | No | No | **Yes** | **Yes** | **Yes** | **Yes** | Yes |
-| Exploit Sim Framework | No | No | No | No | **Yes** | **Yes** | **Yes** | **Yes** | Yes |
-| Threat modeler agent | No | No | No | No | **Yes** | **Yes** | **Yes** | **Yes** | 6+ |
-| PoC metadata files | No | No | No | No | **3** | **3** | **3** | **3** | 3 |
-| Root cause analysis | No | No | No | No | No | **Yes** | **Yes** | **Yes** | Yes |
-| Regression test gen | No | No | No | No | No | **Yes** | **Yes** | **Yes** | Yes |
-| Fix difficulty rating | No | No | No | No | No | **Yes** | **Yes** | **Yes** | Yes |
-| Remediation priority order | No | No | No | No | No | **Yes** | **Yes** | **Yes** | Yes |
-| Architecture Review (Phase 7) | No | No | No | No | No | No | **Yes** | **Yes** | Yes |
-| Architecture-reviewer agent | No | No | No | No | No | No | **Yes** | **Yes** | Yes |
-| Report: Executive Summary | No | No | No | No | No | No | **Yes** | **Yes** | Yes |
-| Report: Methodology Trace | No | No | No | No | No | No | **Yes** | **Yes** | Yes |
-| Report: Finding Distribution | No | No | No | No | No | No | **Yes** | **Yes** | Yes |
-| PT-BR guide | No | No | No | No | No | No | No | **Yes** | Yes |
-| Benchmark docs | No | No | No | No | No | No | No | **Yes** | Yes |
-| GH Actions docs | No | No | No | No | No | No | No | **Yes** | Yes |
-| Before/After comparison | No | No | No | No | No | No | No | **Yes** | Yes |
+| Metric | v1.0 | v1.4 FINAL | v1.8.1 | v1.9.0 | v1.10.0 | v1.11.0 | v1.12.0 | v1.13.0 | v1.14.0 | v1.14.1 |
+|--------|------|------------|--------|--------|---------|---------|---------|---------|---------|---------|
+| Integrity checks | 18 | **62** | **154** | **154** | **158** | **161** | **161** | **161** | **161** | **161** |
+| VULN tags | 10 | **17** | 17 | 17 | 17 | 17 | 17 | 17 | **59** | **59** |
+| Property-based tests | 0 | **19** | **22** | **22** | 22 | 22 | 22 | 22 | 22 | 22 |
+| Fixtures | 1 | **3** | 3 | 3 | 3 | 3 | 3 | 3 | **6** | **6** |
+| Rules | 12 | **17** | **50** | **50** | 50 | 50 | 50 | 50 | 50 | 50 |
+| Commands | 5 | **6** | **9** | **9** | 9 | 9 | 9 | 9 | 9 | 9 |
+| Phases | 6 | **6** | **6** | **7** | **7** | **8** | **8** | **8** | **8** | **8** |
+| Agents | 4 | **4** | **4** | **7** | **7** | **8** | **8** | **10** | **10** | **10** |
+| Languages | 1 | **2** | 2 | 2 | 2 | 2 | 2 | 2 | 2 | 2 |
+| PoC walkthroughs | 0 | **3** | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 |
+| Formal verification | 0 | **5 patterns** | **5 patterns** | **5 patterns** | **5 patterns** | **5 patterns** | **5 patterns** | **5 patterns** | **5 patterns** | **5 patterns** |
+| SARIF export | No | **Yes** | **Yes** | **Yes** | **Yes** | **Yes** | **Yes** | **Yes** | **Yes** | **Yes** |
+| Lock file / resume | No | **Yes** | **Yes** | **Yes** | **Yes** | **Yes** | **Yes** | **Yes** | **Yes** | **Yes** |
+| HTML dashboard | No | No | **Yes** | **Yes** | **Yes** | **Yes** | **Yes** | **Yes** | **Yes** | **Yes** |
+| Commands frontmatter | No | No | **Yes** | **Yes** | **Yes** | **Yes** | **Yes** | **Yes** | **Yes** | **Yes** |
+| Threat Modeling (STRIDE) | No | No | No | **Yes** | **Yes** | **Yes** | **Yes** | **Yes** | **Yes** | **Yes** |
+| Exploit Sim Framework | No | No | No | **Yes** | **Yes** | **Yes** | **Yes** | **Yes** | **Yes** | **Yes** |
+| Threat modeler agent | No | No | No | **Yes** | **Yes** | **Yes** | **Yes** | **Yes** | **Yes** | **Yes** |
+| PoC metadata files | No | No | No | **3** | **3** | **3** | **3** | **3** | **3** | **3** |
+| Root cause analysis | No | No | No | No | **Yes** | **Yes** | **Yes** | **Yes** | **Yes** | **Yes** |
+| Regression test gen | No | No | No | No | **Yes** | **Yes** | **Yes** | **Yes** | **Yes** | **Yes** |
+| Fix difficulty rating | No | No | No | No | **Yes** | **Yes** | **Yes** | **Yes** | **Yes** | **Yes** |
+| Remediation priority order | No | No | No | No | **Yes** | **Yes** | **Yes** | **Yes** | **Yes** | **Yes** |
+| Architecture Review (Phase 7) | No | No | No | No | No | **Yes** | **Yes** | **Yes** | **Yes** | **Yes** |
+| Architecture-reviewer agent | No | No | No | No | No | **Yes** | **Yes** | **Yes** | **Yes** | **Yes** |
+| Report: Executive Summary | No | No | No | No | No | **Yes** | **Yes** | **Yes** | **Yes** | **Yes** |
+| Report: Methodology Trace | No | No | No | No | No | **Yes** | **Yes** | **Yes** | **Yes** | **Yes** |
+| Report: Finding Distribution | No | No | No | No | No | **Yes** | **Yes** | **Yes** | **Yes** | **Yes** |
+| PT-BR guide | No | No | No | No | No | No | **Yes** | **Yes** | **Yes** | **Yes** |
+| Benchmark docs | No | No | No | No | No | No | **Yes** | **Yes** | **Yes** | **Yes** |
+| GH Actions docs | No | No | No | No | No | No | **Yes** | **Yes** | **Yes** | **Yes** |
+| Before/After comparison | No | No | No | No | No | No | **Yes** | **Yes** | **Yes** | **Yes** |
+| Bilingual --lang pt\|en | No | No | No | No | No | No | No | No | **Yes** | **Yes** |
+| Raydium CLMM live audit | No | No | No | No | No | No | No | No | **Yes** | **Yes** |

@@ -46,6 +46,8 @@
 
 **v1.14.0**: 3 new audit fixtures — AMM/DEX (14 vulns, Rules 14/15/26/13/6/4/8/40/38/36/37), Staking Pool (14 vulns, Rules 14/22/41/6/8/11/5/15/4/38/3/36/37), NFT/Candy Machine (14 vulns, Rules 16/40/2/8/6/14/5/33/22/38/27/39/4/37). All 42 findings CVSS-math-verified. Total fixtures: 6 (was 3).
 
+**v1.14.1**: Raydium CLMM live audit (6 findings, source-verified). Bilingual support (`--lang pt|en`) added to all commands. README polish (step numbers, agents badge, dashboard commands). Check 20 (line-number drift) verified implemented. SDD docs synced to v1.14.1.
+
 ```
 
 ### 1.2 Data Flow
@@ -57,7 +59,7 @@ User Input
 Orchestrator Agent ──► Intent matching ──► Phase routing
   │                                                │
   ▼                                                ▼
-Skill Files (00-06) ──► Agent execution ──► Findings DB
+Skill Files (00-safety-guard through 07-architecture-review) ──► Agent execution ──► Findings DB
   │                                                │
   ▼                                                ▼
 Phase 2B Runtime ──► CPI Surface Graph ──► Cross-Program Analysis

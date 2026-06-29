@@ -188,16 +188,30 @@ python3 -m pytest fails silently on clean clone because pytest is not on system 
 
 ## Future Improvements
 
-- [ ] **Line-number drift check (Check 20)** — `rg -n "VULN-\d+"` in source and verify each finding's claimed line falls within its VULN function scope.
+- [x] **Line-number drift check (Check 20)** — implemented in `severity_counts.py check_line_numbers()`. Verified 161/161 pass. ✅ v1.14.1
+- [x] **Architecture Review module** — Done v1.11.0 (Phase 7 + architecture-reviewer agent). ✅ v1.11.0
 - [ ] **Flake8 config + lint CI** — pyproject.toml has black + mypy but no flake8.
 - [ ] **Runtime tests** — Solana test validator in CI (~3 min extra per run).
 - [ ] **Native qed-solana CI integration** — Needs toolchain install.
 - [ ] **Interactive audit dashboard** — Visual report with severity distribution.
 - [ ] **Multi-program audit aggregation** — Combine findings from multiple Anchor programs.
 - [ ] **Visual diff** — Pre/post-fix audit report comparison.
-- [ ] **Architecture Review module** — Done v1.11.0 (Phase 7 + architecture-reviewer agent).
 
 ---
+
+## 2026-06-29 — Sprint 51: Check 20 Verification + SDD Sync (v1.14.1)
+
+### What we did
+Subagent analysis reported Check 20 as "never implemented." Direct code inspection proved it was already fully implemented — `check_line_numbers()` in `severity_counts.py:284` with bash wiring in `test-skill-integrity.sh:399-419`. All 3 fixtures pass. SDD docs updated to v1.14.1.
+
+### Key lessons
+1. **Subagent findings need independent verification** — P107's post-daughter rule applies: for multi-file verification tasks, inline inspection beats subagent delegation. Subagents time out or give false negatives on long analysis.
+2. **Velocity tables drift** — Column count mismatches (11 data cols, 9 header versions) accumulated across sprint PRs. Always verify table alignment when updating.
+3. **Phase 7 already done** — Architecture-reviewer agent exists at `agents/architecture-reviewer.md`, Phase 7 procedure at `skill/07-architecture-review.md`, routing in `skill/SKILL.md:63`. No action needed.
+4. **MCP conflicts are scope-level** — Removing `~/.mcp.json` project-scope entry fixed the melone daemon collision. User-level Melone app path takes precedence.
+
+### New learnings entry
+5. **Check the actual code, not just the subagent summary** — The subagent correctly listed Check 20 as a "pending item" but missed the `check-line-numbers` mode in `severity_counts.py` and the bash loop at lines 399-419. Always grep the actual files.
 
 ## 2026-06-29 — v1.14.0 Fixture Expansion Sprint
 
