@@ -18,6 +18,27 @@
 #   7. Prints summaries for judges
 #
 # Expected runtime: < 60 seconds (no Solana toolchain needed)
+#
+# =========================================================================
+# HOW TO USE THE AUDIT COMMANDS (after install with bash install.sh -y)
+# =========================================================================
+# After installing the skill, use these commands in Claude Code:
+#
+#   /audit <path-or-url>           # Full 8-phase audit (Recon → Remediation)
+#   /audit-quick <path>             # Quick SAST scan only (~5 min)
+#   /audit-report <path>           # Generate markdown + HTML report
+#   /audit-resume                  # Resume last audit from checkpoint
+#   /audit-poc <id>               # Generate consent-gated PoC for a finding
+#   /audit-findings <path>         # List all findings with CVSS scores
+#   /audit-fix <path>              # Generate fix suggestions with regression tests
+#   /audit-history                 # Show audit history DB
+#   /audit-pr <pr-url>             # Audit a GitHub PR's changed files
+#   /audit <path> --lang pt        # Run in Portuguese (EN also works)
+#
+# Examples:
+#   /audit ./my-program             # Full audit of local Anchor project
+#   /audit https://github.com/user/repo  # Clone + audit GitHub repo
+#   /audit ./vault --lang pt          # Audit in Portuguese
 # =========================================================================
 
 set -e
