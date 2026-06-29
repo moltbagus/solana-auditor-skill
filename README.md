@@ -1,6 +1,6 @@
 # Solana Auditor Shiba Skill
 
-**World-class Solana security auditor for Claude Code** — 7-phase audit lifecycle (Phase 0 Safety Guard + Phases 1–6), 45 Solana security rules + 5 agent safety rules (50 total), 9 slash commands, 10 specialist agents, 6 compile-verified example fixtures, 173 integrity checks passing, 22 fuzz tests, two-tier execution (SAST + runtime), pre-commit hook, PR auditing, audit history, and inline fix suggestions.
+**World-class Solana security auditor for Claude Code** — 7-phase audit lifecycle (Phase 0 Safety Guard + Phases 1–6), 45 Solana security rules + 5 agent safety rules (50 total), 9 slash commands, 10 specialist agents, 6 compile-verified example fixtures, 161 integrity checks passing, 22 fuzz tests, two-tier execution (SAST + runtime), pre-commit hook, PR auditing, audit history, and inline fix suggestions.
 
 [![CI](https://github.com/moltbagus/solana-auditor-skill/actions/workflows/test.yml/badge.svg)](https://github.com/moltbagus/solana-auditor-skill/actions/workflows/test.yml)
 [![Anchor 0.31.1](https://img.shields.io/badge/anchor-0.31.1-blueviolet)](https://www.anchor-lang.com/)
@@ -29,7 +29,7 @@ Todos os 9 comandos, agentes e 50 regras funcionam em ambos os idiomas.
 # 1. Run the demo — zero setup, works without Solana toolchain
 bash demo.sh
 
-# 2. Verify integrity — 173 integrity checks, all should pass
+# 2. Verify integrity — 161 integrity checks, all should pass
 bash tests/test-skill-integrity.sh
 
 # 3. Run fuzz tests — 22 Hypothesis strategies
@@ -310,7 +310,7 @@ bash demo.sh
 > and correctly recalled KAM-002/003/004 after source verification showed they were
 > already fixed or not findings.
 
-The demo script runs structure verification, 159 integrity checks, and 22 property-based
+The demo script runs structure verification, 161 integrity checks, and 22 property-based
 fuzz tests in under 30 seconds.
 
 ### Live Audit #2: Solend Governance Flash Loan (August 2022)
@@ -393,7 +393,7 @@ This skill ships with a working CI pipeline and an example fixture for testing.
 
 Every push to `main` runs:
 
-1. **`skill-integrity`** — 47 integrity checks (`tests/test-skill-integrity.sh`, 47 check categories)
+1. **`skill-integrity`** — 161 integrity checks (`tests/test-skill-integrity.sh`)
 2. **`anchor-build`** — builds the example fixture under anchor 0.31.1 (via `cargo check`)
 3. **`lint-install`** — verifies `install.sh` syntax + dry-run deploys the skill to `~/.claude/skills/solana-auditor-skill/`
 

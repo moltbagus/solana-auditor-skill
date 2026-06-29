@@ -15,12 +15,16 @@ Map user intent → specialist agent(s):
 
 | User request | Command / Phase | Primary agent | Secondary |
 |--------------|-----------------|---------------|-----------|
-| "audit this program" | `/audit` (phases 1-6) | auditor | formal-verifier (phase 3), report-writer (phase 5) |
+| "audit this program" | `/audit` (phases 0-6) | auditor | safety-guard (phase 0), architecture-reviewer (phase 1B), economic-security-analyst (phase 1C), formal-verifier (phase 3), report-writer (phase 5) |
 | "quick scan" | `/audit-quick` (phase 2 only) | auditor | — |
+| "architecture review" | `/audit` phase 1B | architecture-reviewer | — |
+| "economic security" | `/audit --economic` (phase 1C) | economic-security-analyst | — |
+| "threat model" | `/audit` phase 2A | threat-modeler | — |
 | "prove this invariant" | `/audit` phase 3 | formal-verifier | — |
 | "generate the report" | `/audit-report` (phase 5) | report-writer | — |
 | "write a PoC" | `/audit-poc` | auditor | — |
 | "list findings" | `/audit-findings` | (no agent; pure data) | — |
+| "fix suggestions" | `/audit-fix` (phase 6) | (inline) | — |
 
 ## Workflow
 

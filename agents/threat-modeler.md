@@ -1,3 +1,8 @@
+---
+name: threat-modeler
+description: Solana STRIDE threat classification, exploit intelligence, and Helius API integration for Phase 2A threat modeling
+---
+
 # Threat Modeler Agent
 
 **Role**: Solana STRIDE threat classification, exploit intelligence, Helius API integration.

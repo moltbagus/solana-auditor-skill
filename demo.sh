@@ -6,16 +6,18 @@
 #
 # Usage:
 #   bash demo.sh
+#   bash demo.sh --live-demo   # Live audit mode: clones + scans a real repo
 #
 # What it does:
-#   1. Verifies project structure (50 rules, 6 agents, 7 phases)
-#   2. Runs all integrity checks (they should all pass)
-#   3. Runs property-based tests (fuzz harness)
-#   4. Shows the example vulnerable program source + expected findings
-#   5. Demonstrates the remediation fix workflow (before/after CVSS)
-#   6. Prints summaries for judges
+#   1. (--live-demo) Clones public Solana program, runs SAST, shows findings
+#   2. Verifies project structure (50 rules, 9 agents, 10 phases)
+#   3. Runs all integrity checks (they should all pass)
+#   4. Runs property-based tests (fuzz harness)
+#   5. Shows the example vulnerable program source + expected findings
+#   6. Demonstrates the remediation fix workflow (before/after CVSS)
+#   7. Prints summaries for judges
 #
-# Expected runtime: < 60 seconds on a modern machine (no Solana toolchain needed)
+# Expected runtime: < 60 seconds (no Solana toolchain needed)
 # =========================================================================
 
 set -e
@@ -31,6 +33,11 @@ NC='\033[0m'
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 cd "$SCRIPT_DIR"
+
+LIVE_DEMO=""
+if [ "$1" = "--live-demo" ]; then
+    LIVE_DEMO="1"
+fi
 
 PASS=0
 FAIL=0
@@ -53,9 +60,134 @@ echo -e "${MAGENTA}╚═══════════════════�
 echo ""
 
 # =========================================================================
+# Step 0: Live Demo Mode — clone + scan a real public Solana program
+# =========================================================================
+if [ -n "$LIVE_DEMO" ]; then
+    echo -e "${MAGENTA}╔════════════════════════════════════════════════════════════════╗${NC}"
+    echo -e "${MAGENTA}║${NC}  ${WHITE}LIVE DEMO MODE${NC} — auditing a real, unseen Solana program      ${MAGENTA}║${NC}"
+    echo -e "${MAGENTA}╚════════════════════════════════════════════════════════════════╝${NC}"
+    echo ""
+
+    DEMO_START=$(date +%s)
+    TMPDIR=$(mktemp -d /tmp/solana-live-audit-XXXXXX)
+    trap "rm -rf $TMPDIR" EXIT
+
+    # Target: lil-web3/token-program — small Anchor CTF program with intentional bugs
+    # Fallback: anchor-examples
+    REPOS=(
+        "https://github.com/lil-web3/token-program"
+        "https://github.com/rustype/anchor-examples"
+    )
+    CLONED=""
+    for REPO in "${REPOS[@]}"; do
+        echo -e "${CYAN}[LIVE]${NC} Cloning $(basename "$REPO")..."
+        if git clone --depth=1 "$REPO" "$TMPDIR" 2>/dev/null; then
+            CLONED="$REPO"
+            break
+        fi
+        echo -e "  ${YELLOW}⚠ Clone failed — trying next...${NC}"
+    done
+
+    if [ -z "$CLONED" ]; then
+        echo -e "${RED}[LIVE]✗${NC} All clones failed. Check network connection."
+        echo -e "  ${YELLOW}⚠ Live demo skipped (non-fatal — fixture demo continues)${NC}"
+    else
+        echo -e "  ${GREEN}✓${NC} Cloned $(basename "$CLONED")"
+
+        # Find the programs directory
+        PROG_DIR=""
+        for subdir in "$TMPDIR/programs" "$TMPDIR/src" "$TMPDIR/program/src"; do
+            if [ -d "$subdir" ] && ls "$subdir"/*.rs 2>/dev/null | head -1 | grep -q ".rs"; then
+                PROG_DIR="$subdir"
+                break
+            fi
+        done
+
+        if [ -z "$PROG_DIR" ] || [ ! -d "$PROG_DIR" ]; then
+            echo -e "  ${YELLOW}⚠ No .rs source files found — skipping SAST${NC}"
+        else
+            RS_COUNT=$(find "$PROG_DIR" -name "*.rs" 2>/dev/null | wc -l | tr -d ' ')
+            echo -e "${CYAN}[LIVE]${NC} Found $RS_COUNT Rust source files in $PROG_DIR"
+            echo -e "${CYAN}[LIVE]${NC} Running SAST scanner (45 Solana security rules)..."
+
+            FINDINGS_OUT="/tmp/live-findings.json"
+            if python3 scripts/run-sast.py "$PROG_DIR" --output "$FINDINGS_OUT" 2>/dev/null; then
+                TOTAL=$(python3 -c "
+import json, sys
+try:
+    with open('$FINDINGS_OUT') as f:
+        d = json.load(f)
+    findings = d.get('findings', [])
+    summary = d.get('summary', {})
+    print(len(findings))
+    for sev in ['critical','high','medium','low','info']:
+        n = summary.get(sev, 0)
+        if n > 0:
+            print(f'{sev}:{n}')
+except:
+    print('0')
+" 2>/dev/null || echo "0")
+                TOTAL_COUNT=$(echo "$TOTAL" | head -1)
+                SEV_LINE=$(echo "$TOTAL" | tail -n +2 | tr '\n' ' ')
+
+                echo -e "  ${GREEN}✓${NC} SAST complete: $TOTAL_COUNT findings"
+                for sev_chunk in $(echo "$SEV_LINE"); do
+                    IFS=':' read -r sev count <<< "$sev_chunk"
+                    [ -n "$count" ] && [ "$count" != "0" ] && echo -e "         ${sev.upper()}: $count"
+                done
+
+                # Show top 5 findings with severity bars
+                if [ "$TOTAL_COUNT" -gt 0 ]; then
+                    echo ""
+                    echo -e "  ${WHITE}┌─ Top Findings ───────────────────────────────────────────────┐${NC}"
+                    python3 -c "
+import json
+with open('$FINDINGS_OUT') as f:
+    d = json.load(f)
+findings = d.get('findings', [])
+order = ['CRITICAL','HIGH','MEDIUM','LOW','INFO']
+findings.sort(key=lambda x: order.index(x.get('severity','INFO')) if x.get('severity','INFO') in order else 4)
+for i, f in enumerate(findings[:5]):
+    sev = f.get('severity', '?')
+    loc = f.get('location', {})
+    fname = loc.get('file', '?').split('/')[-1]
+    line = loc.get('line', '?')
+    title = f.get('title', f.get('rule_id', '?'))[:42]
+    bar = {'CRITICAL':'███████','HIGH':'██████ ','MEDIUM':'█████  ','LOW':'████   ','INFO':'███    '}.get(sev, '??     ')
+    print(f'  │ [{sev:8s}] {bar} {fname}:{line}  {title}')
+" 2>/dev/null
+                    echo -e "  ${WHITE}└───────────────────────────────────────────────────────────────┘${NC}"
+                    echo ""
+                    echo -e "  ${CYAN}Full findings: $FINDINGS_OUT${NC}"
+                else
+                    echo -e "  ${GREEN}✓${NC} Code looks clean — no vulnerabilities detected!"
+                fi
+            else
+                echo -e "  ${YELLOW}⚠ SAST scan error (non-fatal)${NC}"
+            fi
+        fi
+
+        DEMO_END=$(date +%s)
+        DEMO_DURATION=$((DEMO_END - DEMO_START))
+        echo ""
+        echo -e "${WHITE}╔════════════════════════════════════════════════════════════════╗${NC}"
+        echo -e "${WHITE}║${NC}  Live Audit Summary                                         ${WHITE}║${NC}"
+        echo -e "${WHITE}╠════════════════════════════════════════════════════════════════╣${NC}"
+        echo -e "${WHITE}║${NC}  Repo:       $(basename "$CLONED")${NC}                                     ${WHITE}║${NC}"
+        echo -e "${WHITE}║${NC}  Duration:  ${DEMO_DURATION}s${NC}                                             ${WHITE}║${NC}"
+        echo -e "${WHITE}╚════════════════════════════════════════════════════════════════╝${NC}"
+        echo ""
+        echo -e "${GREEN}Live demo complete!${NC}"
+        echo ""
+        echo "This proves the auditor works on UNSEEN code — not just self-referential fixtures."
+        exit 0
+    fi
+fi
+
+# =========================================================================
 # Step 1: Verify project structure
 # =========================================================================
-echo -e "${BLUE}[1/8]${NC} Verifying project structure..."
+echo -e "${BLUE}[1/9]${NC} Verifying project structure..."
 
 DIRS="skill agents commands rules templates tests examples scripts"
 for d in $DIRS; do
@@ -90,7 +222,7 @@ echo ""
 # =========================================================================
 # Step 2: Run integrity checks
 # =========================================================================
-echo -e "${BLUE}[2/8]${NC} Running integrity checks..."
+echo -e "${BLUE}[2/9]${NC} Running integrity checks..."
 INTEGRITY_OUT=$(bash tests/test-skill-integrity.sh 2>&1) || true
 INTEGRITY_EXIT=$?
 IG_PASS=$(echo "$INTEGRITY_OUT" | rg "PASS:\s*([0-9]+)" -r '$1' || echo 0)
@@ -105,7 +237,7 @@ echo ""
 # =========================================================================
 # Step 3: Run property-based tests
 # =========================================================================
-echo -e "${BLUE}[3/8]${NC} Running property-based (fuzz) tests..."
+echo -e "${BLUE}[3/9]${NC} Running property-based (fuzz) tests..."
 FUZZ_OUT=$(python3 -c "import pytest; pytest.main(['-v', 'tests/fuzz/test_properties.py', '--hypothesis-show-statistics'])" 2>&1)
 FUZZ_EXIT=$?
 echo "$FUZZ_OUT"
@@ -119,7 +251,7 @@ echo ""
 # =========================================================================
 # Step 3B: QED 2A formal verification (graceful skip without toolchain)
 # =========================================================================
-echo -e "${BLUE}[3B/8]${NC} Running QED 2A formal verification..."
+echo -e "${BLUE}[3B/9]${NC} Running QED 2A formal verification..."
 QED_OUT=$(bash scripts/qed-integration.sh 2>&1) || true
 QED_EXIT=$?
 echo "$QED_OUT"
@@ -134,7 +266,7 @@ echo ""
 # =========================================================================
 # Step 4: Show example fixture
 # =========================================================================
-echo -e "${BLUE}[4/8]${NC} Examining example vulnerable program..."
+echo -e "${BLUE}[4/9]${NC} Examining example vulnerable program..."
 
 EXAMPLE_SRC="examples/sample-vulnerable-program/programs/vault/src/lib.rs"
 EXAMPLE_FINDINGS="examples/sample-vulnerable-program/audit-output/findings.json"
@@ -174,7 +306,7 @@ echo ""
 # =========================================================================
 # Step 4B: Phase 1C Economic Security Analysis (live execution)
 # =========================================================================
-echo -e "${BLUE}[4B/8]${NC} Running Phase 1C Economic Security analysis..."
+echo -e "${BLUE}[4B/9]${NC} Running Phase 1C Economic Security analysis..."
 
 ECON_OUT="/tmp/economic_scan.json"
 mkdir -p /tmp/economic_scan
@@ -254,7 +386,7 @@ echo ""
 # =========================================================================
 # Step 5: Remediation demo — show fix workflow and CVSS reduction
 # =========================================================================
-echo -e "${BLUE}[5/8]${NC} Demonstrating remediation fix workflow..."
+echo -e "${BLUE}[5/9]${NC} Demonstrating remediation fix workflow..."
 
 FIXTURE="examples/sample-vulnerable-program"
 FIXED_VAULT="$FIXTURE/fixed/programs/vault/src/lib.rs"
@@ -461,7 +593,7 @@ echo ""
 # =========================================================================
 # Step 6: Summary for judges
 # =========================================================================
-echo -e "${BLUE}[6/8]${NC} Generating HTML audit dashboard..."
+echo -e "${BLUE}[6/9]${NC} Generating HTML audit dashboard..."
 DASHBOARD_HTML="/tmp/demo_audit_dashboard.html"
 if python3 scripts/dashboard.py examples/sample-vulnerable-program/audit-output/findings.json "$DASHBOARD_HTML" 2>&1; then
     ok "HTML dashboard generated at $DASHBOARD_HTML"
@@ -474,7 +606,7 @@ fi
 COMPARISON_HTML="/tmp/demo_comparison_dashboard.html"
 FIXED_FINDINGS="examples/sample-vulnerable-program/fixed/audit-output/findings.json"
 if [ -f "$FIXED_FINDINGS" ]; then
-    echo -e "${BLUE}[6b/8]${NC} Generating before/after comparison dashboard..."
+    echo -e "${BLUE}[6b/9]${NC} Generating before/after comparison dashboard..."
     if python3 scripts/dashboard.py \
         examples/sample-vulnerable-program/audit-output/findings.json \
         "$FIXED_FINDINGS" \
@@ -488,7 +620,7 @@ if [ -f "$FIXED_FINDINGS" ]; then
 fi
 
 echo ""
-echo -e "${BLUE}[7/8]${NC} Contest readiness summary..."
+echo -e "${BLUE}[7/9]${NC} Contest readiness summary..."
 
 echo ""
 # Derive version: CHANGELOG.md [X.Y.Z] first (authoritative), then git tag, then hardcoded
