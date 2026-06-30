@@ -337,6 +337,19 @@ fuzz tests in under 30 seconds.
 
 See [`examples/solend-governance-audit/`](examples/solend-governance-audit/) for full findings and report.
 
+### Why This Wins
+
+*Judging criteria mapped to concrete evidence.*
+
+| Criterion | What judges look for | What we deliver | Gap this fills |
+|---|---|---|---|
+| **Usefulness** | Does it solve a real problem builders face? | `/audit-quick` catches bugs before mainnet. `/audit-fix` generates fixes. `/audit-pr` reviews PRs automatically. | solhint finds style; we find logic bugs that drain vaults |
+| **Novelty** | Is it filling a genuine gap? | Only full lifecycle: Phase 0 consent → Phase 6 remediation. Only Phase 1C economic security (MEV, tokenomics, invariant violations). | safe-solana-builder is pre-build only. QEDGen is spec/verify only. Trail of Bits is point-in-time scanners. |
+| **Quality** | Production-grade, tested, documented? | 161 integrity checks + 22 fuzz tests + CVSS math mathematically verified + 6 compile-verified fixtures + live bug submissions to Immunefi. | Only skill with bugs actually filed against real programs (Kamino Finance, Solend, Raydium CLMM) |
+| **Fit** | Does it slot into the standard kit? | Matches solana-game-skill structure exactly. MIT licensed. Progressive SKILL.md routing. No external dependencies. `bash install.sh` works. | Drop-in submodule ready |
+
+**We win on novelty because no competitor has a complete audit lifecycle.** The ecosystem has pre-build hardening (safe-solana-builder), formal verification only (QEDGen), and point scanners (Trail of Bits). None cover Phase 0 consent → Recon → SAST → Threat Model → Economic Security → Formal Verification → CVSS Triage → Report → Remediation in one coherent pipeline. We do.
+
 **Contest features**:
 - **Spec-Driven Development** — `PRD.md`, `spec.md`, `kanban.md`, `learnings.md`
 - **Property-Based Testing** — 22 fuzz tests verifying CVSS math & invariants
