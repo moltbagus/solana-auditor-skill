@@ -6,7 +6,7 @@ Audite programas Solana como um profissional de seguranca. Este guia explica tud
 
 ## 1. O que faz
 
-O **Solana Auditor Shiba Skill** transforma o Claude Code em um auditor de seguranca completo para programas Solana. Ele cobre:
+O **Solana Auditor Skill** transforma o Claude Code em um auditor de seguranca completo para programas Solana. Ele cobre:
 
 | Fase | O que faz |
 |------|-----------|
