@@ -213,7 +213,7 @@ Rules auto-activate on file open. Full rule set in `rules/audit.rules`.
 |---------|-----|
 | `/audit <repo>` | Full lifecycle audit |
 | `/audit-quick <repo>` | Fast SAST scan only |
-| `/audit-resume` | Resume interrupted audit from loop_state.json |
+| `/audit-resume` | Resume interrupted audit from `phase-state.json` |
 | `/audit-report` | Generate report from findings |
 | `/audit-poc <finding>` | Generate proof-of-concept exploit |
 | `/audit-findings` | List/manage findings database |

@@ -24,9 +24,9 @@ Query, filter, deduplicate, and export existing findings. No new analysis.
 ## Pre-flight
 
 1. **Locate findings file** — search order:
-   - `<cwd>/audit-report/findings.json`
+   - `<cwd>/audit-output/findings.json`  (standard output from `/audit` and `/audit-report`)
    - `<cwd>/findings.json`
-   - `<cwd>/audit-output/findings.json`
+   - `<cwd>/examples/*/audit-output/findings.json`  (fixture paths)
    - Ask user if not found.
 2. **Validate JSON schema** — abort with parse error on invalid.
 3. **Confirm destructive ops** — `--delete`, `--retag` (when downgrading) require explicit confirmation.

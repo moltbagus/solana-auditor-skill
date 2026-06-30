@@ -157,15 +157,17 @@ python3 scripts/export-sarif.py --output results.sarif
 After generating findings.json and AUDIT_REPORT.md, optionally call:
 
 ```
-python3 scripts/dashboard.py <findings-path> <output-dir>/dashboard.html
+python3 scripts/dashboard.py <findings-path> <output-html>
+python3 scripts/dashboard.py --compare <before-findings> <after-findings> <output-html>
 ```
 
 Add a `--html` flag to the audit-report command that triggers this automatically after the markdown report is written.
 
 If `--html` is passed:
-1. Determine findings path from audit output dir (findings.json)
-2. Run `python3 scripts/dashboard.py findings.json <output-dir>/dashboard.html`
-3. Report the dashboard path in the final summary
+1. Locate findings.json (search order: `<repo>/audit-output/findings.json`, `<repo>/findings.json`)
+2. Derive output path: `findings.json.with_suffix('.dashboard.html')`
+3. Run `python3 scripts/dashboard.py findings.json output.html`
+4. Report the dashboard path in the final summary
 
 ## Post-write
 
