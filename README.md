@@ -23,6 +23,8 @@ Todos os 9 comandos, agentes e 50 regras funcionam em ambos os idiomas.
 /audit-quick <repo> --lang pt
 ```
 
+> **Co-created by [sirshibaninja](https://x.com/sirshibaninja) and Claude Code** — for the [Superteam Brasil Solana Skills Contest](https://superteam.fun/earn/listing/skills/).
+
 ## ⚡ Judges Quick Start (5 Minutes)
 
 ```bash

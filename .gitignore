@@ -46,6 +46,9 @@ secrets/
 .hermes/
 *.tmp_fix.py
 
+# Claude Code worktrees
+.claude/worktrees/
+
 # Session / project state — gitignored here (contest repo).
 # These are excluded from https://github.com/solanabr/solana-auditor-skill
 # but can be force-added to the moltbagus backup repo with:
