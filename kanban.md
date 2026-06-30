@@ -2,7 +2,7 @@
 
 > **Project Kanban Board**
 > _Superteam Brasil Solana Skills Contest — v1.14.2_
-> Last updated: 2026-06-29
+> Last updated: 2026-06-30
 
 ---
 
@@ -63,7 +63,7 @@ Backlog → To Do → In Progress → Review → Done
 | SDD docs — full project spec synchronized to v1.12.0 | Core | v1.12.0 |
 - [x] CLAUDE.md rewrite — v1.13.0: correct agent count (10), phase files (12), Two-Tier model, fixture schema, pytest command, key gotchas
 
-### 🟢 Done (v1.14.2 — Contest Polish Sprint, 2026-06-29)
+### 🟢 Done (v1.14.2 — Submission Sprint, 2026-06-30)
 
 | Task | Category | Version |
 |------|---------|---------|
@@ -76,8 +76,11 @@ Backlog → To Do → In Progress → Review → Done
 | orchestrator.md: malformed response + partial failure handling in handoff contract | Security | v1.14.2 |
 | Git tag v1.14.2 created | Polish | v1.14.2 |
 | 161/161 integrity checks + 22/22 fuzz tests verified clean | Testing | v1.14.2 |
-
----
+| Command audit sprint: 2 senior engineers, 9 commands, 3 real issues fixed | Polish | v1.14.2 |
+| README: co-creator credit — "Co-created by sirshibaninja + Claude Code" | Polish | v1.14.2 |
+| .gitignore: added `.claude/worktrees/` | Polish | v1.14.2 |
+| Secrets scan: 0 real secrets — all 21 pattern matches verified safe | Security | v1.14.2 |
+| SDD docs synced to v1.14.2 | Docs | v1.14.2 |
 
 ### Live Audit: Kamino Finance Lend (2026-06-25 → 06-26)
 
@@ -127,6 +130,13 @@ All priority items from the contest readiness audit have been addressed. Remaini
 | Token-2022 fixture deep coverage (Rules 28-35) | P3 | Stretch |
 
 ---
+
+### Sprint 53 — Secrets Scan + Co-Creator Sprint (Done: 2026-06-30)
+- [x] Multi-pattern secrets scan: 8 grep patterns, 21 matches, 0 real secrets
+- [x] All matches verified safe (public program IDs, Rust seed paths, example placeholders)
+- [x] README: co-creator credit — "Co-created by sirshibaninja and Claude Code"
+- [x] .gitignore: added `.claude/worktrees/`
+- [x] SDD docs synced to v1.14.2 (2026-06-30 date)
 
 
 ### Sprint 52 — Contest Polish Sprint (Done: 2026-06-29)

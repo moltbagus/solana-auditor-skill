@@ -2,7 +2,7 @@
 
 > **Product Requirements Document**
 > _Superteam Brasil Solana Skills Contest — v1.14.2_
-> Last updated: 2026-06-29
+> Last updated: 2026-06-30
 
 ---
 
@@ -153,7 +153,9 @@ Transform Claude Code into the **gold-standard Solana security auditor** — a r
   - audit-report.md: dashboard.py invocation wrong (<output-dir>/ → <file>.html)
   - audit-findings.md: search path audit-report/findings.json → audit-output/findings.json
 - [x] Key lesson: always test -f before accepting subagent filesystem claims
-
+- [x] README: co-creator credit added — "Co-created by sirshibaninja and Claude Code"
+- [x] .gitignore: added `.claude/worktrees/`
+- [x] Secrets scan: 0 real secrets — all matches verified safe (public program IDs, Rust seed paths, example placeholders)
 
 ### Stretch (Future)
 - [x] Line-number drift integrity check (Check 20) — implemented v1.14.2

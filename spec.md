@@ -1,8 +1,8 @@
 # Spec — Solana Auditor Skill
 
 > **Technical Specification**
-> _Version 1.14.2 — Contest Polish Sprint_
-> Last updated: 2026-06-29
+> _Version 1.14.2 — Submission Sprint_
+> Last updated: 2026-06-30
 
 ---
 
@@ -118,18 +118,20 @@ Tier 1 runs without Solana toolchain. Tier 2 enables:
 }
 ```
 
-### 2.3 Agent Roster (8 specialists)
+### 2.3 Agent Roster (10 specialists)
 
 | Agent | Role | Primary Phase |
 |-------|------|---------------|
 | orchestrator | Entry point, routes to specialists | All |
 | auditor | Primary audit execution | 1, 2, 2B |
-| threat-modeler | STRIDE threat identification, trust boundaries | 2A |
+| threat-modeler | STRIDE threat identification, exploit intel, Helius API | 2A |
 | formal-verifier | Invariant proofs, QED 2A | 3 |
 | report-writer | Structured findings → report | 5 |
-| cross-program | CPI surface graph, cross-program analysis | 2B |
-| safety-guard | Agent safety guardrails, prevents harmful ops | 0 |
-| architecture-reviewer | Component analysis, trust boundaries, data flow | 7 |
+| cross-program-agent | CPI chain analysis, flash loan detection | 2B |
+| safety-guard | Consent gate, program identity, cluster boundary | 0 |
+| architecture-reviewer | Structural topology, upgrade authority, tokenomics | 1B |
+| economic-security-analyst | Tokenomics, MEV, staking/LP, governance | 1C |
+| AUDIT.md | Auto-generated per-audit audit trail | All |
 
 ---
 

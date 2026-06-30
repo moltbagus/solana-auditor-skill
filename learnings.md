@@ -2,7 +2,35 @@
 
 > **Decision Log & Lessons Learned**
 > _Superteam Brasil Solana Skills Contest — v1.14.2_
-> Last updated: 2026-06-29
+> Last updated: 2026-06-30
+
+---
+
+## 2026-06-30 — Secrets Scan + Co-Creator Sprint
+
+### What we did
+Full multi-pattern secrets scan across all code, configs, and scripts. Ran 8 grep patterns simultaneously: seed phrases, Solana keypairs, JWT/Bearer tokens, API keys, AWS credentials, passwords, GitHub tokens, mnemonic phrases.
+
+### Results: 21 matches, 0 real secrets
+| Match type | Files | Status |
+|---|---|---|
+| Rust seed constant paths (`seeds::WITHDRAW_TICKET`) | `klend/handlers/*.rs` | ✅ Safe — module references, not key material |
+| Public program deploy addresses | `data/protocols/known-vulns.json` | ✅ Safe — intentionally public |
+| Public Solana program addresses | `generate-cpi-graph.sh` | ✅ Safe — well-known SPL programs |
+| Placeholder program names | `agents/cross-program-agent.md` | ✅ Safe — documentation examples |
+| Public lending market addresses | `klend-interface/README.md` | ✅ Safe — well-known deployed programs |
+
+### Changes made
+- README: co-creator credit added — "Co-created by sirshibaninja and Claude Code"
+- .gitignore: added `.claude/worktrees/` (was missing)
+- PRD.md, kanban.md, learnings.md: synced to 2026-06-30
+- Spec.md: agent roster count corrected (8→10 specialists)
+
+### Key lessons
+1. **Secrets scan is fast and definitive** — 8 grep patterns in <2s, zero false positives on real code
+2. **Public program addresses trigger seed-phrase patterns** — `HUBBLE*` and `SLND*` look like seeds but are Solana public keys in known-vulns.json
+3. **Rust seed constants are module paths** — `seeds::WITHDRAW_TICKET` is a Rust module path constant, not a cryptographic seed
+4. **Worktrees directory was un-ignored** — `.claude/worktrees/` not in .gitignore allowed the stale v1.5 worktree to exist untracked
 
 ---
 
