@@ -156,6 +156,8 @@ Transform Claude Code into the **gold-standard Solana security auditor** — a r
 - [x] README: co-creator credit added — "Co-created by sirshibaninja and Claude Code"
 - [x] .gitignore: added `.claude/worktrees/`
 - [x] Secrets scan: 0 real secrets — all matches verified safe (public program IDs, Rust seed paths, example placeholders)
+- [x] Shiba rename sprint: "Solana Auditor Shiba Skill" → "Solana Auditor Skill" across 7 files (6 repo + PT-BR guide)
+- [x] todo.md removed: Kamino-specific content migrated to learnings.md
 
 ### Stretch (Future)
 - [x] Line-number drift integrity check (Check 20) — implemented v1.14.2

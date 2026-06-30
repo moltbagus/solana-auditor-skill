@@ -138,6 +138,11 @@ All priority items from the contest readiness audit have been addressed. Remaini
 - [x] .gitignore: added `.claude/worktrees/`
 - [x] SDD docs synced to v1.14.2 (2026-06-30 date)
 
+### Sprint 54 — Shiba Rename + Cleanup (Done: 2026-06-30)
+- [x] "Solana Auditor Shiba Skill" → "Solana Auditor Skill" across all 7 files (6 via subagents + PT-BR guide)
+- [x] todo.md removed: Kamino-specific content migrated to learnings.md
+- [x] SDD docs synced: PRD, spec, kanban, learnings → 2026-06-30
+
 
 ### Sprint 52 — Contest Polish Sprint (Done: 2026-06-29)
 - [x] G1/G2/G3 quick wins: SKILL.md agents (9→10), phases (6→12), rules breakdown; threat-modeler.md YAML frontmatter; README stale counts (173/159/47→161)

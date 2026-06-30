@@ -6,6 +6,29 @@
 
 ---
 
+## 2026-06-30 — Shiba Rename Sprint
+
+### What we did
+Renamed "Solana Auditor Shiba Skill" → "Solana Auditor Skill" across all repo files. Found 7 files containing the old name across 19 total (including stale worktrees). Updated all 7 real repo files via parallel subagents (6 in one batch, 1 earlier). Also removed stale todo.md (Kamino-specific, already in learnings.md).
+
+### Files changed (7 total)
+| File | Occurrences |
+|------|-------------|
+| README.md | 1 |
+| install.sh | 2 |
+| scripts/audit-fix-suggestions.py | 1 |
+| scripts/run-sast.py | 1 |
+| tests/fuzz/__init__.py | 1 |
+| tests/fuzz/test_properties.py | 1 |
+| guides/pt-BR/AUDITORIA_GUIA.md | 1 |
+
+### Key lessons
+1. **Subagent fan-out scales** — 6 parallel subagents completed in ~40s each; trivial for independent file edits
+2. **Grep before-and-after is deterministic** — `grep -rEl "Old" . | grep -v worktrees` verifies zero remaining
+3. **Worktrees were already gitignored** — 13 stale worktree references found but not tracked by git
+
+---
+
 ## 2026-06-30 — Secrets Scan + Co-Creator Sprint
 
 ### What we did
