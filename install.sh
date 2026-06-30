@@ -39,7 +39,7 @@ print_banner() {
     local mode_tag="${2:-Standard}"
     echo ""
     echo -e "${MAGENTA}╔════════════════════════════════════════════════════════════════╗${NC}"
-    echo -e "${MAGENTA}║${NC}  ${WHITE}Solana Auditor Shiba Skill for Claude Code${NC}              ${MAGENTA}║${NC}"
+    echo -e "${MAGENTA}║${NC}  ${WHITE}Solana Auditor Skill for Claude Code${NC}              ${MAGENTA}║${NC}"
     echo -e "${MAGENTA}║${NC}  ${CYAN}World-Class Security Auditor — ${version}${NC}"
     echo -e "${MAGENTA}║${NC}  ${CYAN}50 rules (45 SAST + 5 AI), 10 agents, 9 commands${NC}         ${MAGENTA}║${NC}"
     echo -e "${MAGENTA}║${NC}  ${CYAN}Mode: ${mode_tag}${NC}"
@@ -48,7 +48,7 @@ print_banner() {
 }
 
 print_help() {
-    echo "Solana Auditor Shiba Skill - Installer"
+    echo "Solana Auditor Skill - Installer"
     echo ""
     echo "Usage: ./install.sh [OPTIONS]"
     echo ""

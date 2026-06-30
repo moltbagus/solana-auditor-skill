@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-audit-fix-suggestions.py — Fix suggestion engine for Solana Auditor Shiba Skill v1.7
+audit-fix-suggestions.py — Fix suggestion engine for Solana Auditor Skill v1.7
 
 Reads findings.json and generates inline fix suggestions for each finding type with:
 - Confidence scoring based on prediction-market model

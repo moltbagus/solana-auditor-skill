@@ -1,4 +1,4 @@
-"""Property-based tests for Solana Auditor Shiba Skill.
+"""Property-based tests for Solana Auditor Skill.
 
 These tests verify GENERAL PROPERTIES of the skill's algorithms that should
 hold for ALL valid inputs — not just the specific examples in the fixture.

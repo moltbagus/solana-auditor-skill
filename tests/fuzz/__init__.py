@@ -1,4 +1,4 @@
-"""Property-based tests for Solana Auditor Shiba Skill.
+"""Property-based tests for Solana Auditor Skill.
 
 These tests use Hypothesis to check general properties of the skill's core
 algorithms — things that should be true for ALL valid inputs, not just

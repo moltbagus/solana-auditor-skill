@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-run-sast.py -- Solana Auditor Shiba Skill SAST Engine
+run-sast.py -- Solana Auditor Skill SAST Engine
 
 Executes all 26 security rules against Rust source code, producing findings.json.
 This is the executable implementation of rules/audit.rules.

@@ -1,4 +1,4 @@
-# Solana Auditor Shiba Skill
+# Solana Auditor Skill
 
 **World-class Solana security auditor for Claude Code** — 7-phase audit lifecycle (Phase 0 Safety Guard + Phases 1–6), 45 Solana security rules + 5 agent safety rules (50 total), 9 slash commands, 10 specialist agents, 6 compile-verified example fixtures, 161 integrity checks passing, 22 fuzz tests, two-tier execution (SAST + runtime), pre-commit hook, PR auditing, audit history, and inline fix suggestions.
 
