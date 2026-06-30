@@ -70,7 +70,7 @@ Transform Claude Code into the **gold-standard Solana security auditor** — a r
 - [x] Agent safety guardrails: preventing harmful operations during audit
 - [x] 75+ integrity checks (up from 62, now 161)
 - [x] 50 security rules (up from 26)
-- [x] 8 phases (up from 7)
+- [x] 7 phases (Phase 0 safety guard + Phases 1–6)
 
 ### v1.8.1 — Dashboard + Exploit Simulation (2026-06-27)
 - [x] HTML audit dashboard: `scripts/dashboard.py` + `templates/dashboard.html`
@@ -128,12 +128,31 @@ Transform Claude Code into the **gold-standard Solana security auditor** — a r
 - [x] All 3 fixtures include findings.json, AUDIT_REPORT.md, methodology-trace.md, quick-scan-results.md
 
 
-### v1.14.2 — Raydium CLMM Live Audit + Bilingual Polish (2026-06-29)
-- [x] Live audit of jup-ag/raydium-clmm — 6 confirmed findings, source-verified with #[account] constraint analysis
-- [x] RAY-01 severity corrected: CRITICAL → HIGH after source verification of admin::ID constraint
-- [x] Bilingual support: --lang pt|en added to all audit commands
-- [x] README polish: duplicate step numbers, agents badge corrected, dashboard commands added
-- [x] Severity lesson: verify #[account] constraints before assigning CRITICAL on access control findings
+### v1.14.2 — Contest Polish Sprint (2026-06-29)
+- [x] OODA loop: parallel subagent audits for structural, competitive, corporate-grade review
+- [x] Removed 77 stale files: ext/solana-auditor-shiba/, package/, gan-harness/, benchmarks/, docs/superpowers/, skills/, prompts/bug-fixer-agent.md
+- [x] Added skill-registry.json with 4 judging criteria mapped to features
+- [x] Removed committed Cargo.lock files from examples/klend/ (added **/Cargo.lock to .gitignore)
+- [x] README: added "Why This Wins" section mapping to 4 judging criteria + competitor comparison
+- [x] SKILL.md: added Phase 0 routing, version v1.14.2, agents count corrected to 10, Phase 2A entry added
+- [x] CLAUDE.md: version v1.14.2
+- [x] README.md: fixed safety-anchor.md (non-existent) → safety-guard.md, "8-phase" → "7-phase"
+- [x] demo.sh: added visible cat <<EOF commands block; 8-phase → 7-phase
+- [x] install.sh: || true silent failures → explicit exit 1; find counts added
+- [x] orchestrator.md: malformed response + partial failure handling added to handoff contract
+- [x] PRD.md: duplicate v1.14.0 section removed; 07-architecture-review.md → 01B-architecture-review.md
+- [x] Git tag v1.14.2 created and pushed
+- [x] 161/161 integrity + 22/22 fuzz tests verified clean
+- [x] Self-fixing loop: persistent correction rules at ~/.claude/corrections/solana-auditor-skill/
+
+### v1.14.2 Command Audit Sprint (2026-06-30)
+- [x] 2 senior engineers audited all 9 commands (Phase 0-3 and Phase 4-6 in parallel)
+- [x] 18 issues found across Phase 0-6 commands; 15 were subagent hallucinations
+- [x] 3 real HIGH issues verified + fixed:
+  - SKILL.md: loop_state.json → phase-state.json (matches audit-resume.md)
+  - audit-report.md: dashboard.py invocation wrong (<output-dir>/ → <file>.html)
+  - audit-findings.md: search path audit-report/findings.json → audit-output/findings.json
+- [x] Key lesson: always test -f before accepting subagent filesystem claims
 
 
 ### Stretch (Future)
@@ -180,7 +199,7 @@ Following the Loop 2 contest judges feedback, the Remediation Engine received a 
 
 | Metric | Target | Current | How Measured |
 |--------|--------|---------|-------------|
-| Integrity checks passing | 100% (75+) | 75+/75 | `test-skill-integrity.sh` exit code |
+| Integrity checks passing | 100% (161+) | 161/161 | `test-skill-integrity.sh` exit 0 |
 | Vulnerability coverage | ≥50 classes | 50 rules | `grep "^## Rule " rules/audit.rules` |
 | CVSS math accuracy | 100% | 50/50 verified | `check-cvss-math` integrity check |
 | Security rules | ≥50 | 50 | `grep "^## Rule " rules/audit.rules` |
@@ -245,6 +264,9 @@ For the **Superteam Brasil Solana Skills Contest**:
 6. **World-class** — Formal verification demo, PoC exploit walkthroughs, SARIF export, concurrent protection, two-tier execution, CPI surface analysis
 7. **Dashboard proof** — HTML dashboard screenshot in README as visual evidence
 8. **GH Actions template** — Audit-on-push workflow template for contest submissions
+8b. **Why This Wins** — Explicit "Judging criteria mapped to evidence" section in README
+9. **Immunefi submissions** — 5 real bugs filed against Kamino Finance and Solend Governance
+10. **git tag v1.14.2** — Canonical version pushed to origin/main
 9. **Live exploit audit** — Historical Solana exploit documented for real-world context
 10. **Benchmarked** — Comparative table vs solhint, cargo audit, and manual review
 

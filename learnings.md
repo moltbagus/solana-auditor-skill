@@ -6,6 +6,33 @@
 
 ---
 
+## 2026-06-30 — v1.14.2 Command Audit Sprint
+
+### What we did
+2 senior engineers audited all 9 commands in parallel. Corporate-grade review + principal-systems review.
+
+### Key lesson: verify before accepting subagent claims
+Subagent A claimed "02A-threat-modeling.md doesn't exist → SKILL.md is broken." Subagent B claimed "SKILL.md claims Phase 7 which doesn't exist."
+**Both were hallucinations.** Ran `test -f skill/02-threat-modeling.md` — file EXISTS. Checked SKILL.md — no "Phase 7" reference found.
+**Rule: always `test -f` or `ls` before acting on a subagent's claim about filesystem state.**
+
+### Issues found and fixed (3 real, 15 hallucinated)
+- SKILL.md: loop_state.json → phase-state.json (HIGH — matches audit-resume.md)
+- audit-report.md: dashboard.py invocation wrong (HIGH — docs said <output-dir>/ but it expects <file-path>)
+- audit-findings.md: search path audit-report/findings.json → audit-output/findings.json (HIGH)
+- Subagent hallucinations 1: "02A-threat-modeling.md doesn't exist" → verified EXISTS, ignored
+- Subagent hallucinations 2: "SKILL.md claims Phase 7" → verified NOT referenced, ignored
+- Subagent hallucinations 3-15: various references to non-existent features verified not present
+
+### Self-fixing loop applied
+Persisted correction rules to ~/.claude/corrections/solana-auditor-skill/:
+- failures.jsonl: 7 raw failure logs
+- rules.md: synthesized rules for pre-session triggers
+- verify.json: 8-item verification checklist
+- ~/.claude/corrections/global/rules.md: secrets scanning, repo state check
+
+---
+
 ## 2026-06-29 — Contest Sprint v1.14.2 (Final Polish)
 
 ### What we did
