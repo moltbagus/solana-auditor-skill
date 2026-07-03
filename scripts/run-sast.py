@@ -2,7 +2,11 @@
 """
 run-sast.py -- Solana Auditor Skill SAST Engine
 
-Executes all 26 security rules against Rust source code, producing findings.json.
+STALE WARNING: This engine hardcodes 26 rule patterns but rules/audit.rules has 50.
+Rules 27-50 (Token-2022 Transfer Hook, Pinocchio/Native, AI Agent Safety) are NOT
+covered by this automated engine and must be checked manually.
+
+Executes 26 security rules against Rust source code, producing findings.json.
 This is the executable implementation of rules/audit.rules.
 
 Usage:

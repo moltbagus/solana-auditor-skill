@@ -51,7 +51,7 @@ skill/
   01B-architecture-review.md        # Phase 1B: authority/tokenomics topology
   01C-economic-security.md          # Phase 1C: tokenomics, MEV, invariants
   02-static-analysis.md             # Phase 2: SAST (50 rules)
-  02A-threat-modeling.md            # Phase 2A: STRIDE enumeration
+  02-threat-modeling.md            # Phase 2A: STRIDE enumeration
   02B-runtime-testing.md            # Phase 2B: anchor test (requires toolchain)
   03-formal-verification.md         # Phase 3: QED 2A invariant proofs
   04-findings-triage.md            # Phase 4: CVSS 3.1 scoring
@@ -95,7 +95,7 @@ User: /audit <repo>
     → 01-recon.md (Phase 1 — attack surface)
     → 01B-architecture-review.md (Phase 1B — structural)
     → 01C-economic-security.md (Phase 1C — economic design)
-    → 02A-threat-modeling.md (Phase 2A — STRIDE)
+    → 02-threat-modeling.md (Phase 2A — STRIDE)
     → 02-static-analysis.md (Phase 2 — 50 rules)
     → 02B-runtime-testing.md (Phase 2B — anchor test, toolchain)
     → 03-formal-verification.md (Phase 3 — QED 2A)

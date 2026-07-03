@@ -1,7 +1,8 @@
 # SPEC: Remediation Phase Enhancement (v1.7)
 
-**Status**: Draft spec for implementation
-**Owner**: solana-auditor-skill v1.7
+**Status**: Archived — superseded by v1.14.2 Phase 6 (`06-remediation.md`)
+**Owner**: solana-auditor-skill v1.7 (carried forward to v1.14.2)
+**Note**: This draft spec for auto-fix tiers/confidence scoring/CVSS reduction tracking was written for v1.7 but never promoted. Phase 6 (`06-remediation.md`) in v1.14.2 uses the prose-heavy approach described in §1. Revisit if v1.15+ includes structured fix-suggestion engine work.
 **Supersedes**: `skill/06-remediation.md` (becomes Phase 6 reference)
 **CVSS verified by**: `tests/severity_counts.py::check_cvss_math()`
 

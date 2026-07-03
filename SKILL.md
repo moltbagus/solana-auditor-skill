@@ -41,7 +41,7 @@ Auditor-lifecycle skill for comprehensive Solana program security review. Runs f
 | Architecture Review | `skill/01B-architecture-review.md` | After recon — structural topology |
 | Economic Security | `skill/01C-economic-security.md` | After recon — tokenomics, MEV, invariants |
 | Static Analysis | `skill/02-static-analysis.md` | After recon, SAST scan |
-| Threat Modeling | `skill/02A-threat-modeling.md` | SAST companion — STRIDE enumeration |
+| Threat Modeling | `skill/02-threat-modeling.md` | SAST companion — STRIDE enumeration |
 | Runtime Testing | `skill/02B-runtime-testing.md` | Tier 2 only (requires Anchor) |
 | Formal Verification | `skill/03-formal-verification.md` | Invariant proofs needed |
 | Findings Triage | `skill/04-findings-triage.md` | After finding collection |
@@ -65,7 +65,7 @@ Auditor-lifecycle skill for comprehensive Solana program security review. Runs f
 | Architecture review | `skill/01B-architecture-review.md` |
 | Economic security | `skill/01C-economic-security.md` |
 | Fast SAST scan | `skill/02-static-analysis.md` |
-| Threat modeling | `skill/02A-threat-modeling.md` |
+| Threat modeling | `skill/02-threat-modeling.md` |
 | Tier 2 runtime | `skill/02B-runtime-testing.md` |
 | Formal verification | `skill/03-formal-verification.md` |
 | Full audit report | `skill/05-report-generation.md` + `skill/01-recon.md` |

@@ -64,14 +64,15 @@ Full multi-pattern secrets scan across all code, configs, and scripts. Ran 8 gre
 
 ### Key lesson: verify before accepting subagent claims
 Subagent A claimed "02A-threat-modeling.md doesn't exist → SKILL.md is broken." Subagent B claimed "SKILL.md claims Phase 7 which doesn't exist."
-**Both were hallucinations.** Ran `test -f skill/02-threat-modeling.md` — file EXISTS. Checked SKILL.md — no "Phase 7" reference found.
-**Rule: always `test -f` or `ls` before acting on a subagent's claim about filesystem state.**
+**Partial miss: Subagent A was partially correct.** The file `skill/02A-threat-modeling.md` does NOT exist. The file `skill/02-threat-modeling.md` DOES exist. Root SKILL.md (lines 44, 68) and CLAUDE.md (line 54) referenced the non-existent `02A-` variant. Verified via `test -f skill/02A-threat-modeling.md` (file NOT found).
+**Rule: always `test -f` with exact filename from the reference, not the closest match.**
+**Correction applied 2026-07-03**: SKILL.md + CLAUDE.md refs fixed to `02-threat-modeling.md`.
 
-### Issues found and fixed (3 real, 15 hallucinated)
-- SKILL.md: loop_state.json → phase-state.json (HIGH — matches audit-resume.md)
+### Issues found and fixed (4 real, 14 hallucinated)
+- SKILL.md: `02A-threat-modeling.md` → `02-threat-modeling.md` (HIGH — broken path on lines 44, 68)
+- CLAUDE.md: `02A-threat-modeling.md` → `02-threat-modeling.md` (HIGH — broken path on line 54)
 - audit-report.md: dashboard.py invocation wrong (HIGH — docs said <output-dir>/ but it expects <file-path>)
 - audit-findings.md: search path audit-report/findings.json → audit-output/findings.json (HIGH)
-- Subagent hallucinations 1: "02A-threat-modeling.md doesn't exist" → verified EXISTS, ignored
 - Subagent hallucinations 2: "SKILL.md claims Phase 7" → verified NOT referenced, ignored
 - Subagent hallucinations 3-15: various references to non-existent features verified not present
 
