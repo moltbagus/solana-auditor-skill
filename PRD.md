@@ -2,7 +2,7 @@
 
 > **Product Requirements Document**
 > _Superteam Brasil Solana Skills Contest — v1.14.2_
-> Last updated: 2026-06-30
+> Last updated: 2026-07-03
 
 ---
 
@@ -158,6 +158,15 @@ Transform Claude Code into the **gold-standard Solana security auditor** — a r
 - [x] Secrets scan: 0 real secrets — all matches verified safe (public program IDs, Rust seed paths, example placeholders)
 - [x] Shiba rename sprint: "Solana Auditor Shiba Skill" → "Solana Auditor Skill" across 7 files (6 repo + PT-BR guide)
 - [x] todo.md removed: Kamino-specific content migrated to learnings.md
+
+### v1.14.3 — Repository Hygiene Sprint (2026-07-03)
+- [x] Fixed 2 broken file references: SKILL.md (lines 44, 68) and CLAUDE.md (line 54) referenced non-existent `02A-threat-modeling.md` → corrected to `02-threat-modeling.md`
+- [x] learnings.md corrected: previous entry dismissed subagent's broken-ref claim as "hallucination" — it was actually a real bug
+- [x] `scripts/run-sast.py`: added STALE WARNING — hardcodes 26 rules but `rules/audit.rules` has 50 (Rules 27-50 not covered by automated engine)
+- [x] `chmod +x` on `scripts/qed-integration.sh` + 7 Python scripts (only `run-anchor-tests.py` was executable)
+- [x] `skill/SPEC-REMEDIATION.md`: marked as Archived — 599-line draft spec from v1.7 never promoted
+- [x] Cleaned stale untracked output dir: `examples/sample-vulnerable-program/audit-report/`
+- [x] 161/161 integrity checks + 22/22 fuzz tests verified clean post-fixes
 
 ### Stretch (Future)
 - [x] Line-number drift integrity check (Check 20) — implemented v1.14.2

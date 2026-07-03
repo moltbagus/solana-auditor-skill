@@ -2,7 +2,7 @@
 
 > **Technical Specification**
 > _Version 1.14.2 — Submission Sprint_
-> Last updated: 2026-06-30
+> Last updated: 2026-07-03
 
 ---
 
@@ -47,6 +47,8 @@
 **v1.14.0**: 3 new audit fixtures — AMM/DEX (14 vulns, Rules 14/15/26/13/6/4/8/40/38/36/37), Staking Pool (14 vulns, Rules 14/22/41/6/8/11/5/15/4/38/3/36/37), NFT/Candy Machine (14 vulns, Rules 16/40/2/8/6/14/5/33/22/38/27/39/4/37). All 42 findings CVSS-math-verified. Total fixtures: 6 (was 3).
 
 **v1.14.2**: Raydium CLMM live audit (6 findings, source-verified). Bilingual support (`--lang pt|en`) added to all commands. README polish (step numbers, agents badge, dashboard commands). Check 20 (line-number drift) verified implemented. SDD docs synced to v1.14.2.
+
+**v1.14.3**: Repository hygiene — fixed 2 broken file refs (SKILL.md, CLAUDE.md: `02A-threat-modeling` → `02-threat-modeling`). Added STALE WARNING to `scripts/run-sast.py` (26 hardcoded vs 50 actual rules). `chmod +x` on all scripts. Archived stale `SPEC-REMEDIATION.md` draft. Cleaned untracked stale artifact dir. 161/161 checks, 22/22 fuzz all clean.
 
 ```
 

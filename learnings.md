@@ -2,7 +2,7 @@
 
 > **Decision Log & Lessons Learned**
 > _Superteam Brasil Solana Skills Contest — v1.14.2_
-> Last updated: 2026-06-30
+> Last updated: 2026-07-03
 
 ---
 
@@ -82,6 +82,30 @@ Persisted correction rules to ~/.claude/corrections/solana-auditor-skill/:
 - rules.md: synthesized rules for pre-session triggers
 - verify.json: 8-item verification checklist
 - ~/.claude/corrections/global/rules.md: secrets scanning, repo state check
+
+---
+
+## 2026-07-03 — Repository Hygiene Sprint (v1.14.3)
+
+### What we did
+Deep repo audit found 7 improvements: 2 broken file refs that were previously dismissed as "hallucination," stale SAST engine warning, missing executable permissions, archived draft spec, and cleanup of stale artifact directory.
+
+### Issues found and fixed
+| Issue | Severity | File | Fix |
+|-------|----------|------|-----|
+| Broken file ref: `02A-threat-modeling.md` doesn't exist | HIGH | SKILL.md (lines 44, 68), CLAUDE.md (line 54) | Fixed → `02-threat-modeling.md` |
+| learnings.md: dismissed real bug as hallucination | HIGH | learnings.md (line 66-67) | Corrected entry — subagent was right |
+| run-sast.py claims 26 rules, audit.rules has 50 | MEDIUM | scripts/run-sast.py | Added STALE WARNING header |
+| qed-integration.sh not executable | HIGH | scripts/qed-integration.sh | chmod +x |
+| 7/8 Python scripts not executable | MEDIUM | scripts/*.py | chmod +x on 7 files |
+| SPEC-REMEDIATION.md is stale draft (v1.7, never promoted) | LOW | skill/SPEC-REMEDIATION.md | Marked as Archived |
+| Stale untracked output dir | LOW | examples/sample-vulnerable-program/audit-report/ | Removed |
+
+### Key lessons
+1. **learnings.md can contain errors** — The dismissed-hallucination entry from 2026-06-30 was itself wrong. Subagent A correctly identified that SKILL.md references `02A-threat-modeling.md` which does NOT exist. Always re-verify old learnings when new evidence contradicts them.
+2. **Executable permissions can drift** — Adding a shell script without `chmod +x` is an easy miss. A CI check for executable bits would catch this automatically.
+3. **SAST engine vs rules file drift is insidious** — `run-sast.py` was written when only 26 rules existed. Rules grew to 50 but the SAST engine never caught up. The stale warning is a band-aid — the real fix is to generate patterns from `audit.rules` dynamically.
+4. **Draft specs accumulate** — `SPEC-REMEDIATION.md` was a 599-line v1.7 spec for auto-fix tiers that was never implemented. It remains in the repo as an informative reference for future work.
 
 ---
 
