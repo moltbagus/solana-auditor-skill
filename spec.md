@@ -1,7 +1,7 @@
 # Spec — Solana Auditor Skill
 
 > **Technical Specification**
-> _Version 1.15.0 — CI Stabilization + CVSS Math Fix_
+> _Version 1.15.1 — CI Stabilization + CVSS Math Fix + Maintainability Audit_
 > Last updated: 2026-07-07
 
 ---
@@ -786,11 +786,33 @@ Each audit-phase script implements this interface:
 
 ### Backlog for v1.15.x
 
-| ID | Item | Priority |
-|---|---|---|
-| SPEC-001 | Wire smoke tests into `test.yml` skill-integrity job | P1 |
-| SPEC-002 | Decide fate of `audit-pr` job post-guard | P2 |
-| SPEC-003 | Migrate Node 20 → 24 across all setup-python/setup-node steps | P2 |
-| SPEC-004 | Replace hardcoded `moltbagus/solana-auditor-skill` clone with skill-dir copy | P3 |
-| SPEC-005 | Fix Check 10 coverage gap: all 5 fixtures now verified (was 3). See learnings.md v1.15.1 | P1 |
+| ID | Item | Priority | Effort |
+|---|---|---|---|
+| SPEC-001 | Wire smoke tests into `test.yml` skill-integrity job | P1 | XS |
+| SPEC-002 | Decide fate of `audit-pr` job post-guard | P2 | S |
+| SPEC-003 | Migrate Node 20 → 24 across all setup-python/setup-node steps | P2 | XS |
+| SPEC-004 | Replace hardcoded `moltbagus/solana-auditor-skill` clone with skill-dir copy | P3 | M |
+| SPEC-005 | Fix Check 10 coverage gap: all 5 fixtures now verified (was 3). See learnings.md v1.15.1 | P1 | ✅ |
+| SPEC-006 | Split `scripts/audit-fix-suggestions.py` (>120KB) into modules | P1 | M |
+| SPEC-007 | Deduplicate SARIF exporters: `export-sarif.py` ↔ `findings-to-sarif.py` | P1 | S |
+| SPEC-008 | Fix `scripts/dashboard.py` dead code + confusing argparse | P2 | S |
+| SPEC-009 | Migrate `scripts/run-sast.py` to dynamically read patterns from `audit.rules` | P2 | M |
+| SPEC-010 | Add bc-dependency check to `scripts/fix-verification.sh` | P3 | XS |
+| SPEC-011 | Fix `pyproject.toml` python_version conflict (black py39 vs mypy py310) | P3 | XS |
+
+### Known maintainability issues (cataloged 2026-07-07)
+
+| # | File | Issue | Severity |
+|---|------|-------|----------|
+| 1 | `scripts/audit-fix-suggestions.py` | >120KB single file (truncated by reader). Multiple responsibilities: fix templates, regression tests, exploit metadata, confidence scoring. Should be split into modules. | HIGH |
+| 2 | `scripts/run-sast.py` | Hardcodes 26 rule patterns; `audit.rules` has 50. Stale warning exists but architecture should read patterns dynamically. | MEDIUM |
+| 3 | `scripts/export-sarif.py` + `scripts/findings-to-sarif.py` | Two near-identical SARIF exporters. DRY violation — both do findings.json → SARIF 2.1.0. | MEDIUM |
+| 4 | `scripts/dashboard.py` | Dead code: `stdout_mode = False` never set to True. Argparse confusing: positional `after` means output in single-file mode but `before` in compare mode. | MEDIUM |
+| 5 | `scripts/pre-commit-audit.sh` | Temp files in `/tmp/PID` without SIGKILL / crash cleanup assurance. | LOW |
+| 6 | `scripts/fix-verification.sh` | Uses `bc -l` without checking if `bc` is installed. Uses `{|,}` bash 4.x syntax (macOS = bash 3.2). | LOW |
+| 7 | `scripts/protocol-fingerprint.sh` | 400+ line shell script with heavy `jq` usage. Complex shell is brittle. | LOW |
+| 8 | `scripts/generate-cpi-graph.sh` | `set -uo pipefail` but references variables computed via `jq` that may silently fail. | LOW |
+| 9 | `pyproject.toml` | Black targets py39, mypy has python_version="3.10". Version conflict. | LOW |
+| 10 | `tests/test-skill-integrity.sh` | 850+ lines, growing without modularization. Many inline checks remain despite shared functions. | MEDIUM |
+| 11 | `commands/*.md` frontmatter | Inconsistent YAML frontmatter across 9 command files. | LOW |
 

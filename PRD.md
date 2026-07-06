@@ -1,7 +1,7 @@
 # PRD — Solana Auditor Skill
 
 > **Product Requirements Document**
-> _Superteam Brasil Solana Skills Contest — v1.15.0_
+> _Superteam Brasil Solana Skills Contest — v1.15.1_
 > Last updated: 2026-07-07
 
 ---
@@ -418,15 +418,32 @@ The `moltbagus/solana-auditor-skill` fork on `main` had 10 consecutive red CI ru
 - [x] 165/165 integrity checks (up from 161: +4 from extended coverage)
 - [x] 22/22 fuzz tests, all CVSS math verified across all 5 fixture dirs
 
+### v1.15.2 — Maintainability Audit (2026-07-07)
+
+Following a comprehensive codebase review, 11 maintainability/readability issues were identified and cataloged. Priority backlog created for the top 5 items.
+
+- [x] **Issue catalog**: 11 issues identified across scripts, config, and documentation
+- [x] **Priority backlog**: 5 items slotted into kanban for maintainability sprint
+- [x] **SDD sync**: All 4 docs updated to v1.15.2 with current state + new plans
+- [x] **165/165 integrity + 22/22 fuzz**: all verified clean
+
+### Backlog for v1.15.x (updated)
+
+| Priority | Item | Effort | Status |
+|---|---|---|---|
+| P1 | Wire `tests/test_scripts_smoke.py` into `test.yml` | XS | TODO |
+| P1 | Split `scripts/audit-fix-suggestions.py` (>120KB) into modules | M | TODO |
+| P1 | Deduplicate SARIF exporters: `export-sarif.py` ↔ `findings-to-sarif.py` | S | TODO |
+| P2 | Fix `scripts/dashboard.py` dead code + confusing argparse | S | TODO |
+| P2 | Migrate `scripts/run-sast.py` to dynamically read patterns from `audit.rules` | M | TODO |
+| P3 | Fix temp file cleanup in `scripts/pre-commit-audit.sh` | XS | TODO |
+| P3 | Add `bc` check to `scripts/fix-verification.sh` | XS | TODO |
+| P3 | Fix `pyproject.toml` version conflicts (py39 vs py310) | XS | TODO |
+
+Full catalog: see learnings.md 2026-07-07 entry.
+
 ### Out of scope (intentionally not fixed)
 
 - New bug class: `hull-scope` doesn't exist upstream — fallback uses ripgrep over `rules/audit.rules` instead
 - `audit.yml` `audit-tier1` and `audit-quick.yml` duplicate `pre-commit-audit.sh` invocation — both run on push, harmless but wasteful
-
-### Process learnings
-
-- 8 atomic commits = clean revert surface; each PR/commit self-contained
-- `hashFiles()` is the canonical guard for SARIF step gating — not `if-no-files-found`
-- Phase 0 (consent gate) MUST exist before any remediation in contest repos — applies here too, user explicitly authorized each fix
-- `ruflo workflow run` and `ruflo memory compress` are usable from CI-debug context
 

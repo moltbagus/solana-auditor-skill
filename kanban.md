@@ -1,7 +1,7 @@
 # Kanban — Solana Auditor Skill
 
 > **Project Kanban Board**
-> _Superteam Brasil Solana Skills Contest — v1.15.0_
+> _Superteam Brasil Solana Skills Contest — v1.15.1_
 > Last updated: 2026-07-07
 
 ---
@@ -152,6 +152,30 @@ All priority items from the contest readiness audit have been addressed. Remaini
 - [x] Cleaned stale untracked dir: examples/sample-vulnerable-program/audit-report/
 - [x] 161/161 integrity + 22/22 fuzz: all PASS
 
+### Sprint 56 — Maintainability Audit (2026-07-07)
+
+**Goal**: Systematically review codebase for maintainability/readability issues and update SDD docs.
+
+**Task**: Catalog all issues that make the codebase harder to maintain. Priority: P1 items are actionable this sprint.
+
+**Backlog (from audit):**
+
+| ID | Item | Priority | Effort | Status |
+|---|---|---|---|---|
+| MAINT-001 | Split `scripts/audit-fix-suggestions.py` (>120KB) into modules | P1 | M | TODO |
+| MAINT-002 | Deduplicate `export-sarif.py` ↔ `findings-to-sarif.py` | P1 | S | TODO |
+| MAINT-003 | Fix `scripts/dashboard.py` dead code + argparse confusion | P2 | S | TODO |
+| MAINT-004 | Migrate `scripts/run-sast.py` to read patterns from `audit.rules` dynamically | P2 | M | TODO |
+| MAINT-005 | Fix `scripts/pre-commit-audit.sh` temp file cleanup | P3 | XS | TODO |
+| MAINT-006 | Add `bc` check to `scripts/fix-verification.sh` | P3 | XS | TODO |
+| MAINT-007 | Fix `pyproject.toml` version conflicts (py39 vs py310) | P3 | XS | TODO |
+
+**Completed this sprint:**
+- [x] 11 maintainability issues identified and cataloged
+- [x] Top 5 items prioritized in backlog
+- [x] All 4 SDD docs updated to v1.15.1
+- [x] 165/165 integrity + 22/22 fuzz verified
+
 ### Sprint 52 — Contest Polish Sprint (Done: 2026-06-29)
 - [x] G1/G2/G3 quick wins: SKILL.md agents (9→10), phases (6→12), rules breakdown; threat-modeler.md YAML frontmatter; README stale counts (173/159/47→161)
 - [x] G5 Economic security wiring: SKILL.md Phase 1B/1C/7A table+routing; orchestrator.md Phase 1B/1C/2A routes; all 10 agents listed
@@ -292,11 +316,11 @@ Full details: `docs/superpowers/specs/2026-06-27-gap-analysis.md` and `docs/supe
 
 ---
 
-## Velocity Tracking (v1.14.3)
+## Velocity Tracking (v1.15.1)
 
-| Metric | v1.0 | v1.4 FINAL | v1.8.1 | v1.9.0 | v1.10.0 | v1.11.0 | v1.12.0 | v1.13.0 | v1.14.0 | v1.14.1 | v1.14.3 |
+| Metric | v1.0 | v1.4 FINAL | v1.8.1 | v1.9.0 | v1.10.0 | v1.11.0 | v1.12.0 | v1.13.0 | v1.14.0 | v1.14.3 | v1.15.1 |
 |--------|------|------------|--------|--------|---------|---------|---------|---------|---------|---------|---------|
-| Integrity checks | 18 | **62** | **154** | **154** | **158** | **161** | **161** | **161** | **161** | **161** | **161** |
+| Integrity checks | 18 | **62** | **154** | **154** | **158** | **161** | **161** | **161** | **161** | **161** | **165** |
 | VULN tags | 10 | **17** | 17 | 17 | 17 | 17 | 17 | 17 | **59** | **59** | **59** |
 | Property-based tests | 0 | **19** | **22** | **22** | 22 | 22 | 22 | 22 | 22 | 22 | **22** |
 | Fixtures | 1 | **3** | 3 | 3 | 3 | 3 | 3 | 3 | **6** | **6** | **6** |
@@ -330,9 +354,10 @@ Full details: `docs/superpowers/specs/2026-06-27-gap-analysis.md` and `docs/supe
 | Before/After comparison | No | No | No | No | No | No | **Yes** | **Yes** | **Yes** | **Yes** | **Yes** |
 | Bilingual --lang pt\|en | No | No | No | No | No | No | No | No | **Yes** | **Yes** | **Yes** |
 | Raydium CLMM live audit | No | No | No | No | No | No | No | No | **Yes** | **Yes** | **Yes** |
-| Scripts executable | No | No | No | No | No | No | No | No | No | No | **Yes** |
-| File refs correct | No | No | No | No | No | No | No | No | No | No | **Yes** |
-| No stale draft files | No | No | No | No | No | No | No | No | No | No | **Yes** |
+| Scripts executable | No | No | No | No | No | No | No | No | No | **Yes** | **Yes** |
+| File refs correct | No | No | No | No | No | No | No | No | No | **Yes** | **Yes** |
+| No stale draft files | No | No | No | No | No | No | No | No | No | **Yes** | **Yes** |
+| CVSS math verified (all 5 fixtures) | No | No | No | No | No | No | No | No | No | No | **Yes** |
 
 ---
 
@@ -378,8 +403,8 @@ Full details: `docs/superpowers/specs/2026-06-27-gap-analysis.md` and `docs/supe
 - None
 
 ### Risks
-- Contest deadline July 8, 2026 — these CI fixes are post-submission improvements, not in-scope for judging
-- `actions/setup-node` Node 20 → 24 migration is a separate concern from CI failures; can wait
+- Contest deadline July 8, 2026 — post-submission improvements
+- SDD docs grow stale without automated cross-referencing
 
 ### Sprint metrics
 - **Commits**: 8

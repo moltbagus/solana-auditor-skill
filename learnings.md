@@ -1,7 +1,7 @@
 # Learnings — Solana Auditor Skill
 
 > **Decision Log & Lessons Learned**
-> _Superteam Brasil Solana Skills Contest — v1.15.0_
+> _Superteam Brasil Solana Skills Contest — v1.15.1_
 > Last updated: 2026-07-07
 
 ---
@@ -527,4 +527,55 @@ Check 10's `run_single_arg_check_for_fixtures` looped over only 3 fixture paths 
 
 ### Cross-reference
 This is the same CVSS drift class documented in the 2026-06-29 fixture expansion learnings. The brute-force rule was known but the Check 10 coverage gap meant it wasn't enforced on all fixtures. The fix closes both the bug AND the coverage gap.
+
+---
+
+## 2026-07-07 — v1.15.1 Maintainability & Readability Audit
+
+### What we did
+Systematic codebase review for maintainability and readability issues. Spawned file-pickers and read every Python script, shell script, test file, workflow, and doc. Found **11 issues** across categories: file size, DRY violations, dead code, fragile shell patterns, config version conflicts, and inconsistent documentation.
+
+### Issues found and cataloged
+
+| # | Severity | File | Issue |
+|---|----------|------|-------|
+| 1 | **HIGH** | `scripts/audit-fix-suggestions.py` | >120KB single file — truncated by any reader. Mixes fix templates, regression tests, exploit metadata, confidence scoring. Must be split into modules. |
+| 2 | **MEDIUM** | `scripts/run-sast.py` | Hardcodes 26 rules; `audit.rules` has 50. STALE WARNING present but real fix = read patterns dynamically from `audit.rules`. |
+| 3 | **MEDIUM** | `scripts/export-sarif.py` + `findings-to-sarif.py` | Two near-identical SARIF 2.1.0 exporters. DRY violation — should be one. |
+| 4 | **MEDIUM** | `scripts/dashboard.py` | Dead code: `stdout_mode = False` assigned but never True. Argparse confusing: `after` means output path (single) or before-findings (compare). |
+| 5 | **LOW** | `scripts/pre-commit-audit.sh` | Temp files in `/tmp/PID` — cleanup via `trap EXIT` but not crash-safe with locked processes. |
+| 6 | **LOW** | `scripts/fix-verification.sh` | Uses `bc -l` without checking if `bc` installed. Uses `{|,}` bash 4.x syntax (macOS = 3.2). |
+| 7 | **LOW** | `scripts/protocol-fingerprint.sh` | 400+ line shell script with heavy `jq` — complex shell is inherently brittle. |
+| 8 | **LOW** | `scripts/generate-cpi-graph.sh` | `pipefail` but `jq` failures may silently produce empty output. |
+| 9 | **LOW** | `pyproject.toml` | Black targets `py39`, mypy has `python_version=3.10`. Version conflict in config. |
+| 10 | **MEDIUM** | `tests/test-skill-integrity.sh` | 850+ lines. Shared functions help but many inline checks remain un-modularized. |
+| 11 | **LOW** | `commands/*.md` | Inconsistent YAML frontmatter across 9 command files. |
+
+### Key lessons
+
+1. **File size is a readability metric** — A 120KB+ Python file is unreadable even by AI tools. The truncation at 100KB means `severity_counts.py` can't be fully read in a single `read_files` call. SRP demands modularization.
+
+2. **Two nearly-identical scripts = double maintenance** — `export-sarif.py` and `findings-to-sarif.py` both convert findings.json → SARIF 2.1.0. They differ only in CLI interface. Pick one, deprecate the other.
+
+3. **Dead code in scripts goes unnoticed** — `stdout_mode = False` in `dashboard.py` was never used. Only discovered by reading the full file. Dead code isn't just waste — it's a signal that the control flow isn't understood.
+
+4. **Bash version incompatibility is macOS-specific** — macOS ships bash 3.2 (2007). Features like `{|,}` (bash 4.0) and `**` globbing fail silently. Scripts that claim bash 3.2 compat should be tested on macOS explicitly.
+
+5. **Config drift between Python tooling** — Black config says py39, mypy config says 3.10. Both tools target different language versions; the stricter one (mypy 3.10) will accept syntax like `X | None` that breaks on 3.9.
+
+6. **Integrity scripts grow faster than tests** — `test-skill-integrity.sh` is 850+ lines now. The shared function pattern helped (checks 3, 6-8, 10, 18) but many checks remain 15-30 lines each. At 1000+ lines, it should be migrated to Python.
+
+### Items deferred (not actionable without understanding script intent)
+
+- `findings-to-sarif.py` vs `export-sarif.py` — deduping requires deciding which CLI contract to keep
+- `audit-fix-suggestions.py` modularization — the find-template pattern is sound but needs multi-file refactor
+- `run-sast.py` dynamic pattern reader — would require re-architecting the rule loading
+
+### What to do next sprint
+
+1. **P1**: Wire smoke tests into CI (`test.yml` skill-integrity job)
+2. **P1**: Split `audit-fix-suggestions.py` into `fix_templates.py`, `regression_gen.py`, `exploit_metadata.py`, and `main.py`
+3. **P1**: Decide on SARIF exporter consolidation
+4. **P2**: Fix `dashboard.py` dead code and argparse clarity
+5. **P2**: Re-architect `run-sast.py` to load patterns from `audit.rules`
 
