@@ -23,7 +23,7 @@
     {
       "id": "SOLEND-02",
       "severity": "HIGH",
-      "cvss": 7.5,
+      "cvss": 6.5,
       "cvss_vector": "CVSS:3.1/AV:N/AC:L/PR:L/UI:N/S:U/C:H/I:N/A:N",
       "cwe": "CWE-841",
       "title": "Flash loan susceptible governance voting mechanism",
@@ -43,7 +43,7 @@
     {
       "id": "SOLEND-03",
       "severity": "HIGH",
-      "cvss": 7.3,
+      "cvss": 7.5,
       "cvss_vector": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:H/A:N",
       "cwe": "CWE-347",
       "title": "Unchecked CPI to treasury vault without privilege verification",

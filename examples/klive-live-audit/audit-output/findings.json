@@ -4,7 +4,7 @@
       "id": "KAM-001",
       "title": "Token2022 transfer fee not deducted from deposit amount — systematic undercollateralization",
       "severity": "CRITICAL",
-      "cvss": 9.1,
+      "cvss": 8.8,
       "cvss_vector": "CVSS:3.1/AV:N/AC:L/PR:L/UI:N/S:U/C:H/I:H/A:H",
       "cwe": "CWE-345",
       "rule": 5,
