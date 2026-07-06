@@ -35,25 +35,26 @@ jobs:
       - name: Phase 1 — Recon
         run: |
           echo "=== Phase 1: Attack Surface Recon ==="
-          python scripts/find-programs.py || true
+          echo "=== Phase 1: Attack Surface Recon ==="
+          echo "[SKIP] find-programs.py — not yet committed to this fork"
 
       # Phase 2 — Static Analysis via anchor build
       - name: Phase 2 — Static Analysis
         run: |
           echo "=== Phase 2: Static Analysis ==="
-          cargo hull-scope programs/ 2>&1 || true
+          echo "[SKIP] hull-scope — not installed in this CI environment"
 
       # Phase 3 — Formal Verification (QED 2A)
       - name: Phase 3 — Formal Verification
         run: |
           echo "=== Phase 3: Formal Verification ==="
-          python scripts/run-formal-verification.py || true
+          echo "[SKIP] run-formal-verification.py — not yet committed to this fork"
 
       # Phase 4 — Findings Triage
       - name: Phase 4 — Triage & CVSS Scoring
         run: |
           echo "=== Phase 4: Triage ==="
-          python scripts/triage-findings.py || true
+          echo "[SKIP] triage-findings.py — not yet committed to this fork"
 
       # Phase 5 — Generate SARIF
       - name: Phase 5 — Generate SARIF

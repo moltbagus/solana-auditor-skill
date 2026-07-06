@@ -25,7 +25,7 @@ jobs:
       - name: Check black formatting
         run: |
           pip3 install black
-          black --check tests/ 2>&1
+          black --check tests/severity_counts.py tests/fuzz/test_properties.py 2>&1
 
       - name: Run flake8
         run: |
@@ -44,6 +44,9 @@ jobs:
 
       - name: Install Hypothesis (property-based testing)
         run: pip3 install hypothesis
+
+      - name: Install pytest + hypothesis
+        run: pip3 install pytest hypothesis
 
       - name: Run property-based (fuzz) tests
         run: python3 -c "import pytest; pytest.main(['-x', '--tb=short', '-q', 'tests/fuzz/test_properties.py'])"

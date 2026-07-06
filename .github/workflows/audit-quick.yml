@@ -32,6 +32,11 @@ jobs:
         run: |
           bash scripts/pre-commit-audit.sh || true
 
+      - name: Convert findings to SARIF
+        if: always()
+        run: |
+          python3 scripts/export-sarif.py --input .audit-precommit.json --output .audit-precommit.sarif || true
+
       - name: Upload SARIF to GitHub Security
         if: always()
         uses: github/codeql-action/upload-sarif@v3

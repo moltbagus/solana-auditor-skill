@@ -24,7 +24,7 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Setup Rust
-        uses: solana-actions/setup-solana@v1
+        uses: anza-actions/setup-solana@v2
         with:
           version: 1.18.0
           shadow-unsafe-cfg: '[[bin]]
