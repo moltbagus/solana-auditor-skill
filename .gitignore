@@ -57,6 +57,8 @@ secrets/
 momentic.config.yaml
 kanban.md
 learnings.md
+PRD.md
+spec.md
 
 # Build artifacts
 dist/
