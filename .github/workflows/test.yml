@@ -24,7 +24,7 @@ jobs:
 
       - name: Check black formatting
         run: |
-          pip3 install black
+          pip3 install 'black==24.10.0'
           black --check tests/severity_counts.py tests/fuzz/test_properties.py 2>&1
 
       - name: Run flake8

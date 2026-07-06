@@ -54,6 +54,7 @@ cd "$ROOT_DIR"
 
 PASS=0
 FAIL=0
+WARN=0
 
 ok() {
     echo "  ✓ $1"
@@ -63,6 +64,11 @@ ok() {
 fail() {
     echo "  ✗ $1"
     FAIL=$((FAIL + 1))
+}
+
+warn() {
+    echo "  ⚠ $1"
+    WARN=$((WARN + 1))
 }
 
 # =========================================================================
@@ -487,16 +493,19 @@ else
     fail "skill/00-terminology.md missing"
 fi
 
-# Check 16: SDD documentation files present
+# Check 16: SDD documentation files present (warning-only — these are
+# gitignored session-state docs in the contest repo; see .gitignore).
+# Presence is expected for the upstream moltbagus backup branch, where they
+# are force-added. In the contest fork, absence is intentional.
 echo ""
-echo "Check 16: SDD documentation files present"
+echo "Check 16: SDD documentation files present (advisory)"
 SDD_FILES="PRD.md spec.md kanban.md learnings.md"
 MISSING_SDD=0
 for f in $SDD_FILES; do
     if [ -f "$f" ]; then
         ok "SDD file: $f"
     else
-        fail "SDD file missing: $f"
+        warn "SDD file absent (gitignored session-state): $f"
         MISSING_SDD=$((MISSING_SDD + 1))
     fi
 done

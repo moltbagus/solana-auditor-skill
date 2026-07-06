@@ -34,10 +34,16 @@ jobs:
           echo "$HOME/.local/share/solana/install/active_release/bin" >> $GITHUB_PATH
 
       - name: Setup Node / Anchor
+        # Skip pnpm install if the repo has no package.json — the original
+        # step assumed a JS workspace that this repo doesn't ship.
         run: |
-          corepack enable
-          corepack prepare pnpm@9 --activate
-          pnpm install --frozen-lockfile
+          if [ -f package.json ]; then
+            corepack enable
+            corepack prepare pnpm@9 --activate
+            pnpm install --frozen-lockfile
+          else
+            echo "::notice::No package.json — skipping Node/pnpm setup"
+          fi
 
       - name: Detect toolchain
         id: toolchain
