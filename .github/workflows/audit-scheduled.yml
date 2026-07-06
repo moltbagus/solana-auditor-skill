@@ -35,8 +35,7 @@ jobs:
       - name: Phase 1 — Recon
         run: |
           echo "=== Phase 1: Attack Surface Recon ==="
-          echo "=== Phase 1: Attack Surface Recon ==="
-          echo "[SKIP] find-programs.py — not yet committed to this fork"
+          python3 scripts/find-programs.py --output audit-output/find-programs.json || true
 
       # Phase 2 — Static Analysis via anchor build
       - name: Phase 2 — Static Analysis
@@ -48,13 +47,13 @@ jobs:
       - name: Phase 3 — Formal Verification
         run: |
           echo "=== Phase 3: Formal Verification ==="
-          echo "[SKIP] run-formal-verification.py — not yet committed to this fork"
+          python3 scripts/run-formal-verification.py --output audit-output/formal-verification.json --force || true
 
       # Phase 4 — Findings Triage
       - name: Phase 4 — Triage & CVSS Scoring
         run: |
           echo "=== Phase 4: Triage ==="
-          echo "[SKIP] triage-findings.py — not yet committed to this fork"
+          python3 scripts/triage-findings.py --input findings.json --output audit-output/triage.json --force || true
 
       # Phase 5 — Generate SARIF
       - name: Phase 5 — Generate SARIF
