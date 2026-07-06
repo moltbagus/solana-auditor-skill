@@ -1,8 +1,8 @@
 # PRD — Solana Auditor Skill
 
 > **Product Requirements Document**
-> _Superteam Brasil Solana Skills Contest — v1.14.2_
-> Last updated: 2026-07-03
+> _Superteam Brasil Solana Skills Contest — v1.15.0_
+> Last updated: 2026-07-07
 
 ---
 
@@ -212,7 +212,7 @@ Following the Loop 2 contest judges feedback, the Remediation Engine received a 
 
 | Metric | Target | Current | How Measured |
 |--------|--------|---------|-------------|
-| Integrity checks passing | 100% (161+) | 161/161 | `test-skill-integrity.sh` exit 0 |
+| Integrity checks passing | 100% (165+) | 165/165 | `test-skill-integrity.sh` exit 0 |
 | Vulnerability coverage | ≥50 classes | 50 rules | `grep "^## Rule " rules/audit.rules` |
 | CVSS math accuracy | 100% | 50/50 verified | `check-cvss-math` integrity check |
 | Security rules | ≥50 | 50 | `grep "^## Rule " rules/audit.rules` |
@@ -407,6 +407,16 @@ The `moltbagus/solana-auditor-skill` fork on `main` had 10 consecutive red CI ru
 | P3 | Workflow name collision audit — re-check after rename round 8 | S | DONE |
 | P3 | `formal-verification.yml` chained `&&` in `if:` — moved into shell `command -v anchor` | S | DONE |
 | P3 | `audit-on-push.yml` hardcoded clone of `moltbagus/solana-auditor-skill` — race with in-repo `skill/` | M | TODO |
+
+### v1.15.1 — CVSS Math Drift Fix + Check 10 Coverage Expansion (2026-07-07)
+- [x] CVSS score corrections on 3 live-exploit findings:
+  - KAM-001: 9.1→8.8 (PR:L scope-U = 0.62, not 0.50)
+  - SOLEND-02: 7.5→6.5 (C:H I:N A:N → ISS = 0.56, not 0.81)
+  - SOLEND-03: 7.3→7.5 (C:N I:H A:N → ISS = 0.56, not 0.46)
+- [x] Check 10 (CVSS math verification) expanded to cover all 5 fixtures including solend-governance + klive-live-audit — was only running against 3 of 5 fixtures
+- [x] Missing-foundation guard: Check 10 now skips absent fixtures (ok) instead of failing — removing an example never breaks CI
+- [x] 165/165 integrity checks (up from 161: +4 from extended coverage)
+- [x] 22/22 fuzz tests, all CVSS math verified across all 5 fixture dirs
 
 ### Out of scope (intentionally not fixed)
 

@@ -1,8 +1,8 @@
 # Spec — Solana Auditor Skill
 
 > **Technical Specification**
-> _Version 1.14.2 — Submission Sprint_
-> Last updated: 2026-07-03
+> _Version 1.15.0 — CI Stabilization + CVSS Math Fix_
+> Last updated: 2026-07-07
 
 ---
 
@@ -792,4 +792,5 @@ Each audit-phase script implements this interface:
 | SPEC-002 | Decide fate of `audit-pr` job post-guard | P2 |
 | SPEC-003 | Migrate Node 20 → 24 across all setup-python/setup-node steps | P2 |
 | SPEC-004 | Replace hardcoded `moltbagus/solana-auditor-skill` clone with skill-dir copy | P3 |
+| SPEC-005 | Fix Check 10 coverage gap: all 5 fixtures now verified (was 3). See learnings.md v1.15.1 | P1 |
 
