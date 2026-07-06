@@ -26,6 +26,12 @@ jobs:
   audit-pr:
     name: PR Diff Audit
     runs-on: ubuntu-latest
+    # Only run on PR events — running on push would recursively trigger
+    # the audit workflow (gh workflow run audit.yml) with no PR context.
+    if: github.event_name == 'pull_request'
+    permissions:
+      contents: read
+      pull-requests: write
     steps:
       - uses: actions/checkout@v4
       # No explicit gh auth needed — GITHUB_TOKEN is already in the env and gh

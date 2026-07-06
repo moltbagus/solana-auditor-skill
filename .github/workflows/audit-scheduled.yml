@@ -55,22 +55,24 @@ jobs:
           echo "=== Phase 4: Triage ==="
           python3 scripts/triage-findings.py --input findings.json --output audit-output/triage.json --force || true
 
-      # Phase 5 — Generate SARIF
+      # Phase 5 — Generate SARIF (only if triage produced findings.json)
       - name: Phase 5 — Generate SARIF
+        if: hashFiles('findings.json') != ''
         run: |
           echo "=== Phase 5: SARIF Export ==="
-          python scripts/findings-to-sarif.py \
+          python3 scripts/findings-to-sarif.py \
             --input findings.json \
             --output audit-results.sarif \
             --pretty || true
 
-      # Phase 6 — Upload SARIF
+      # Phase 6 — Upload SARIF (guard via hashFiles; upload-sarif doesn't
+      # support if-no-files-found — that's an upload-artifact-only input)
       - name: Upload SARIF to GitHub Security
-        uses: github/codeql-action/upload-sarif@v3
+        if: hashFiles('audit-results.sarif') != ''
+        uses: github/codeql-action/upload-sarif@v4
         with:
           sarif_file: audit-results.sarif
           category: scheduled-solana-audit
-          if-no-files-found: ignore
 
       # Create issues for new critical/high findings
       - name: Create issues for new critical/high findings

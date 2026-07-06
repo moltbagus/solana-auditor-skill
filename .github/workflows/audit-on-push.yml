@@ -7,6 +7,9 @@ on:
 jobs:
   audit:
     runs-on: ubuntu-latest
+    permissions:
+      security-events: write
+      contents: read
     steps:
       - uses: actions/checkout@v4
       - name: Install Claude Code
@@ -17,9 +20,13 @@ jobs:
         run: claude --print "/audit-quick ."
         env:
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
-      - name: Upload SARIF
-        if: always()
-        uses: github/codeql-action/upload-sarif@v3
+      # Guard: only upload if SARIF actually exists. claude /audit-quick may
+      # not produce a SARIF file (e.g., when no findings), and codeql-action
+      # upload-sarif does NOT support an "if-no-files-found" input — it errors
+      # with "Path does not exist" instead.
+      - name: Upload SARIF (if produced)
+        if: always() && hashFiles('audit-output/results.sarif') != ''
+        uses: github/codeql-action/upload-sarif@v4
         with:
           sarif_file: audit-output/results.sarif
           category: solana-sast

@@ -37,11 +37,12 @@ jobs:
         run: |
           python3 scripts/export-sarif.py --input .audit-precommit.json --output .audit-precommit.sarif || true
 
+      # Guard: only upload if SARIF actually exists. codeql-action/upload-sarif
+      # does NOT support "if-no-files-found" (that's an upload-artifact input) —
+      # use hashFiles() to gate the step instead.
       - name: Upload SARIF to GitHub Security
-        if: always()
-        uses: github/codeql-action/upload-sarif@v3
+        if: always() && hashFiles('.audit-precommit.sarif') != ''
+        uses: github/codeql-action/upload-sarif@v4
         with:
           sarif_file: .audit-precommit.sarif
           category: solana-sast
-          # upload if the file exists and is non-empty
-          if-no-files-found: ignore
