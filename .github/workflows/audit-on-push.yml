@@ -1,4 +1,4 @@
-name: Solana Security Audit
+name: Solana Security Audit (push)
 on:
   push:
     branches: [main]

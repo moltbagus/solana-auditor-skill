@@ -41,7 +41,14 @@ jobs:
       - name: Phase 2 — Static Analysis
         run: |
           echo "=== Phase 2: Static Analysis ==="
-          echo "[SKIP] hull-scope — not installed in this CI environment"
+          # hull-scope is a planned Cargo subcommand that is not yet available
+          # in any registry. Until it ships, fall back to a lightweight
+          # ripgrep sweep over the programs/ tree using audit rules.
+          if command -v rg >/dev/null 2>&1 && [ -d programs ]; then
+            rg --json -f rules/audit.rules programs/ 2>/dev/null | head -200 || true
+          else
+            echo "[SKIP] ripgrep or programs/ missing — nothing to scan"
+          fi
 
       # Phase 3 — Formal Verification (QED 2A)
       - name: Phase 3 — Formal Verification

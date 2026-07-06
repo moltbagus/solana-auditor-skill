@@ -1,4 +1,4 @@
-name: Solana Security Audit
+name: Solana Security Audit (PR + cargo + anchor)
 
 on:
   pull_request:
@@ -9,6 +9,11 @@ on:
   push:
     branches: [main]
   workflow_dispatch:
+    inputs:
+      pr:
+        description: 'PR number to audit (used by audit-pr job)'
+        required: false
+        type: string
 
 jobs:
   audit-tier1:
@@ -40,8 +45,11 @@ jobs:
       # subcommand rejects that mode.
       - name: Run PR audit
         run: |
-          PR_NUMBER=${{ github.event.pull_request.number }}
-          gh workflow run audit.yml -f pr=$PR_NUMBER || true
+          # PR_NUMBER resolves from either the live PR event or the
+          # workflow_dispatch `pr` input — both paths now declared.
+          PR_NUMBER="${PR_NUMBER:-${{ github.event.pull_request.number }}}"
+          PR_NUMBER="${PR_NUMBER:-${{ inputs.pr }}}"
+          gh workflow run audit.yml -f pr="$PR_NUMBER" || true
       - name: Comment findings on PR
         uses: actions/github-script@v7
         with:
