@@ -24,13 +24,14 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Setup Rust
-        uses: anza-actions/setup-solana@v2
-        with:
-          version: 1.18.0
-          shadow-unsafe-cfg: '[[bin]]
-          name = "solana-test-validator"
-          path = "target/debug/solana-test-validator"
-          risc0-vm = { version = "0.1.0" }'
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Install Solana CLI
+        # Direct install — anza-actions/setup-solana no longer resolves at the
+        # expected path. Same approach that works in test.yml/anchor-build.
+        run: |
+          sh -c "$(curl -sSfL https://release.anza.xyz/stable/install)"
+          echo "$HOME/.local/share/solana/install/active_release/bin" >> $GITHUB_PATH
 
       - name: Setup Node / Anchor
         run: |

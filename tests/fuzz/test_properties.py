@@ -231,9 +231,7 @@ def test_cvss_parse_roundtrip(vector: str) -> None:
 
 @given(AV_VALUES, AC_VALUES, PR_VALUES, UI_VALUES, CIA_VALUES)
 @settings(max_examples=100)
-def test_cvss_scope_ordering(
-    av: str, ac: str, pr: str, ui: str, cia: str
-) -> None:
+def test_cvss_scope_ordering(av: str, ac: str, pr: str, ui: str, cia: str) -> None:
     """P4: For identical exploitability metrics, Scope:C score >= Scope:U score.
 
     The CVSS 3.1 formula applies a 1.08x scope bonus when Scope is
@@ -375,9 +373,7 @@ TOKEN_FIXTURE_SOURCE_PATH: Path = (
 # VAULT FIXTURE CONSTANTS
 # =========================================================================
 
-TOKEN2022_FIXTURE_PATH: Path = (
-    PROJECT_ROOT / "examples/token-2022-real/audit-output/findings.json"
-)
+TOKEN2022_FIXTURE_PATH: Path = PROJECT_ROOT / "examples/token-2022-real/audit-output/findings.json"
 TOKEN2022_FINDING_COUNT: int = 2
 TOKEN2022_VULN_RANGE: range = range(17, 19)  # VULN-17 through VULN-18
 
@@ -606,14 +602,14 @@ def test_worst_case_cvss() -> None:
         - AV:N/AC:L/PR:N/UI:N/S:C/C:H/I:H/A:H -> 10.0
     """
     score_u = compute_cvss_score(WORST_CASE_SCOPE_U_VECTOR)
-    assert score_u == WORST_CASE_SCOPE_U_EXPECTED, (
-        f"Worst-case scope:U should be {WORST_CASE_SCOPE_U_EXPECTED}, got {score_u}"
-    )
+    assert (
+        score_u == WORST_CASE_SCOPE_U_EXPECTED
+    ), f"Worst-case scope:U should be {WORST_CASE_SCOPE_U_EXPECTED}, got {score_u}"
 
     score_c = compute_cvss_score(WORST_CASE_SCOPE_C_VECTOR)
-    assert score_c == WORST_CASE_SCOPE_C_EXPECTED, (
-        f"Worst-case scope:C should be {WORST_CASE_SCOPE_C_EXPECTED}, got {score_c}"
-    )
+    assert (
+        score_c == WORST_CASE_SCOPE_C_EXPECTED
+    ), f"Worst-case scope:C should be {WORST_CASE_SCOPE_C_EXPECTED}, got {score_c}"
 
 
 # =========================================================================
@@ -623,9 +619,7 @@ def test_worst_case_cvss() -> None:
 
 @given(AV_VALUES, AC_VALUES, PR_VALUES, UI_VALUES, SCOPE_VALUES)
 @settings(max_examples=100)
-def test_impact_metric_independence(
-    av: str, ac: str, pr: str, ui: str, scope: str
-) -> None:
+def test_impact_metric_independence(av: str, ac: str, pr: str, ui: str, scope: str) -> None:
     """P11: CIA impact metrics must contribute independently without cross-coupling.
 
     Changing only the Confidentiality metric must not affect how Integrity
@@ -851,12 +845,9 @@ def test_native_program_findings_reference_pinocchio_rules() -> None:
             continue
 
         rule_caught: str = finding.get("rule_caught", "")
-        has_pinocchio_ref: bool = any(
-            f"Rule {r}" in rule_caught for r in pinocchio_rules
-        )
+        has_pinocchio_ref: bool = any(f"Rule {r}" in rule_caught for r in pinocchio_rules)
         assert has_pinocchio_ref, (
-            f"Finding {vuln_id} references '{rule_caught}' — "
-            f"expected Pinocchio rule (36-45)"
+            f"Finding {vuln_id} references '{rule_caught}' — " f"expected Pinocchio rule (36-45)"
         )
 
 
@@ -896,12 +887,10 @@ def test_all_findings_have_location() -> None:
         for finding in data.get("findings", []):
             loc: Dict[str, Any] = finding.get("location", {})
             assert "file" in loc, (
-                f"Finding {finding.get('id')} in {fixture_dir.name} "
-                f"lacks location.file"
+                f"Finding {finding.get('id')} in {fixture_dir.name} " f"lacks location.file"
             )
             assert loc["file"], (
-                f"Finding {finding.get('id')} in {fixture_dir.name} "
-                f"has empty location.file"
+                f"Finding {finding.get('id')} in {fixture_dir.name} " f"has empty location.file"
             )
 
 

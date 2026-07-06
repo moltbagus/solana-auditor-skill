@@ -696,10 +696,10 @@ else
     fail "skill/02B-runtime-testing.md missing"
 fi
 
-# Check 30: SPEC.md and PRD.md reflect 26 rules
+# Check 30: spec.md and PRD.md reflect 26 rules
 echo ""
-echo "Check 30: SPEC.md and PRD.md reflect 26 rules"
-SPEC26=$(grep -c "26" SPEC.md 2>/dev/null || echo 0)
+echo "Check 30: spec.md and PRD.md reflect 26 rules"
+SPEC26=$(grep -c "26" spec.md 2>/dev/null || echo 0)
 PRD26=$(grep -c "26" PRD.md 2>/dev/null || echo 0)
 if [ "$SPEC26" -gt 0 ] && [ "$PRD26" -gt 0 ]; then
     ok "SPEC.md and PRD.md reference 26 rules"

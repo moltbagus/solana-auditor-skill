@@ -28,10 +28,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Authenticate with GitHub CLI
-        run: gh auth login --hostname github.com
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      # No explicit gh auth needed — GITHUB_TOKEN is already in the env and gh
+      # auto-uses it. The previous `gh auth login --hostname github.com`
+      # command fails because the GH_TOKEN is already set and the login
+      # subcommand rejects that mode.
       - name: Run PR audit
         run: |
           PR_NUMBER=${{ github.event.pull_request.number }}

@@ -225,7 +225,8 @@ def compute_cvss_score(vec: str) -> Optional[float]:
     else:  # Scope:C — only valid when ISS > 0
         impact = (
             CVSS_SCOPE_C_IMPACT_MULTIPLIER * (iss - CVSS_SCOPE_C_IMPACT_CONSTANT_1)
-            - CVSS_SCOPE_C_IMPACT_CONSTANT_2 * (iss - CVSS_SCOPE_C_IMPACT_CONSTANT_2) ** CVSS_SCOPE_C_IMPACT_POWER
+            - CVSS_SCOPE_C_IMPACT_CONSTANT_2
+            * (iss - CVSS_SCOPE_C_IMPACT_CONSTANT_2) ** CVSS_SCOPE_C_IMPACT_POWER
         )
 
     exploitability = CVSS_EXPLOITABILITY_COEFFICIENT * av * ac * pr * ui
