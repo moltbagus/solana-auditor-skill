@@ -23,4 +23,3 @@ jobs:
         with:
           sarif_file: audit-output/results.sarif
           category: solana-sast
-          if-no-files-found: ignore

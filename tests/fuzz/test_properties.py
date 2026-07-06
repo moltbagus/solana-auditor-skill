@@ -10,11 +10,10 @@ Run:  python -m pytest tests/fuzz/ -x -v --hypothesis-show-statistics
 """
 
 import json
-import os
 import re
 import sys
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Set
+from typing import Any, Dict, List, Set
 
 from hypothesis import given, assume, settings, strategies as st
 
