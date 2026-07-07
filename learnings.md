@@ -641,3 +641,76 @@ Fixed `scripts/dashboard.py` — removed dead `stdout_mode` code, renamed confus
 ### Current state
 - `dashboard.py`: 0 flake8 warnings, clear argparse, `--version` flag ✅
 - 4 items remain in maintainability backlog (run-sast.py, pre-commit-audit.sh, fix-verification.sh, pyproject.toml)
+
+---
+
+## 2026-07-07 — v1.15.2 MAINT-004: Dynamic SAST pattern loading
+
+### What we did
+Migrated `scripts/run-sast.py` from 26 hardcoded rules to dynamic loading from `rules/sast-patterns.json`. Created new JSON file with all 26 rule definitions, fixing 3 garbled CWE values in the process.
+
+### Changes
+| Before | After |
+|--------|-------|
+| 26 rules in Python list `RULES` | Rules loaded from `rules/sast-patterns.json` |
+| STALE WARNING: "hardcodes 26 rules, audit.rules has 50" | Dynamic coverage stats: "52% (26/50), 24 require manual review" |
+| `--rules` flag parsed but unused | `--rules` loads alternative patterns file |
+| No `--patterns` or `--stats` flags | Added `--patterns` (list rules), `--stats` (coverage report), `--version` |
+| RULE-03 CWE: `CWE-自主决策` (garbled) | CWE-340 (Generation of Predictable Numbers) |
+| RULE-15 CWE: `CWE-adyice-79` (garbled) | CWE-20 (Improper Input Validation) |
+| RULE-17 CWE: `CWE-adyice-20` (garbled) | CWE-20 (Improper Input Validation) |
+| SCRIPT_VERSION 1.6.0 | SCRIPT_VERSION 2.0.0 |
+| 1 flake8 warning (unused import `os`) | 0 flake8 warnings |
+
+### Bugs found and fixed
+| Bug | Severity | Details |
+|-----|----------|---------|
+| Garbled CWE values in 3 rules | MEDIUM | RULE-03 had Chinese characters `自主决策`, RULE-15/17 had `adyice-` prefix. These were clearly garbled text artifacts from a template or copy-paste error. Fixed to correct CWE IDs. |
+| `--rules` flag was no-op | MEDIUM | `--rules` parsed but always ignored. The flag documentation promised functionality that didn't exist. Now correctly loads alternative patterns file. |
+| Missing coverage awareness | LOW | Script had no way to report how many of the 50 audit.rules rules it covered. Now `--stats` and output JSON include `audit_rules_total` and `rules_requiring_manual_review`. |
+
+### Key lessons
+1. **Externalizing data from code is always worth it** — 26 rule definitions as a Python list means every rule change requires a code change. A JSON file can be updated independently, shared, and version-tracked separately.
+2. **Garbled CWE values can persist for months** — The `CWE-自主决策` and `CWE-adyice-*` values were clearly copy-paste artifacts that made it through code review, testing, and 6+ months of use. They were never caught because the CWE field is informational in the SAST engine — no test validated CWE correctness.
+3. **Coverage transparency prevents false confidence** — Adding `rules_requiring_manual_review: 24` to the output JSON makes it clear that the SAST engine covers 52% of the full rule set. Before this change, a user running `run-sast.py` would think they got a complete scan.
+
+---
+
+## 2026-07-07 — v1.15.2 MAINT-005: pre-commit-audit.sh temp cleanup
+
+### What we did
+Hardened temp file cleanup in `scripts/pre-commit-audit.sh`: added INT/TERM signal traps, use `${TMPDIR:-/tmp}` for path resolution.
+
+### Changes
+| Before | After |
+|--------|-------|
+| `trap cleanup EXIT` only | `trap cleanup EXIT INT TERM` |
+| Hardcoded `/tmp/audit_*_$$` paths | `${TMPDIR:-/tmp}/audit_*_$$` — respects env var |
+| No SIGINT/SIGTERM handling | PID files cleaned up on Ctrl-C or kill |
+
+### Key lessons
+1. **Signal traps are cheap insurance** — A single `INT TERM` addition to the trap covers Ctrl-C and `kill` scenarios. The `cleanup` function was already correct — it just needed to be triggered on more signals.
+2. **`TMPDIR` env var is standard** — Many systems set `TMPDIR` to a secure location. Respecting it is one line per temp file reference, but requires finding all instances.
+
+---
+
+## 2026-07-07 — v1.15.2 MAINT-006: fix-verification.sh bc + bash 3.2 compat
+
+### What we did
+Added `bc` dependency check and replaced bash 4.x syntax with bash 3.2-compatible alternatives in `scripts/fix-verification.sh`.
+
+### Changes
+| Before | After |
+|--------|-------|
+| `bc -l` called without checking if `bc` exists | `command -v bc` guard before `bc -l`; graceful skip with warning |
+| `${finding_id,,}` (bash 4.0+ lowercase expansion) | `echo "$finding_id" \| tr '[:upper:]' '[:lower:]'` (bash 3.2+) |
+
+### Key lessons
+1. **macOS ships bash 3.2 by default** — `${var,,}` and `${var^^}` are bash 4.0+ features. On macOS (still the most common dev platform), these cause silent failures in shell scripts. Always use `tr` for case conversion.
+2. **`bc` is not preinstalled on minimal systems** — Docker images, CI runners, and fresh macOS installs may lack `bc`. A `command -v` guard prevents hard-to-diagnose failures. Install hint makes self-healing easy.
+
+### Current state
+- `run-sast.py`: dynamic loading ✅, 0 flake8 ✅, 26 patterns from JSON, 52% coverage awareness
+- `pre-commit-audit.sh`: crash-safe temp cleanup ✅
+- `fix-verification.sh`: bc guard ✅, bash 3.2 compat ✅
+- **1 item remains**: MAINT-007 (pyproject.toml version conflict)

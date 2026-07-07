@@ -263,14 +263,16 @@ aggregate_findings() {
     echo "MEDIUM=$medium_count"
 
     # Store details for JSON output
+    local tmp_dir
+    tmp_dir="${TMPDIR:-/tmp}"
     if [[ ${#critical_details[@]} -gt 0 ]]; then
-        printf '%s\n' "${critical_details[@]}" > /tmp/audit_critical_$$
+        printf '%s\n' "${critical_details[@]}" > "${tmp_dir}/audit_critical_$$"
     fi
     if [[ ${#high_details[@]} -gt 0 ]]; then
-        printf '%s\n' "${high_details[@]}" > /tmp/audit_high_$$
+        printf '%s\n' "${high_details[@]}" > "${tmp_dir}/audit_high_$$"
     fi
     if [[ ${#medium_details[@]} -gt 0 ]]; then
-        printf '%s\n' "${medium_details[@]}" > /tmp/audit_medium_$$
+        printf '%s\n' "${medium_details[@]}" > "${tmp_dir}/audit_medium_$$"
     fi
 }
 
@@ -285,14 +287,16 @@ generate_json() {
     medium_count=0
 
     # Read counts from temp files
-    if [[ -f /tmp/audit_critical_$$ ]]; then
-        critical_count=$(wc -l < /tmp/audit_critical_$$ | tr -d ' ')
+    local tmp_dir
+    tmp_dir="${TMPDIR:-/tmp}"
+    if [[ -f "${tmp_dir}/audit_critical_$$" ]]; then
+        critical_count=$(wc -l < "${tmp_dir}/audit_critical_$$" | tr -d ' ')
     fi
-    if [[ -f /tmp/audit_high_$$ ]]; then
-        high_count=$(wc -l < /tmp/audit_high_$$ | tr -d ' ')
+    if [[ -f "${tmp_dir}/audit_high_$$" ]]; then
+        high_count=$(wc -l < "${tmp_dir}/audit_high_$$" | tr -d ' ')
     fi
-    if [[ -f /tmp/audit_medium_$$ ]]; then
-        medium_count=$(wc -l < /tmp/audit_medium_$$ | tr -d ' ')
+    if [[ -f "${tmp_dir}/audit_medium_$$" ]]; then
+        medium_count=$(wc -l < "${tmp_dir}/audit_medium_$$" | tr -d ' ')
     fi
 
     local blocked=$((critical_count + high_count > 0 ? 1 : 0))
@@ -321,10 +325,11 @@ generate_findings_json() {
 
     for severity in CRITICAL HIGH MEDIUM; do
         local tmpfile=""
+        local tmp_dir="${TMPDIR:-/tmp}"
         case "$severity" in
-            CRITICAL) tmpfile="/tmp/audit_critical_$$" ;;
-            HIGH)     tmpfile="/tmp/audit_high_$$" ;;
-            MEDIUM)   tmpfile="/tmp/audit_medium_$$" ;;
+            CRITICAL) tmpfile="${tmp_dir}/audit_critical_$$" ;;
+            HIGH)     tmpfile="${tmp_dir}/audit_high_$$" ;;
+            MEDIUM)   tmpfile="${tmp_dir}/audit_medium_$$" ;;
         esac
 
         if [[ -f "$tmpfile" ]] && [[ -s "$tmpfile" ]]; then
@@ -341,7 +346,8 @@ generate_findings_json() {
 
 # Cleanup temp files
 cleanup() {
-    rm -f /tmp/audit_critical_$$ /tmp/audit_high_$$ /tmp/audit_medium_$$
+    local tmp_dir="${TMPDIR:-/tmp}"
+    rm -f "${tmp_dir}/audit_critical_$$" "${tmp_dir}/audit_high_$$" "${tmp_dir}/audit_medium_$$"
 }
 
 # Run main audit
@@ -395,9 +401,10 @@ run_audit() {
     high_count=0
     medium_count=0
 
-    [[ -f /tmp/audit_critical_$$ ]] && critical_count=$(wc -l < /tmp/audit_critical_$$ | tr -d ' ')
-    [[ -f /tmp/audit_high_$$ ]] && high_count=$(wc -l < /tmp/audit_high_$$ | tr -d ' ')
-    [[ -f /tmp/audit_medium_$$ ]] && medium_count=$(wc -l < /tmp/audit_medium_$$ | tr -d ' ')
+    local tmp_dir="${TMPDIR:-/tmp}"
+    [[ -f "${tmp_dir}/audit_critical_$$" ]] && critical_count=$(wc -l < "${tmp_dir}/audit_critical_$$" | tr -d ' ')
+    [[ -f "${tmp_dir}/audit_high_$$" ]] && high_count=$(wc -l < "${tmp_dir}/audit_high_$$" | tr -d ' ')
+    [[ -f "${tmp_dir}/audit_medium_$$" ]] && medium_count=$(wc -l < "${tmp_dir}/audit_medium_$$" | tr -d ' ')
 
     # Generate JSON report
     generate_json
@@ -432,8 +439,9 @@ run_audit() {
 # ─── Main ────────────────────────────────────────────────────────────────────
 
 main() {
-    # Trap for cleanup
-    trap cleanup EXIT
+    # Trap for cleanup on exit, interrupt, or termination
+    # PID-based temp files in ${TMPDIR:-/tmp} are cleaned up on these signals
+    trap cleanup EXIT INT TERM
 
     case "${1:-}" in
         --install)

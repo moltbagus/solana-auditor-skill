@@ -796,8 +796,8 @@ Each audit-phase script implements this interface:
 | SPEC-006 | Split `scripts/audit-fix-suggestions.py` (>120KB) into modules | P1 | M | ✅ v1.15.2 |
 | SPEC-007 | Deduplicate SARIF exporters: `export-sarif.py` ↔ `findings-to-sarif.py` | P1 | S | ✅ v1.15.2 |
 | SPEC-008 | Fix `scripts/dashboard.py` dead code + confusing argparse | P2 | S | ✅ v1.15.2 |
-| SPEC-009 | Migrate `scripts/run-sast.py` to dynamically read patterns from `audit.rules` | P2 | M |
-| SPEC-010 | Add bc-dependency check to `scripts/fix-verification.sh` | P3 | XS |
+| SPEC-009 | Migrate `scripts/run-sast.py` to dynamically read patterns from `audit.rules` | P2 | M | ✅ v1.15.2 |
+| SPEC-010 | Add bc-dependency check + macOS bash 3.2 compat to `scripts/fix-verification.sh` | P3 | XS | ✅ v1.15.2 |
 | SPEC-011 | Fix `pyproject.toml` python_version conflict (black py39 vs mypy py310) | P3 | XS |
 
 ### Known maintainability issues (cataloged 2026-07-07, updated v1.15.2)
@@ -805,11 +805,11 @@ Each audit-phase script implements this interface:
 | # | File | Issue | Severity | Status |
 |---|------|-------|----------|--------|
 | 1 | `scripts/audit-fix-suggestions.py` → 6 modules + 510-line orchestrator | SRP modularization done. 472 tests. | HIGH | ✅ v1.15.2 |
-| 2 | `scripts/run-sast.py` | Hardcodes 26 rule patterns; `audit.rules` has 50. Stale warning present but architecture should read patterns dynamically. | MEDIUM | TODO |
+| 2 | `scripts/run-sast.py` | Hardcoded 26 rules → loaded from `rules/sast-patterns.json`. `--rules`, `--patterns`, `--stats`, `--version` flags. 0 flake8. | MEDIUM | ✅ v1.15.2 |
 | 3 | `export-sarif.py` + `findings-to-sarif.py` → `sarif_core.py` + thin wrappers | DRY violation resolved. 44 tests. | MEDIUM | ✅ v1.15.2 |
 | 4 | `scripts/dashboard.py` | Dead code removed. Named positionals (`input`, `second`, `compare_output`). Added `--version`. 0 flake8. | MEDIUM | ✅ v1.15.2 |
-| 5 | `scripts/pre-commit-audit.sh` | Temp files in `/tmp/PID` without SIGKILL / crash cleanup assurance. | LOW | TODO |
-| 6 | `scripts/fix-verification.sh` | Uses `bc -l` without checking if `bc` is installed. Uses `{|,}` bash 4.x syntax (macOS = bash 3.2). | LOW | TODO |
+| 5 | `scripts/pre-commit-audit.sh` | Temp files now use `${TMPDIR:-/tmp}` prefix. `trap cleanup EXIT INT TERM` for crash-safe cleanup. | LOW | ✅ v1.15.2 |
+| 6 | `scripts/fix-verification.sh` | Added `command -v bc` guard. Replaced `${finding_id,,}` with `tr` for bash 3.2 compat. | LOW | ✅ v1.15.2 |
 | 7 | `scripts/protocol-fingerprint.sh` | 400+ line shell script with heavy `jq` usage. Complex shell is brittle. | LOW | TODO |
 | 8 | `scripts/generate-cpi-graph.sh` | `set -uo pipefail` but references variables computed via `jq` that may silently fail. | LOW | TODO |
 | 9 | `pyproject.toml` | Black targets py39, mypy has python_version="3.10". Version conflict. | LOW | TODO |

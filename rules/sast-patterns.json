@@ -1,0 +1,298 @@
+{
+  "_meta": {
+    "version": 2,
+    "description": "SAST rule patterns for Solana Auditor Skill",
+    "loaded_by": "scripts/run-sast.py", "extracted_from": "scripts/run-sast.py (v1.x)",
+    "rules_count": 26,
+    "audit_rules_count": 50,
+    "note": "Rules 27-50 (Token-2022 Transfer Hook, Pinocchio/Native, AI Agent Safety) require manual review — no automated patterns exist"
+  },
+  "rules": [
+    {
+      "rule_id": "RULE-01",
+      "severity": "HIGH",
+      "cwe": "CWE-269",
+      "pattern": "pub fn \\w+\\([^)]*\\)[^{]*\\{[^}]*(?<!is_signer)(?<!require_signed)\\b(close|withdraw|transfer|liquidate)\\b",
+      "pattern_type": "regex",
+      "file_glob": "**/*.rs",
+      "description": "Function performs privileged operation without obvious signer validation",
+      "impact": "Unauthorized state mutation possible if account is not properly validated",
+      "recommendation": "Add #[account(signer)] constraint and verify signer's pubkey matches expected authority"
+    },
+    {
+      "rule_id": "RULE-02",
+      "severity": "HIGH",
+      "cwe": "CWE-345",
+      "pattern": "#\\[account\\(init\\)\\][^}]*Account[^}]*\\{[^}]*(?!#[account\\()owner\\()\\])",
+      "pattern_type": "regex",
+      "file_glob": "**/*.rs",
+      "description": "Account initialized without owner constraint",
+      "impact": "Account can be initialized by anyone who knows the PDA seed",
+      "recommendation": "Add #[account(owner = program_id)] constraint"
+    },
+    {
+      "rule_id": "RULE-03",
+      "severity": "MEDIUM",
+      "cwe": "CWE-340",
+      "pattern": "bump\\s*=\\s*[0-9]{1,3}(?!\\s*#.*find_program_address)",
+      "pattern_type": "regex",
+      "file_glob": "**/*.rs",
+      "description": "Hardcoded bump seed -- program address collision risk",
+      "impact": "If collision occurs, attacker could initialize their own account at the PDA",
+      "recommendation": "Use find_program_address with canonical bump: let bump = bump_seed.unwrap()"
+    },
+    {
+      "rule_id": "RULE-04",
+      "severity": "HIGH",
+      "cwe": "CWE-347",
+      "pattern": "invoke\\([^)]*\\bprogram_id\\b[^)]*\\)[^}]*(?!require_verified_program_id)(?!program_id\\s*==)",
+      "pattern_type": "regex",
+      "file_glob": "**/*.rs",
+      "description": "CPI call with program_id that may not be verified",
+      "impact": "Attacker could redirect CPI to malicious program",
+      "recommendation": "Validate program_id: require!(actual_program == expected_program)"
+    },
+    {
+      "rule_id": "RULE-05",
+      "severity": "HIGH",
+      "cwe": "CWE-1109",
+      "pattern": "use\\s+spl_token[^;]*;\\s+#[account.*token_extensions|#[account.*transfer_fee",
+      "pattern_type": "regex",
+      "file_glob": "**/*.rs",
+      "description": "Token program mismatch -- spl_token used with Token-2022 extensions",
+      "impact": "Extension features won't work correctly",
+      "recommendation": "Use spl_token_2022::ID and appropriate extension types"
+    },
+    {
+      "rule_id": "RULE-06",
+      "severity": "MEDIUM",
+      "cwe": "CWE-190",
+      "pattern": "\\b([a-z_]+_amount|[a-z_]+_sum)\\s*=\\s*[^;]+\\.(saturating_add|checked_add|wrapping_add)",
+      "pattern_type": "contains",
+      "file_glob": "**/*.rs",
+      "description": "NOT using checked arithmetic on token amounts",
+      "impact": "Overflow/underflow could drain or mint unintended amounts",
+      "recommendation": "Use checked_add, checked_mul, saturating_add for all token math"
+    },
+    {
+      "rule_id": "RULE-07",
+      "severity": "CRITICAL",
+      "cwe": "CWE-377",
+      "pattern": "close\\([^)]*,\\s*[^)]*authority[^)]*\\)",
+      "pattern_type": "contains",
+      "file_glob": "**/*.rs",
+      "description": "close instruction with authority account -- verify it's the rent recipient",
+      "impact": "Lamports could be sent to wrong destination",
+      "recommendation": "Ensure close target is the account that will receive the rent exemption refund"
+    },
+    {
+      "rule_id": "RULE-08",
+      "severity": "CRITICAL",
+      "cwe": "CWE-306",
+      "pattern": "#[instruction]\\s*\\n\\s*pub\\s+fn\\s+\\w+[^}]*\\{[^}]*(?<!is_signer)(?<!require_signed)(?<!require\\()\\b(admin|withdraw|mint|set_authority|pause)",
+      "pattern_type": "regex",
+      "file_glob": "**/*.rs",
+      "description": "Privileged instruction without signer check",
+      "impact": "Anyone can call admin functions",
+      "recommendation": "Add #[account(signer)] and validate authority PDA"
+    },
+    {
+      "rule_id": "RULE-09",
+      "severity": "MEDIUM",
+      "cwe": "CWE-284",
+      "pattern": "UpgradeAuthority|SETUPGRADEAUTHORITY|BufData\\.new_with_size",
+      "pattern_type": "contains",
+      "file_glob": "**/*.rs",
+      "description": "Upgrade authority pattern detected -- verify governance controls",
+      "impact": "Program can be upgraded without multisig approval",
+      "recommendation": "Use Timelock + multisig for upgrade authority"
+    },
+    {
+      "rule_id": "RULE-10",
+      "severity": "LOW",
+      "cwe": "CWE-755",
+      "pattern": "\\bpanic!\\s*\\(",
+      "pattern_type": "contains",
+      "file_glob": "**/*.rs",
+      "description": "panic! without custom error -- loses error context",
+      "impact": "Audit findings can't distinguish panic sources",
+      "recommendation": "Replace panic! with custom error: Err(Error::Custom(NOT_AUTHORIZED)"
+    },
+    {
+      "rule_id": "RULE-11",
+      "severity": "CRITICAL",
+      "cwe": "CWE-565",
+      "pattern": "#\\[account\\(init_if_needed\\)\\][^}]*(?!#[account\\()init.*discriminator)",
+      "pattern_type": "regex",
+      "file_glob": "**/*.rs",
+      "description": "init_if_needed without discriminator reinitialization guard",
+      "impact": "Account can be reinitialized with new data by anyone",
+      "recommendation": "Track initialized state in discriminator or use close + reinit pattern"
+    },
+    {
+      "rule_id": "RULE-12",
+      "severity": "MEDIUM",
+      "cwe": "CWE-400",
+      "pattern": "Account\\s*\\{[^}]*space:\\s*0\\s*[^}]*\\}",
+      "pattern_type": "regex",
+      "file_glob": "**/*.rs",
+      "description": "Account allocated with zero space -- rent exemption violated",
+      "impact": "Account cannot hold data without paying rent",
+      "recommendation": "Set space = T::LAYOUT: bytes. Use AccountSerialize + AccountDeserialize for dynamic sizing"
+    },
+    {
+      "rule_id": "RULE-13",
+      "severity": "CRITICAL",
+      "cwe": "CWE-841",
+      "pattern": "oracle|price_feed|quote|get_price\\s*\\([^)]*\\)[^}]*(?!\\.settle_balance|settlement_delay)",
+      "pattern_type": "regex",
+      "file_glob": "**/*.rs",
+      "description": "Oracle read without settlement delay -- flash loan susceptible",
+      "impact": "Price can be manipulated within same transaction to drain protocol",
+      "recommendation": "Add settlement period -- price updates take effect after N slots"
+    },
+    {
+      "rule_id": "RULE-14",
+      "severity": "CRITICAL",
+      "cwe": "CWE-362",
+      "pattern": "\\.invoke\\([^}]*\\)[\\s\\n]+[^}]*\\{[^}]*(?<!reentrancy_guard)[^}]*self\\.[^}]*[\\n\\s]+[^}]*\\.\\w+\\(",
+      "pattern_type": "regex",
+      "file_glob": "**/*.rs",
+      "description": "CEI pattern violation -- external call before state update enables reentrancy",
+      "impact": "Attacker re-enters contract in same tx, drains funds via race condition",
+      "recommendation": "Apply checks-effects-interactions: update state BEFORE external call. Use reentrancy guard."
+    },
+    {
+      "rule_id": "RULE-15",
+      "severity": "CRITICAL",
+      "cwe": "CWE-20",
+      "pattern": "remaining_accounts\\s*\\.\\s*iter\\(\\)[^}]*(?!remaining_accounts\\[i\\]\\.key\\(\\)\\s*==)",
+      "pattern_type": "regex",
+      "file_glob": "**/*.rs",
+      "description": "Iterating remaining_accounts without index-based validation",
+      "impact": "Attacker can reorder accounts to bypass checks",
+      "recommendation": "Validate each account's key BEFORE use. Store count: let remaining = remaining_accounts.len(); assert_eq!(expected_len, remaining.len());"
+    },
+    {
+      "rule_id": "RULE-16",
+      "severity": "CRITICAL",
+      "cwe": "CWE-563",
+      "pattern": "#\\[instruction\\]\\s*\\n\\s*(?:impl\\s+\\w+\\s*\\{[^}]*\\})?\\s*pub\\s+fn\\s+(\\w+)[^}]*\\n[^}]*pub\\s+fn\\s+(\\w+)[^}]*",
+      "pattern_type": "regex",
+      "file_glob": "**/*.rs",
+      "description": "Multiple instructions with similar names -- discriminator collision risk",
+      "impact": "Wrong instruction could be dispatched",
+      "recommendation": "Use unique discriminator prefixes. Audit discriminator assignment for collisions."
+    },
+    {
+      "rule_id": "RULE-17",
+      "severity": "HIGH",
+      "cwe": "CWE-20",
+      "pattern": "AccountLoader::\\w+<[^>]+>\\s*\\([^)]+\\)[^}]*(?!owner_check)[^}]*\\.load\\(\\)",
+      "pattern_type": "regex",
+      "file_glob": "**/*.rs",
+      "description": "AccountLoader used without owner verification",
+      "impact": "Attacker could deserialize account data not owned by this program",
+      "recommendation": "Use .load() with .owner() check, or use Account instead"
+    },
+    {
+      "rule_id": "RULE-18",
+      "severity": "HIGH",
+      "cwe": "CWE-755",
+      "pattern": "(?<!try_from_slice::)<[A-Z]\\w+>\\s*\\.\\s*deserialize\\s*\\(&[^)]*\\)\\s*(?!\\?)(?!\\.map_err)",
+      "pattern_type": "regex",
+      "file_glob": "**/*.rs",
+      "description": "BorshDeserialize without Result handling -- panics on malformed data",
+      "impact": "Malicious tx data causes panic, enabling denial of service",
+      "recommendation": "Use try_from_slice and handle Result: data.try_into()?"
+    },
+    {
+      "rule_id": "RULE-19",
+      "severity": "HIGH",
+      "cwe": "CWE-346",
+      "pattern": "#\\[account\\([^)]*verify\\s*=\\s*false[^)]*\\)",
+      "pattern_type": "contains",
+      "file_glob": "**/*.rs",
+      "description": "Anchor verify constraint disabled -- constraint bypassed",
+      "impact": "Account constraint not enforced by Anchor",
+      "recommendation": "Enable verify constraint or add manual validation with require!()"
+    },
+    {
+      "rule_id": "RULE-20",
+      "severity": "HIGH",
+      "cwe": "CWE-682",
+      "pattern": "Extension::\\s*MemoTransfer[^}]*Extension::\\s*TransferFeeConfig",
+      "pattern_type": "contains",
+      "file_glob": "**/*.rs",
+      "description": "Token-2022 extension order violation -- memo must precede transfer_fee",
+      "impact": "Transfer fee extension silently fails if initialized out of order",
+      "recommendation": "Initialize extensions in order: MemoTransfer BEFORE TransferFeeConfig"
+    },
+    {
+      "rule_id": "RULE-21",
+      "severity": "CRITICAL",
+      "cwe": "CWE-362",
+      "pattern": "invoke_signed\\([^}]*with_signer\\([^)]*\\)[^}]*Callback[^}]*PDA[^}]*self\\.\\w+[^}]*\\.\\w+\\(",
+      "pattern_type": "regex",
+      "file_glob": "**/*.rs",
+      "description": "CPI callback with PDA -- attacker can reenter via unexpected signer PDA",
+      "impact": "Callback reentrancy bypasses caller's guard because callee uses different PDA",
+      "recommendation": "Validate callback signer PDA matches expected program-derived address. Add callback guard."
+    },
+    {
+      "rule_id": "RULE-22",
+      "severity": "CRITICAL",
+      "cwe": "CWE-362",
+      "pattern": "#\\[account\\(init_if_needed\\)[^}]*close\\(",
+      "pattern_type": "contains",
+      "file_glob": "**/*.rs",
+      "description": "init_if_needed and close in same or nearby instructions -- race condition",
+      "impact": "Attacker front-runs close with init_if_needed to reinitialize, draining rent refund",
+      "recommendation": "Make init and close ATOMIC or use close authority + state versioning"
+    },
+    {
+      "rule_id": "RULE-23",
+      "severity": "MEDIUM",
+      "cwe": "CWE-20",
+      "pattern": "invoke\\s*\\([^)]*Memo1UhkJRfHyvLMcRuc7u5MC7iBwlZ6EEgMw424FWP[^)]*,\\s*user_data",
+      "pattern_type": "regex",
+      "file_glob": "**/*.rs",
+      "description": "CPI to memo program with user-supplied data -- log injection risk",
+      "impact": "Attacker injects misleading memos into transaction logs to social-engineer users",
+      "recommendation": "Do not pass user-controlled data to memo. Validate memo content before CPI."
+    },
+    {
+      "rule_id": "RULE-24",
+      "severity": "CRITICAL",
+      "cwe": "CWE-125",
+      "pattern": "invoke_signed\\([^,]*,[^)]*remaining_accounts\\[.*\\.\\.[^)]*\\],\\s*remaining_accounts\\[[^\\]]+\\.\\.[^]]*\\]",
+      "pattern_type": "regex",
+      "file_glob": "**/*.rs",
+      "description": "Remaining accounts slice passed to invoke_signed with wrong bounds",
+      "impact": "Signature verification bypassed -- wrong accounts signed for wrong instruction",
+      "recommendation": "Validate accounts array length BEFORE invoke_signed. assert_eq!(expected, accounts.len())"
+    },
+    {
+      "rule_id": "RULE-25",
+      "severity": "HIGH",
+      "cwe": "CWE-346",
+      "pattern": "get_associated_token_address\\s*\\([^)]*versioned_transaction[^)]*address_lookup_table",
+      "pattern_type": "contains",
+      "file_glob": "**/*.rs",
+      "description": "Using associated token address with LUT -- verify account contents",
+      "impact": "Attacker manipulates LUT to substitute unexpected accounts",
+      "recommendation": "Validate LUT contents: verify account is in expected lookup table before use"
+    },
+    {
+      "rule_id": "RULE-26",
+      "severity": "CRITICAL",
+      "cwe": "CWE-841",
+      "pattern": "flash_loan\\(|FlashLoan\\(|ix_with_budget\\s*\\([^)]*borrow[^)]*price[^}]*\\.set\\(",
+      "pattern_type": "regex",
+      "file_glob": "**/*.rs",
+      "description": "Flash loan pattern -- verify oracle settlement across ALL programs in CPI chain",
+      "impact": "Flash loan in Program A manipulates oracle to exploit Program C via Program B CPI",
+      "recommendation": "Check settlement slot + verify price in ALL programs in CPI chain. Add atomicity guard."
+    }
+  ]
+}

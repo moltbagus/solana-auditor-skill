@@ -459,6 +459,21 @@ Following the maintainability audit's 11-item issue catalog, the top 2 P1 items 
 - [x] 0 flake8 warnings on tests/ directory (down from 14)
 - [x] Committed as `d891e0d` and pushed to origin/main
 
+#### MAINT-004: Migrate `scripts/run-sast.py` to load patterns dynamically ✅
+- **Before**: 26 rules hardcoded in source, STALE WARNING about 50 rules in audit.rules, `--rules` flag unused
+- **After**: Patterns loaded from `rules/sast-patterns.json` (new file). `--rules` flag works. Added `--patterns`, `--stats`, `--version` flags. Cross-references `audit.rules` for coverage stats. 0 flake8.
+- **Coverage**: 26 automated patterns / 50 audit.rules rules (52%). Rules 27-50 documented as requiring manual review.
+- **CWE fixes**: 3 garbled CWE values corrected (RULE-03: `CWE-自主决策` → CWE-340, RULE-15: `CWE-adyice-79` → CWE-20, RULE-17: `CWE-adyice-20` → CWE-20)
+- SCRIPT_VERSION bumped to 2.0.0
+
+#### MAINT-005: Fix `scripts/pre-commit-audit.sh` temp file cleanup ✅
+- **Before**: Temp files at `/tmp/audit_*_$$` with `trap cleanup EXIT` only (no SIGINT/SIGTERM handling)
+- **After**: Respects `TMPDIR` env var. `trap cleanup EXIT INT TERM` for crash-safe cleanup. All temp paths use `${TMPDIR:-/tmp}` prefix.
+
+#### MAINT-006: Add `bc` check to `scripts/fix-verification.sh` ✅
+- **Before**: Uses `bc -l` without checking if `bc` is installed. Uses `${finding_id,,}` bash 4.x syntax (breaks on macOS bash 3.2).
+- **After**: Added `command -v bc` guard before `bc -l`. Replaced `${finding_id,,}` with `tr '[:upper:]' '[:lower:]'` for bash 3.2 compat.
+
 ### Backlog for v1.15.x (updated)
 
 | Priority | Item | Effort | Status |
@@ -467,9 +482,9 @@ Following the maintainability audit's 11-item issue catalog, the top 2 P1 items 
 | P1 | Split `scripts/audit-fix-suggestions.py` (>120KB) into modules | M | ✅ DONE |
 | P1 | Deduplicate SARIF exporters: `export-sarif.py` ↔ `findings-to-sarif.py` | S | ✅ DONE |
 | P2 | Fix `scripts/dashboard.py` dead code + confusing argparse | S | ✅ DONE |
-| P2 | Migrate `scripts/run-sast.py` to dynamically read patterns from `audit.rules` | M | TODO |
-| P3 | Fix temp file cleanup in `scripts/pre-commit-audit.sh` | XS | TODO |
-| P3 | Add `bc` check to `scripts/fix-verification.sh` | XS | TODO |
+| P2 | Migrate `scripts/run-sast.py` to dynamically read patterns from `audit.rules` | M | ✅ DONE |
+| P3 | Fix temp file cleanup in `scripts/pre-commit-audit.sh` | XS | ✅ DONE |
+| P3 | Add `bc` check to `scripts/fix-verification.sh` | XS | ✅ DONE |
 | P3 | Fix `pyproject.toml` version conflicts (py39 vs py310) | XS | TODO |
 
 Full catalog: see learnings.md 2026-07-07 entry.

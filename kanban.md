@@ -189,10 +189,37 @@ Before: 3,535 lines, 11 flake8 warnings. After: 7 files, 0 flake8 warnings.
 
 Before: 425 total lines, 90% duplicated. After: ~320 total lines, 0 duplication. 57/57 tests pass.
 
+**MAINT-003: Fix `scripts/dashboard.py` dead code + argparse** ✅
+| Before | After |
+|--------|-------|
+| 3 flake8 warnings | 0 flake8 warnings |
+| Confusing positionals `before`/`after`/`output` | Clear `input`/`second`/`compare_output` |
+| Dead `stdout_mode` code | Removed |
+| No version flag | `--version` shows v1.1.0 |
+
+**MAINT-004: Migrate `scripts/run-sast.py` to load patterns dynamically** ✅
+| Before | After |
+|--------|-------|
+| 26 rules hardcoded in source | Loaded from `rules/sast-patterns.json` |
+| STALE WARNING about 50-rule mismatch | Dynamic coverage stats: 52% (26/50) |
+| `--rules` flag unused | `--rules`, `--patterns`, `--stats`, `--version` all work |
+| Garbled CWE values in Rules 3/15/17 | Corrected CWE-340, CWE-20, CWE-20 |
+| SCRIPT_VERSION 1.6.0 | SCRIPT_VERSION 2.0.0 |
+
+**MAINT-005: Fix `scripts/pre-commit-audit.sh` temp file cleanup** ✅
+- Temp files now use `${TMPDIR:-/tmp}` prefix instead of hardcoded `/tmp`
+- `trap cleanup EXIT INT TERM` for crash-safe cleanup on interrupt/termination
+
+**MAINT-006: Add `bc` check + bash 3.2 compat to `scripts/fix-verification.sh`** ✅
+- Added `command -v bc` guard before `bc -l` usage
+- Replaced `${finding_id,,}` (bash 4.x) with `tr '[:upper:]' '[:lower:]'` (bash 3.2)
+- Graceful skip when bc not installed
+
 **Validation:**
 - 0 flake8 warnings across all new/changed files
 - **516 new tests** + 13 existing smoke tests = 529 total Python tests passing
 - 165/165 integrity + 22/22 fuzz: all clean
+- Both shell scripts pass `bash -n` syntax check ✅
 
 **Remaining backlog:**
 
@@ -202,9 +229,9 @@ Before: 425 total lines, 90% duplicated. After: ~320 total lines, 0 duplication.
 | MAINT-002 | Deduplicate `export-sarif.py` ↔ `findings-to-sarif.py` | P1 | S | ✅ DONE |
 | MAINT-003 | Fix `scripts/dashboard.py` dead code + argparse confusion | P2 | S | ✅ DONE |
 | KD-001/P1 | Wire all 529 Python tests into CI (`test.yml` skill-integrity job) | P1 | XS | ✅ DONE |
-| MAINT-004 | Migrate `scripts/run-sast.py` to read patterns from `audit.rules` dynamically | P2 | M | TODO |
-| MAINT-005 | Fix `scripts/pre-commit-audit.sh` temp file cleanup | P3 | XS | TODO |
-| MAINT-006 | Add `bc` check to `scripts/fix-verification.sh` | P3 | XS | TODO |
+| MAINT-004 | Migrate `scripts/run-sast.py` to read patterns from `audit.rules` dynamically | P2 | M | ✅ DONE |
+| MAINT-005 | Fix `scripts/pre-commit-audit.sh` temp file cleanup | P3 | XS | ✅ DONE |
+| MAINT-006 | Add `bc` check + bash 3.2 compat to `scripts/fix-verification.sh` | P3 | XS | ✅ DONE |
 | MAINT-007 | Fix `pyproject.toml` version conflicts (py39 vs py310) | P3 | XS | TODO |
 
 ### Sprint 52 — Contest Polish Sprint (Done: 2026-06-29)
@@ -362,7 +389,11 @@ Full details: `docs/superpowers/specs/2026-06-27-gap-analysis.md` and `docs/supe
 | Agents | 4 | **4** | **4** | **7** | **7** | **8** | **8** | **10** | **10** | **10** | **10** | **10** |
 | `fix_*` modules (SRP) | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | **7** |
 | SARIF module (SRP) | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | **3** |
+| SAST patterns file | No | No | No | No | No | No | No | No | No | No | No | **1** |
+| Dynamic pattern loading | No | No | No | No | No | No | No | No | No | No | No | **Yes** |
 | Flake8 warnings (scripts/) | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 11 | **0** |
+| `pre-commit-audit.sh` crash safety | No | No | No | No | No | No | No | No | No | No | No | **INT+TERM** |
+| `fix-verification.sh` bash 3.2 compat | No | No | No | No | No | No | No | No | No | No | No | **Yes** |
 | Languages | 1 | **2** | 2 | 2 | 2 | 2 | 2 | 2 | 2 | 2 | **2** | **2** |
 | PoC walkthroughs | 0 | **3** | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | **3** | **3** |
 | Formal verification | 0 | **5 patterns** | **5 patterns** | **5 patterns** | **5 patterns** | **5 patterns** | **5 patterns** | **5 patterns** | **5 patterns** | **5 patterns** | **5 patterns** | **5 patterns** |

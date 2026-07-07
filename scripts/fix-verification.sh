@@ -104,6 +104,12 @@ check_prerequisites() {
         return 1
     fi
 
+    # Check for bc (required for CVSS reduction math)
+    if ! command -v bc &> /dev/null; then
+        log_warn "bc not found. CVSS reduction calculation will be skipped."
+        echo "  Install bc: brew install bc (macOS) or apt install bc (Linux)"
+    fi
+
     log_pass "All prerequisites satisfied (Tier 2 mode)"
     return 0
 }
@@ -206,9 +212,11 @@ verify_poc() {
     separator
     log_info "Running PoC verification for $finding_id..."
 
-    # Look for PoC file
+    # Look for PoC file (bash 3.2 compatible lowercase conversion)
     local poc_dir="${AUDIT_OUTPUT}/pocs"
-    local poc_file="${poc_dir}/${finding_id,,}.md"
+    local lower_id
+    lower_id=$(echo "$finding_id" | tr '[:upper:]' '[:lower:]')
+    local poc_file="${poc_dir}/${lower_id}.md"
 
     if [[ -f "$poc_file" ]]; then
         log_info "Found PoC: $poc_file"
@@ -265,8 +273,12 @@ verify_cvss_recalculation() {
         echo "  Vector:     $cvss_after_vector"
 
         if [[ "$cvss_after" != "N/A" && "$cvss_after" != "0" ]]; then
-            local reduction
-            reduction=$(echo "$cvss_before - $cvss_after" | bc -l 2>/dev/null || echo "N/A")
+            local reduction="N/A"
+            if command -v bc &> /dev/null; then
+                reduction=$(echo "$cvss_before - $cvss_after" | bc -l 2>/dev/null || echo "N/A")
+            else
+                log_warn "bc not available — CVSS reduction not computed"
+            fi
             echo "  Reduction:  $reduction"
         fi
     else
