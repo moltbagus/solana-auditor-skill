@@ -579,3 +579,40 @@ Executed the top 2 P1 items from the maintainability audit backlog:
 - 165/165 integrity + 22/22 fuzz: all PASS ✅
 - 3 P1/P2 items remain in backlog (dashboard.py, run-sast.py, pre-commit-audit.sh)
 
+---
+
+## 2026-07-07 — v1.15.2 CI Wiring + Flake8 Cleanup
+
+### What we did
+Wired all 529 Python tests into CI and fixed 14 flake8 warnings across test files.
+
+**CI Wiring:**
+- Added `Run unit + smoke tests (529 Python tests)` step to `.github/workflows/test.yml` `skill-integrity` job
+- Runs 9 test modules via `pytest.main()` matching the same pattern as the existing fuzz test step
+- Runs after fuzz tests, before integrity checks
+- Uses `-x` (fail-fast) for deterministic CI failure reporting
+
+**Flake8 cleanup (14 warnings fixed):**
+| Warning | Count | Files | Fix |
+|---------|-------|-------|-----|
+| E402 (import not at top) | 8 | 6 test files | Added `# noqa: E402` to imports after `sys.path.insert()` |
+| F401 (unused import) | 2 | test_fix_exploit.py, test_fix_models.py | Removed `import pytest` (files use `def test_` only, no pytest symbols) |
+| F841 (unused variable) | 2 | test_fix_regression.py, test_fix_templates.py | Removed assignment or added `# noqa: F841` |
+| E127 (indentation) | 1 | test_fix_regression.py | Reformatted parametrize decorator from over-indented continuation |
+
+### Bugs found and fixed
+| Bug | Severity | Details |
+|-----|----------|---------|
+| `flake8 tests/` failed on CI lint job | HIGH | New test files had 14 flake8 warnings that would break the existing CI lint-python job (runs `flake8 tests/`) |
+| `import pytest` unused in 2 files | LOW | `test_fix_exploit.py` and `test_fix_models.py` imported pytest but never used `pytest.*` symbols — `def test_` methods don't need the import |
+
+### Key lessons
+1. **New test files break existing CI lint jobs** — When `test.yml` already runs `flake8 tests/`, adding new test files with flake8 warnings will turn CI red. Always run `flake8 tests/` before committing new test files.
+2. **`import pytest` is only needed for pytest decorators** — If a test file only uses `def test_` methods without `@pytest.mark.parametrize`, `@pytest.fixture`, or `pytest.approx()`, the `import pytest` is unnecessary and triggers F401.
+3. **CI step patterns should match existing code** — Using `python3 -c "import pytest; import sys; sys.exit(pytest.main([...]))"` matches the exact pattern used by the fuzz test step, ensuring consistent CI behavior.
+
+### Current state
+- All 529 Python tests run in CI on every push to main ✅
+- 0 flake8 warnings on tests/ directory (down from 14) ✅
+- 5 items remain in maintainability backlog (dashboard.py, run-sast.py, pre-commit-audit.sh, fix-verification.sh, pyproject.toml)
+

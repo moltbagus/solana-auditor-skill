@@ -446,11 +446,18 @@ Following the maintainability audit's 11-item issue catalog, the top 2 P1 items 
 - [x] 165/165 integrity checks + 22/22 fuzz — all verified clean
 - [x] All 4 SDD docs updated to v1.15.2
 
+#### CI Wiring + Lint Cleanup: All 529 tests run on every push ✅
+- [x] Added `Run unit + smoke tests (529 Python tests)` step to `test.yml` `skill-integrity` job
+- [x] Runs all 9 test modules: test_scripts_smoke, test_sarif_core, test_fix_constants, test_fix_models, test_fix_confidence, test_fix_templates, test_fix_regression, test_fix_exploit, test_fix_orchestrator
+- [x] Fixed 14 flake8 warnings across 6 test files: E402 noqas, removed unused imports/variables, fixed E127 indentation
+- [x] 0 flake8 warnings on tests/ directory (down from 14)
+- [x] Committed as `d891e0d` and pushed to origin/main
+
 ### Backlog for v1.15.x (updated)
 
 | Priority | Item | Effort | Status |
 |---|---|---|---|
-| P1 | Wire `tests/test_scripts_smoke.py` into `test.yml` | XS | TODO |
+| P1 | Wire `tests/test_scripts_smoke.py` into `test.yml` | XS | ✅ DONE |
 | P1 | Split `scripts/audit-fix-suggestions.py` (>120KB) into modules | M | ✅ DONE |
 | P1 | Deduplicate SARIF exporters: `export-sarif.py` ↔ `findings-to-sarif.py` | S | ✅ DONE |
 | P2 | Fix `scripts/dashboard.py` dead code + confusing argparse | S | TODO |

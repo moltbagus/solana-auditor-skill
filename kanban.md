@@ -201,6 +201,7 @@ Before: 425 total lines, 90% duplicated. After: ~320 total lines, 0 duplication.
 | MAINT-001 | Split `scripts/audit-fix-suggestions.py` (>120KB) into modules | P1 | M | ✅ DONE |
 | MAINT-002 | Deduplicate `export-sarif.py` ↔ `findings-to-sarif.py` | P1 | S | ✅ DONE |
 | MAINT-003 | Fix `scripts/dashboard.py` dead code + argparse confusion | P2 | S | TODO |
+| KD-001/P1 | Wire all 529 Python tests into CI (`test.yml` skill-integrity job) | P1 | XS | ✅ DONE |
 | MAINT-004 | Migrate `scripts/run-sast.py` to read patterns from `audit.rules` dynamically | P2 | M | TODO |
 | MAINT-005 | Fix `scripts/pre-commit-audit.sh` temp file cleanup | P3 | XS | TODO |
 | MAINT-006 | Add `bc` check to `scripts/fix-verification.sh` | P3 | XS | TODO |
@@ -409,7 +410,7 @@ Full details: `docs/superpowers/specs/2026-06-27-gap-analysis.md` and `docs/supe
 
 | ID | Item | Priority | Effort | Status | Owner |
 |---|---|---|---|---|---|
-| KD-001 | Wire `tests/test_scripts_smoke.py` into `test.yml` `skill-integrity` job | P1 | XS | TODO | — |
+| KD-001 | Wire `tests/test_scripts_smoke.py` into `test.yml` `skill-integrity` job | P1 | XS | ✅ | — |
 | KD-002 | `actions/setup-node` / `actions/setup-python` Node 24 migration | P2 | XS | TODO | — |
 | KD-003 | Decide: keep `audit-pr` job (now correctly guarded) or remove as dead code | P2 | S | TODO | — |
 | KD-004 | Replace `audit-on-push.yml` hardcoded `moltbagus/solana-auditor-skill` clone with in-repo skill-dir copy | P3 | M | TODO | — |

@@ -788,7 +788,7 @@ Each audit-phase script implements this interface:
 
 | ID | Item | Priority | Effort |
 |---|---|---|---|
-| SPEC-001 | Wire smoke tests into `test.yml` skill-integrity job | P1 | XS |
+| SPEC-001 | Wire smoke tests into `test.yml` skill-integrity job | P1 | XS | ✅ v1.15.2 |
 | SPEC-002 | Decide fate of `audit-pr` job post-guard | P2 | S |
 | SPEC-003 | Migrate Node 20 → 24 across all setup-python/setup-node steps | P2 | XS |
 | SPEC-004 | Replace hardcoded `moltbagus/solana-auditor-skill` clone with skill-dir copy | P3 | M |
