@@ -485,9 +485,12 @@ Following the maintainability audit's 11-item issue catalog, the top 2 P1 items 
 | P2 | Migrate `scripts/run-sast.py` to dynamically read patterns from `audit.rules` | M | ✅ DONE |
 | P3 | Fix temp file cleanup in `scripts/pre-commit-audit.sh` | XS | ✅ DONE |
 | P3 | Add `bc` check to `scripts/fix-verification.sh` | XS | ✅ DONE |
-| P3 | Fix `pyproject.toml` version conflicts (py39 vs py310) | XS | TODO |
+| P3 | Fix `pyproject.toml` version conflicts (py39 vs py310) | XS | ✅ DONE |
 
-Full catalog: see learnings.md 2026-07-07 entry.
+#### MAINT-007: Fix `pyproject.toml` version conflict (py39 vs py310) ✅
+- **Before**: `tool.black.target-version` includes `py39`, but `tool.mypy` has `python_version = "3.10"` — mismatch
+- **After**: `tool.mypy` `python_version` changed to `"3.9"` to match black's minimum target
+- **Rationale**: Project claims Python 3.9 compat in PRD.md. mypy should target the same minimum Python version as black.
 
 ### Out of scope (intentionally not fixed)
 

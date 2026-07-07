@@ -232,7 +232,17 @@ Before: 425 total lines, 90% duplicated. After: ~320 total lines, 0 duplication.
 | MAINT-004 | Migrate `scripts/run-sast.py` to read patterns from `audit.rules` dynamically | P2 | M | ✅ DONE |
 | MAINT-005 | Fix `scripts/pre-commit-audit.sh` temp file cleanup | P3 | XS | ✅ DONE |
 | MAINT-006 | Add `bc` check + bash 3.2 compat to `scripts/fix-verification.sh` | P3 | XS | ✅ DONE |
-| MAINT-007 | Fix `pyproject.toml` version conflicts (py39 vs py310) | P3 | XS | TODO |
+| MAINT-007 | Fix `pyproject.toml` version conflicts (py39 vs py310) | P3 | XS | ✅ DONE |
+
+All 7 MAINT items completed. Sprint 56 fully done.
+
+**Remaining post-sprint backlog (from spec.md maintainability table):**
+| # | Item | Priority | Effort |
+|---|---|---|---|
+| 7 | `scripts/protocol-fingerprint.sh` — 400+ line shell with heavy jq | P3 | S |
+| 8 | `scripts/generate-cpi-graph.sh` — `set -uo pipefail` with silent jq failures | P3 | S |
+| 10 | `tests/test-skill-integrity.sh` — 850+ lines, growing without modularization | P2 | M |
+| 11 | `commands/*.md` frontmatter — inconsistent YAML across 9 files | P3 | S |
 
 ### Sprint 52 — Contest Polish Sprint (Done: 2026-06-29)
 - [x] G1/G2/G3 quick wins: SKILL.md agents (9→10), phases (6→12), rules breakdown; threat-modeler.md YAML frontmatter; README stale counts (173/159/47→161)

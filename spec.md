@@ -798,7 +798,7 @@ Each audit-phase script implements this interface:
 | SPEC-008 | Fix `scripts/dashboard.py` dead code + confusing argparse | P2 | S | ✅ v1.15.2 |
 | SPEC-009 | Migrate `scripts/run-sast.py` to dynamically read patterns from `audit.rules` | P2 | M | ✅ v1.15.2 |
 | SPEC-010 | Add bc-dependency check + macOS bash 3.2 compat to `scripts/fix-verification.sh` | P3 | XS | ✅ v1.15.2 |
-| SPEC-011 | Fix `pyproject.toml` python_version conflict (black py39 vs mypy py310) | P3 | XS |
+| SPEC-011 | Fix `pyproject.toml` python_version conflict (black py39 vs mypy py310) | P3 | XS | ✅ v1.15.2 |
 
 ### Known maintainability issues (cataloged 2026-07-07, updated v1.15.2)
 
@@ -812,7 +812,7 @@ Each audit-phase script implements this interface:
 | 6 | `scripts/fix-verification.sh` | Added `command -v bc` guard. Replaced `${finding_id,,}` with `tr` for bash 3.2 compat. | LOW | ✅ v1.15.2 |
 | 7 | `scripts/protocol-fingerprint.sh` | 400+ line shell script with heavy `jq` usage. Complex shell is brittle. | LOW | TODO |
 | 8 | `scripts/generate-cpi-graph.sh` | `set -uo pipefail` but references variables computed via `jq` that may silently fail. | LOW | TODO |
-| 9 | `pyproject.toml` | Black targets py39, mypy has python_version="3.10". Version conflict. | LOW | TODO |
+| 9 | `pyproject.toml` | Black targets py39, mypy had python_version="3.10". Fixed: mypy → "3.9" to match black minimum. | LOW | ✅ v1.15.2 |
 | 10 | `tests/test-skill-integrity.sh` | 850+ lines, growing without modularization. Many inline checks remain despite shared functions. | MEDIUM | TODO |
 | 11 | `commands/*.md` frontmatter | Inconsistent YAML frontmatter across 9 command files. | LOW | TODO |
 

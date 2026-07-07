@@ -713,4 +713,26 @@ Added `bc` dependency check and replaced bash 4.x syntax with bash 3.2-compatibl
 - `run-sast.py`: dynamic loading ✅, 0 flake8 ✅, 26 patterns from JSON, 52% coverage awareness
 - `pre-commit-audit.sh`: crash-safe temp cleanup ✅
 - `fix-verification.sh`: bc guard ✅, bash 3.2 compat ✅
-- **1 item remains**: MAINT-007 (pyproject.toml version conflict)
+- `pyproject.toml`: mypy `python_version` → "3.9" to match black min target ✅
+- **All 7 MAINT items completed** — backlog reduced from 11 to 4 remaining items (protocol-fingerprint.sh, generate-cpi-graph.sh, test-skill-integrity.sh, commands/*.md)
+
+---
+
+## 2026-07-07 — v1.15.2 MAINT-007: pyproject.toml version conflict
+
+### What we did
+Fixed the mismatch between `tool.black.target-version = ["py39", ...]` and `tool.mypy.python_version = "3.10"`.
+
+### Change
+| Before | After |
+|--------|-------|
+| `[tool.mypy]\npython_version = "3.10"` | `[tool.mypy]\npython_version = "3.9"` |
+
+### Rationale
+- Project claims Python 3.9 compatibility in PRD.md
+- black targets py39 as minimum; mypy should target the same minimum
+- `from __future__ import annotations` (PEP 604) works from Python 3.7+ with the import
+
+### Key lessons
+1. **Config version drift is silent** — There's no CI check validating that `tool.mypy.python_version` matches `tool.black.target-version`. A mismatch doesn't fail builds, just misleads tooling.
+2. **Minimum Python compat is a project-level decision** — Aligning black and mypy on "3.9" makes the project's minimum clear. If Python 3.10+ features are ever needed, both should be bumped together.
