@@ -2,7 +2,7 @@
 """Audit findings dashboard generator.
 
 Reads one or two findings.json files and renders a self-contained HTML report
-via Jinja2. When two files are given, shows a before/after comparison view.
+via Jinja2. When --compare is given, shows a before/after comparison view.
 """
 
 from __future__ import annotations
@@ -22,7 +22,7 @@ except ImportError:
         "Or add it to requirements-dev.txt"
     )
 
-SCRIPT_VERSION = "1.0.0"
+SCRIPT_VERSION = "1.1.0"
 TEMPLATE_NAME = "dashboard.html"
 FINDINGS_KEY = "findings"
 SUMMARY_KEY = "summary"
@@ -30,8 +30,12 @@ SUMMARY_KEY = "summary"
 SEVERITY_LEVELS = ["CRITICAL", "HIGH", "MEDIUM", "LOW", "INFO"]
 
 
-def load_findings(source: TextIO | Path | str) -> tuple[list[dict[str, Any]], dict[str, Any]]:
-    """Parse findings.json from a file-like object, Path, or raw string. Returns (findings, raw_data)."""
+def load_findings(
+    source: TextIO | Path | str,
+) -> tuple[list[dict[str, Any]], dict[str, Any]]:
+    """Parse findings.json from a file-like object, Path, or raw string.
+    Returns (findings, raw_data).
+    """
     try:
         if isinstance(source, Path):
             raw = json.loads(source.read_text(encoding="utf-8"))
@@ -63,7 +67,9 @@ def compute_summary(findings: list[dict[str, Any]]) -> dict[str, Any]:
         if sev_upper in counts:
             counts[sev_upper] += 1
 
-    cvss_scores = [f["cvss"] for f in findings if isinstance(f.get("cvss"), (int, float))]
+    cvss_scores = [
+        f["cvss"] for f in findings if isinstance(f.get("cvss"), (int, float))
+    ]
     cvss_total = sum(cvss_scores)
     cvss_avg = cvss_total / len(cvss_scores) if cvss_scores else 0.0
     cvss_worst = max(cvss_scores) if cvss_scores else 0.0
@@ -118,7 +124,14 @@ def compute_comparison(
         return counts
 
     def cvss_sum(findings: list[dict[str, Any]]) -> float:
-        return round(sum(f["cvss"] for f in findings if isinstance(f.get("cvss"), (int, float))), 1)
+        return round(
+            sum(
+                f["cvss"]
+                for f in findings
+                if isinstance(f.get("cvss"), (int, float))
+            ),
+            1,
+        )
 
     before_summary = compute_summary(before_findings)
     after_summary = compute_summary(after_findings)
@@ -143,13 +156,19 @@ def compute_comparison(
         "before_summary": before_summary,
         "after_summary": after_summary,
         "severity_delta": {
-            "critical": delta(before_summary["critical"], after_summary["critical"]),
+            "critical": delta(
+                before_summary["critical"], after_summary["critical"]
+            ),
             "high": delta(before_summary["high"], after_summary["high"]),
-            "medium": delta(before_summary["medium"], after_summary["medium"]),
+            "medium": delta(
+                before_summary["medium"], after_summary["medium"]
+            ),
             "low": delta(before_summary["low"], after_summary["low"]),
             "info": delta(before_summary["info"], after_summary["info"]),
         },
-        "cvss_delta": delta(before_summary["cvss_total"], after_summary["cvss_total"]),
+        "cvss_delta": delta(
+            before_summary["cvss_total"], after_summary["cvss_total"]
+        ),
         "before_total": before_summary["total"],
         "after_total": after_summary["total"],
         "fixed": fixed_findings,
@@ -165,7 +184,9 @@ def compute_comparison(
     }
 
 
-def compute_metadata(raw: dict[str, Any], input_path: str) -> dict[str, Any]:
+def compute_metadata(
+    raw: dict[str, Any], input_path: str
+) -> dict[str, Any]:
     """Extract or derive metadata from the raw findings JSON."""
     summary_block = raw.get(SUMMARY_KEY, {}) or {}
     now = __import__("datetime").datetime.now(
@@ -202,14 +223,20 @@ def render(
 ) -> str:
     """Render the Jinja2 template and return the HTML string."""
     try:
-        env = Environment(loader=FileSystemLoader(str(templates_dir)), autoescape=True)
+        env = Environment(
+            loader=FileSystemLoader(str(templates_dir)), autoescape=True
+        )
     except Exception as e:
-        sys.exit(f"ERROR: Could not load templates from {templates_dir}: {e}\n")
+        sys.exit(
+            f"ERROR: Could not load templates from {templates_dir}: {e}\n"
+        )
 
     try:
         template = env.get_template(TEMPLATE_NAME)
     except TemplateNotFound:
-        sys.exit(f"ERROR: Template '{TEMPLATE_NAME}' not found in {templates_dir}\n")
+        sys.exit(
+            f"ERROR: Template '{TEMPLATE_NAME}' not found in {templates_dir}\n"
+        )
     except Exception as e:
         sys.exit(f"ERROR: Failed to load template: {e}\n")
 
@@ -223,7 +250,10 @@ def render(
 
 def main() -> None:
     parser = argparse.ArgumentParser(
-        description="Generate an HTML audit findings dashboard from findings.json.",
+        description=(
+            "Generate an HTML audit findings dashboard from findings.json. "
+            "Use --compare for before/after comparison."
+        ),
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""\
 Examples:
@@ -234,38 +264,56 @@ Examples:
 """,
     )
     parser.add_argument(
-        "before",
+        "input",
         nargs="?",
         default=None,
-        help="Path to findings.json (before findings in compare mode)",
+        help=(
+            "Path to findings.json (single-file mode), "
+            "or first file in --compare mode"
+        ),
     )
     parser.add_argument(
-        "after",
+        "second",
         nargs="?",
         default=None,
-        help="Output HTML path in single-file mode; before findings in --compare mode",
+        help=(
+            "Output HTML path (single-file mode), "
+            "or second findings file (--compare mode)"
+        ),
     )
     parser.add_argument(
-        "output",
+        "compare_output",
         nargs="?",
         default=None,
-        help="Output HTML path (single-file: second positional; compare: third positional)",
+        help="Output HTML path in --compare mode (optional, third positional)",
     )
     parser.add_argument(
         "--compare",
         dest="compare_mode",
         action="store_true",
-        help="Enable comparison mode: args are before.json after.json [output.html]",
+        help="Enable comparison mode: input=before, second=after",
     )
     parser.add_argument(
         "--templates",
         dest="templates_dir",
         metavar="DIR",
-        help="Directory containing templates/dashboard.html (default: auto-detect)",
+        help=(
+            "Directory containing templates/dashboard.html"
+            " (default: auto-detect)"
+        ),
+    )
+    parser.add_argument(
+        "--version",
+        action="store_true",
+        help="Show script version",
     )
     args = parser.parse_args()
 
-    # Templates dir
+    if args.version:
+        print(f"dashboard.py v{SCRIPT_VERSION}")
+        return
+
+    # ── Templates dir ─────────────────────────────────────────────────────
     templates_dir: Path
     if args.templates_dir:
         templates_dir = Path(args.templates_dir).resolve()
@@ -273,14 +321,19 @@ Examples:
         templates_dir = resolve_templates_dir()
 
     if not templates_dir.is_dir():
-        sys.exit(f"ERROR: Templates directory not found: {templates_dir}\n")
+        sys.exit(
+            f"ERROR: Templates directory not found: {templates_dir}\n"
+        )
 
-    # ── Comparison mode: --compare flag ──────────────────────────────────────
+    # ── Comparison mode: --compare flag ──────────────────────────────────
     if args.compare_mode:
-        if not args.before or not args.after:
-            sys.exit("ERROR: --compare requires two findings.json paths: before and after.\n")
-        before_path = Path(args.before).resolve()
-        after_path = Path(args.after).resolve()
+        if not args.input or not args.second:
+            sys.exit(
+                "ERROR: --compare requires two findings.json paths:\n"
+                "  dashboard.py --compare before.json after.json [output.html]\n"
+            )
+        before_path = Path(args.input).resolve()
+        after_path = Path(args.second).resolve()
         if not before_path.is_file():
             sys.exit(f"ERROR: Before file not found: {before_path}\n")
         if not after_path.is_file():
@@ -294,56 +347,67 @@ Examples:
         before_meta = compute_metadata(before_raw, str(before_path))
         after_meta = compute_metadata(after_raw, str(after_path))
         combined_meta = {
-            "program_name": before_meta.get("program_name", "Unknown Program"),
+            "program_name": before_meta.get(
+                "program_name", "Unknown Program"
+            ),
             "repo": before_meta.get("repo", "N/A"),
             "before_audit_date": before_meta.get("audit_date", "N/A"),
             "after_audit_date": after_meta.get("audit_date", "N/A"),
             "generated_at": before_meta.get("generated_at", "N/A"),
-            "generator": f"solana-auditor-skill dashboard v{SCRIPT_VERSION}",
-            "file_path": f"{before_path} → {after_path}",
+            "generator": (
+                f"solana-auditor-skill dashboard v{SCRIPT_VERSION}"
+            ),
+            "file_path": f"{before_path} \u2192 {after_path}",
         }
 
         combined_findings = comparison["unchanged"] + comparison["new"]
         combined_summary = compute_summary(combined_findings)
 
-        output_path = Path(args.output) if args.output else before_path.with_name("comparison.dashboard.html")
-        html = render(combined_findings, combined_summary, combined_meta, templates_dir, comparison)
+        if args.compare_output:
+            output_path = Path(args.compare_output).resolve()
+        else:
+            output_path = before_path.with_name("comparison.dashboard.html")
+
+        html = render(
+            combined_findings,
+            combined_summary,
+            combined_meta,
+            templates_dir,
+            comparison,
+        )
 
         output_path.parent.mkdir(parents=True, exist_ok=True)
         output_path.write_text(html, encoding="utf-8")
-        print(f"Comparison dashboard written to {output_path}", file=sys.stderr)
+        print(
+            f"Comparison dashboard written to {output_path}",
+            file=sys.stderr,
+        )
         return
 
-    # ── Single-file mode ────────────────────────────────────────────────────
-    if args.before is None:
-        sys.exit("ERROR: No input file specified. Pass a findings.json path.\n")
+    # ── Single-file mode ────────────────────────────────────────────────
+    if args.input is None:
+        sys.exit(
+            "ERROR: No input file specified. Pass a findings.json path.\n"
+        )
 
-    input_path = Path(args.before).resolve()
+    input_path = Path(args.input).resolve()
     if not input_path.is_file():
         sys.exit(f"ERROR: File not found: {input_path}\n")
+
     findings, raw_data = load_findings(input_path)
-    input_path_str = str(input_path)
-
     summary = compute_summary(findings)
-    metadata = compute_metadata(raw_data, input_path_str)
+    metadata = compute_metadata(raw_data, str(input_path))
 
-    stdout_mode = False
-    if args.after:
-        # args.after is the output path in single-file mode
-        output_path = Path(args.after).resolve()
-    elif args.output:
-        output_path = Path(args.output).resolve()
-    elif args.before:
+    if args.second:
+        output_path = Path(args.second).resolve()
+    else:
         output_path = input_path.with_suffix(".dashboard.html")
 
     html = render(findings, summary, metadata, templates_dir)
 
-    if stdout_mode:
-        sys.stdout.write(html)
-    else:
-        output_path.parent.mkdir(parents=True, exist_ok=True)
-        output_path.write_text(html, encoding="utf-8")
-        print(f"Dashboard written to {output_path}", file=sys.stderr)
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+    output_path.write_text(html, encoding="utf-8")
+    print(f"Dashboard written to {output_path}", file=sys.stderr)
 
 
 if __name__ == "__main__":

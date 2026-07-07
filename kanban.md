@@ -200,7 +200,7 @@ Before: 425 total lines, 90% duplicated. After: ~320 total lines, 0 duplication.
 |---|---|---|---|---|
 | MAINT-001 | Split `scripts/audit-fix-suggestions.py` (>120KB) into modules | P1 | M | ✅ DONE |
 | MAINT-002 | Deduplicate `export-sarif.py` ↔ `findings-to-sarif.py` | P1 | S | ✅ DONE |
-| MAINT-003 | Fix `scripts/dashboard.py` dead code + argparse confusion | P2 | S | TODO |
+| MAINT-003 | Fix `scripts/dashboard.py` dead code + argparse confusion | P2 | S | ✅ DONE |
 | KD-001/P1 | Wire all 529 Python tests into CI (`test.yml` skill-integrity job) | P1 | XS | ✅ DONE |
 | MAINT-004 | Migrate `scripts/run-sast.py` to read patterns from `audit.rules` dynamically | P2 | M | TODO |
 | MAINT-005 | Fix `scripts/pre-commit-audit.sh` temp file cleanup | P3 | XS | TODO |

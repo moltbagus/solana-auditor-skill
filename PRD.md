@@ -446,6 +446,12 @@ Following the maintainability audit's 11-item issue catalog, the top 2 P1 items 
 - [x] 165/165 integrity checks + 22/22 fuzz — all verified clean
 - [x] All 4 SDD docs updated to v1.15.2
 
+#### MAINT-003: Fix `scripts/dashboard.py` dead code + confusing argparse ✅
+- **Before**: 3 flake8 warnings (E501 x2, W292), dead `stdout_mode` variable, confusing positional args (`after` meant output in single-file mode but input in `--compare` mode)
+- **After**: Named positionals `input`, `second`, `compare_output` with clear help text. Removed dead `stdout_mode` branch. Added `--version` flag. 0 flake8 warnings.
+- **Backward compatible**: All callers (`demo.sh`, `audit-report.py`, docs) use positional args only — renaming is safe
+- SCRIPT_VERSION bumped to 1.1.0
+
 #### CI Wiring + Lint Cleanup: All 529 tests run on every push ✅
 - [x] Added `Run unit + smoke tests (529 Python tests)` step to `test.yml` `skill-integrity` job
 - [x] Runs all 9 test modules: test_scripts_smoke, test_sarif_core, test_fix_constants, test_fix_models, test_fix_confidence, test_fix_templates, test_fix_regression, test_fix_exploit, test_fix_orchestrator
@@ -460,7 +466,7 @@ Following the maintainability audit's 11-item issue catalog, the top 2 P1 items 
 | P1 | Wire `tests/test_scripts_smoke.py` into `test.yml` | XS | ✅ DONE |
 | P1 | Split `scripts/audit-fix-suggestions.py` (>120KB) into modules | M | ✅ DONE |
 | P1 | Deduplicate SARIF exporters: `export-sarif.py` ↔ `findings-to-sarif.py` | S | ✅ DONE |
-| P2 | Fix `scripts/dashboard.py` dead code + confusing argparse | S | TODO |
+| P2 | Fix `scripts/dashboard.py` dead code + confusing argparse | S | ✅ DONE |
 | P2 | Migrate `scripts/run-sast.py` to dynamically read patterns from `audit.rules` | M | TODO |
 | P3 | Fix temp file cleanup in `scripts/pre-commit-audit.sh` | XS | TODO |
 | P3 | Add `bc` check to `scripts/fix-verification.sh` | XS | TODO |

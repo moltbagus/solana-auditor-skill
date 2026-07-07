@@ -577,7 +577,7 @@ Executed the top 2 P1 items from the maintainability audit backlog:
 - 0 flake8 warnings across all new/changed files
 - **516 new unit tests** (472 fix_* + 44 sarif_core) + 13 existing smoke tests = 529 total Python tests ✅
 - 165/165 integrity + 22/22 fuzz: all PASS ✅
-- 3 P1/P2 items remain in backlog (dashboard.py, run-sast.py, pre-commit-audit.sh)
+- 2 P2 items remain in backlog (run-sast.py, pre-commit-audit.sh)
 
 ---
 
@@ -614,5 +614,30 @@ Wired all 529 Python tests into CI and fixed 14 flake8 warnings across test file
 ### Current state
 - All 529 Python tests run in CI on every push to main ✅
 - 0 flake8 warnings on tests/ directory (down from 14) ✅
-- 5 items remain in maintainability backlog (dashboard.py, run-sast.py, pre-commit-audit.sh, fix-verification.sh, pyproject.toml)
+- 4 items remain in maintainability backlog (run-sast.py, pre-commit-audit.sh, fix-verification.sh, pyproject.toml)
 
+---
+
+## 2026-07-07 — v1.15.2 MAINT-003: Fix dashboard.py dead code + argparse
+
+### What we did
+Fixed `scripts/dashboard.py` — removed dead `stdout_mode` code, renamed confusing positional args, simplified output path logic, added `--version` flag.
+
+### Changes
+| Before | After |
+|--------|-------|
+| Positionals: `before`, `after`, `output` — `after` meant output in single-file but input in compare mode | Positionals: `input`, `second`, `compare_output` — clear, documented semantics |
+| Dead code: `stdout_mode = False` with unreachable `if stdout_mode:` branch | Removed entirely |
+| Output path: confusing `if args.after: elif args.output: elif args.before:` chain | Clear: `if args.second:` for single-file, `if args.compare_output:` for compare mode |
+| No version flag | Added `--version` printing `dashboard.py v1.1.0` |
+| SCRIPT_VERSION 1.0.0 | SCRIPT_VERSION 1.1.0 (minor bump for argparse cleanup) |
+| 3 flake8 warnings (E501 x2, W292) | 0 flake8 warnings |
+
+### Key lessons
+1. **Positional arg naming matters for ergonomics** — `after` meaning "output path in single-file mode" but "second input file in compare mode" is confusing. Clear names (`input`, `second`, `compare_output`) make the code self-documenting.
+2. **`--version` flags cost nothing** — Every CLI script should have one. Helps debugging which version of a script is being called.
+3. **No callers use keyword args** — All callers (`demo.sh`, `audit-report.py`, docs) pass positional args only, so renaming is always safe.
+
+### Current state
+- `dashboard.py`: 0 flake8 warnings, clear argparse, `--version` flag ✅
+- 4 items remain in maintainability backlog (run-sast.py, pre-commit-audit.sh, fix-verification.sh, pyproject.toml)

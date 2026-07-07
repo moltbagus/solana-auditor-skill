@@ -795,7 +795,7 @@ Each audit-phase script implements this interface:
 | SPEC-005 | Fix Check 10 coverage gap: all 5 fixtures now verified (was 3). See learnings.md v1.15.1 | P1 | ✅ |
 | SPEC-006 | Split `scripts/audit-fix-suggestions.py` (>120KB) into modules | P1 | M | ✅ v1.15.2 |
 | SPEC-007 | Deduplicate SARIF exporters: `export-sarif.py` ↔ `findings-to-sarif.py` | P1 | S | ✅ v1.15.2 |
-| SPEC-008 | Fix `scripts/dashboard.py` dead code + confusing argparse | P2 | S |
+| SPEC-008 | Fix `scripts/dashboard.py` dead code + confusing argparse | P2 | S | ✅ v1.15.2 |
 | SPEC-009 | Migrate `scripts/run-sast.py` to dynamically read patterns from `audit.rules` | P2 | M |
 | SPEC-010 | Add bc-dependency check to `scripts/fix-verification.sh` | P3 | XS |
 | SPEC-011 | Fix `pyproject.toml` python_version conflict (black py39 vs mypy py310) | P3 | XS |
@@ -807,7 +807,7 @@ Each audit-phase script implements this interface:
 | 1 | `scripts/audit-fix-suggestions.py` → 6 modules + 510-line orchestrator | SRP modularization done. 472 tests. | HIGH | ✅ v1.15.2 |
 | 2 | `scripts/run-sast.py` | Hardcodes 26 rule patterns; `audit.rules` has 50. Stale warning present but architecture should read patterns dynamically. | MEDIUM | TODO |
 | 3 | `export-sarif.py` + `findings-to-sarif.py` → `sarif_core.py` + thin wrappers | DRY violation resolved. 44 tests. | MEDIUM | ✅ v1.15.2 |
-| 4 | `scripts/dashboard.py` | Dead code: `stdout_mode = False` never set to True. Argparse confusing: positional `after` means output in single-file mode but `before` in compare mode. | MEDIUM | TODO |
+| 4 | `scripts/dashboard.py` | Dead code removed. Named positionals (`input`, `second`, `compare_output`). Added `--version`. 0 flake8. | MEDIUM | ✅ v1.15.2 |
 | 5 | `scripts/pre-commit-audit.sh` | Temp files in `/tmp/PID` without SIGKILL / crash cleanup assurance. | LOW | TODO |
 | 6 | `scripts/fix-verification.sh` | Uses `bc -l` without checking if `bc` is installed. Uses `{|,}` bash 4.x syntax (macOS = bash 3.2). | LOW | TODO |
 | 7 | `scripts/protocol-fingerprint.sh` | 400+ line shell script with heavy `jq` usage. Complex shell is brittle. | LOW | TODO |
