@@ -1,7 +1,7 @@
 # PRD — Solana Auditor Skill
 
 > **Product Requirements Document**
-> _Superteam Brasil Solana Skills Contest — v1.15.1_
+> _Superteam Brasil Solana Skills Contest — v1.15.2_
 > Last updated: 2026-07-07
 
 ---
@@ -418,22 +418,41 @@ The `moltbagus/solana-auditor-skill` fork on `main` had 10 consecutive red CI ru
 - [x] 165/165 integrity checks (up from 161: +4 from extended coverage)
 - [x] 22/22 fuzz tests, all CVSS math verified across all 5 fixture dirs
 
-### v1.15.2 — Maintainability Audit (2026-07-07)
+### v1.15.2 — Maintainability Sprint: Refactoring + Test Expansion (2026-07-07)
 
-Following a comprehensive codebase review, 11 maintainability/readability issues were identified and cataloged. Priority backlog created for the top 5 items.
+Following the maintainability audit's 11-item issue catalog, the top 2 P1 items were completed in this sprint.
 
-- [x] **Issue catalog**: 11 issues identified across scripts, config, and documentation
-- [x] **Priority backlog**: 5 items slotted into kanban for maintainability sprint
-- [x] **SDD sync**: All 4 docs updated to v1.15.2 with current state + new plans
-- [x] **165/165 integrity + 22/22 fuzz**: all verified clean
+#### MAINT-001: Split `scripts/audit-fix-suggestions.py` into modules ✅
+- **Before**: 3,535 lines, monolithic, 11 flake8 warnings
+- **After**: 7 files, clean SRP architecture:
+  - `fix_constants.py` (229 lines) — 26 rule metadata tables
+  - `fix_models.py` (127 lines) — Dataclasses: FixSuggestion, RemediationBlock, FixSuggestionsOutput
+  - `fix_templates.py` (836 lines) — 26 fix templates (before/after code + explanations)
+  - `fix_confidence.py` (211 lines) — Confidence scoring, tier classification, CVSS estimation
+  - `fix_regression.py` (182 lines) — VULN-specific regression test generators
+  - `fix_exploit.py` (114 lines) — Exploit metadata generation + file writing
+  - `audit-fix-suggestions.py` (510 lines) — CLI orchestrator (argparse + delegation only)
+- **Tests**: 472 tests across 7 test files (test_fix_constants, test_fix_models, test_fix_templates, test_fix_confidence, test_fix_regression, test_fix_exploit, test_fix_orchestrator)
+
+#### MAINT-002: Deduplicate SARIF exporters ✅
+- **Before**: `export-sarif.py` (210 lines) + `findings-to-sarif.py` (215 lines) — 90% code duplication
+- **After**: `sarif_core.py` (~200 lines) shared module + both scripts as thin CLI wrappers (~60 lines each)
+- **Backward compatible**: `export-sarif.py` preserves plain IDs, `findings-to-sarif.py` preserves SHIBA- prefix
+- **Tests**: 44 tests in test_sarif_core.py covering all functions + vault fixture integration
+
+#### Validation
+- [x] 0 flake8 warnings across all new/changed files
+- [x] **516 new unit tests** (472 fix_* + 44 sarif_core) + 13 existing smoke tests = **529 total Python tests**
+- [x] 165/165 integrity checks + 22/22 fuzz — all verified clean
+- [x] All 4 SDD docs updated to v1.15.2
 
 ### Backlog for v1.15.x (updated)
 
 | Priority | Item | Effort | Status |
 |---|---|---|---|
 | P1 | Wire `tests/test_scripts_smoke.py` into `test.yml` | XS | TODO |
-| P1 | Split `scripts/audit-fix-suggestions.py` (>120KB) into modules | M | TODO |
-| P1 | Deduplicate SARIF exporters: `export-sarif.py` ↔ `findings-to-sarif.py` | S | TODO |
+| P1 | Split `scripts/audit-fix-suggestions.py` (>120KB) into modules | M | ✅ DONE |
+| P1 | Deduplicate SARIF exporters: `export-sarif.py` ↔ `findings-to-sarif.py` | S | ✅ DONE |
 | P2 | Fix `scripts/dashboard.py` dead code + confusing argparse | S | TODO |
 | P2 | Migrate `scripts/run-sast.py` to dynamically read patterns from `audit.rules` | M | TODO |
 | P3 | Fix temp file cleanup in `scripts/pre-commit-audit.sh` | XS | TODO |

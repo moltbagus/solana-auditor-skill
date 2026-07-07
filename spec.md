@@ -1,7 +1,7 @@
 # Spec — Solana Auditor Skill
 
 > **Technical Specification**
-> _Version 1.15.1 — CI Stabilization + CVSS Math Fix + Maintainability Audit_
+> _Version 1.15.2 — Maintainability Sprint: Refactoring + Test Expansion_
 > Last updated: 2026-07-07
 
 ---
@@ -793,26 +793,59 @@ Each audit-phase script implements this interface:
 | SPEC-003 | Migrate Node 20 → 24 across all setup-python/setup-node steps | P2 | XS |
 | SPEC-004 | Replace hardcoded `moltbagus/solana-auditor-skill` clone with skill-dir copy | P3 | M |
 | SPEC-005 | Fix Check 10 coverage gap: all 5 fixtures now verified (was 3). See learnings.md v1.15.1 | P1 | ✅ |
-| SPEC-006 | Split `scripts/audit-fix-suggestions.py` (>120KB) into modules | P1 | M |
-| SPEC-007 | Deduplicate SARIF exporters: `export-sarif.py` ↔ `findings-to-sarif.py` | P1 | S |
+| SPEC-006 | Split `scripts/audit-fix-suggestions.py` (>120KB) into modules | P1 | M | ✅ v1.15.2 |
+| SPEC-007 | Deduplicate SARIF exporters: `export-sarif.py` ↔ `findings-to-sarif.py` | P1 | S | ✅ v1.15.2 |
 | SPEC-008 | Fix `scripts/dashboard.py` dead code + confusing argparse | P2 | S |
 | SPEC-009 | Migrate `scripts/run-sast.py` to dynamically read patterns from `audit.rules` | P2 | M |
 | SPEC-010 | Add bc-dependency check to `scripts/fix-verification.sh` | P3 | XS |
 | SPEC-011 | Fix `pyproject.toml` python_version conflict (black py39 vs mypy py310) | P3 | XS |
 
-### Known maintainability issues (cataloged 2026-07-07)
+### Known maintainability issues (cataloged 2026-07-07, updated v1.15.2)
 
-| # | File | Issue | Severity |
-|---|------|-------|----------|
-| 1 | `scripts/audit-fix-suggestions.py` | >120KB single file (truncated by reader). Multiple responsibilities: fix templates, regression tests, exploit metadata, confidence scoring. Should be split into modules. | HIGH |
-| 2 | `scripts/run-sast.py` | Hardcodes 26 rule patterns; `audit.rules` has 50. Stale warning exists but architecture should read patterns dynamically. | MEDIUM |
-| 3 | `scripts/export-sarif.py` + `scripts/findings-to-sarif.py` | Two near-identical SARIF exporters. DRY violation — both do findings.json → SARIF 2.1.0. | MEDIUM |
-| 4 | `scripts/dashboard.py` | Dead code: `stdout_mode = False` never set to True. Argparse confusing: positional `after` means output in single-file mode but `before` in compare mode. | MEDIUM |
-| 5 | `scripts/pre-commit-audit.sh` | Temp files in `/tmp/PID` without SIGKILL / crash cleanup assurance. | LOW |
-| 6 | `scripts/fix-verification.sh` | Uses `bc -l` without checking if `bc` is installed. Uses `{|,}` bash 4.x syntax (macOS = bash 3.2). | LOW |
-| 7 | `scripts/protocol-fingerprint.sh` | 400+ line shell script with heavy `jq` usage. Complex shell is brittle. | LOW |
-| 8 | `scripts/generate-cpi-graph.sh` | `set -uo pipefail` but references variables computed via `jq` that may silently fail. | LOW |
-| 9 | `pyproject.toml` | Black targets py39, mypy has python_version="3.10". Version conflict. | LOW |
-| 10 | `tests/test-skill-integrity.sh` | 850+ lines, growing without modularization. Many inline checks remain despite shared functions. | MEDIUM |
-| 11 | `commands/*.md` frontmatter | Inconsistent YAML frontmatter across 9 command files. | LOW |
+| # | File | Issue | Severity | Status |
+|---|------|-------|----------|--------|
+| 1 | `scripts/audit-fix-suggestions.py` → 6 modules + 510-line orchestrator | SRP modularization done. 472 tests. | HIGH | ✅ v1.15.2 |
+| 2 | `scripts/run-sast.py` | Hardcodes 26 rule patterns; `audit.rules` has 50. Stale warning present but architecture should read patterns dynamically. | MEDIUM | TODO |
+| 3 | `export-sarif.py` + `findings-to-sarif.py` → `sarif_core.py` + thin wrappers | DRY violation resolved. 44 tests. | MEDIUM | ✅ v1.15.2 |
+| 4 | `scripts/dashboard.py` | Dead code: `stdout_mode = False` never set to True. Argparse confusing: positional `after` means output in single-file mode but `before` in compare mode. | MEDIUM | TODO |
+| 5 | `scripts/pre-commit-audit.sh` | Temp files in `/tmp/PID` without SIGKILL / crash cleanup assurance. | LOW | TODO |
+| 6 | `scripts/fix-verification.sh` | Uses `bc -l` without checking if `bc` is installed. Uses `{|,}` bash 4.x syntax (macOS = bash 3.2). | LOW | TODO |
+| 7 | `scripts/protocol-fingerprint.sh` | 400+ line shell script with heavy `jq` usage. Complex shell is brittle. | LOW | TODO |
+| 8 | `scripts/generate-cpi-graph.sh` | `set -uo pipefail` but references variables computed via `jq` that may silently fail. | LOW | TODO |
+| 9 | `pyproject.toml` | Black targets py39, mypy has python_version="3.10". Version conflict. | LOW | TODO |
+| 10 | `tests/test-skill-integrity.sh` | 850+ lines, growing without modularization. Many inline checks remain despite shared functions. | MEDIUM | TODO |
+| 11 | `commands/*.md` frontmatter | Inconsistent YAML frontmatter across 9 command files. | LOW | TODO |
+
+### 4.4 New Modules (v1.15.2)
+
+#### 4.4.1 `scripts/fix_*` module group
+
+| Module | LOC | Responsibility |
+|--------|-----|---------------|
+| `fix_constants.py` | 229 | All rule metadata dictionaries (26 rules × 7 tables) |
+| `fix_models.py` | 127 | Dataclasses: FixSuggestion, RemediationBlock, FixSuggestionsOutput (+ to_dict()) |
+| `fix_templates.py` | 836 | 26 fix templates (before/after code + explanations) |
+| `fix_confidence.py` | 211 | Confidence scoring, tier classification, CVSS estimation |
+| `fix_regression.py` | 182 | VULN-specific regression test generators |
+| `fix_exploit.py` | 114 | Exploit metadata generation + file writing |
+| `audit-fix-suggestions.py` | 510 | CLI orchestrator (argparse + delegation only) |
+| `tests/` × 7 files | 472 | Unit tests across all modules + end-to-end smoke test |
+
+#### 4.4.2 `scripts/sarif_core.py` shared module
+
+| Function | Purpose |
+|----------|---------|
+| `severity_to_sarif_level()` | Maps severity strings to SARIF level enum |
+| `build_location()` | Constructs physicalLocation + artifactLocation from finding location dict |
+| `build_results()` | Converts findings → SARIF result objects |
+| `build_rules()` | Deduplicates and builds SARIF rule objects from findings |
+| `build_sarif_log()` | Assembles full SARIF 2.1.0 log document |
+| `findings_to_sarif()` | End-to-end: findings list → SARIF JSON |
+| `load_findings()` | Reads findings from file (list, dict, or empty) |
+
+**CLI wrappers**:
+- `export-sarif.py` (~60 lines) — preserves original plain-ID output, `uriBaseId: %SRCROOT%`
+- `findings-to-sarif.py` (~60 lines) — preserves original SHIBA- prefix output
+
+**Tests**: 44 tests in test_sarif_core.py (severity mapping, locations, results, rules, dedup, load_findings, vault fixture integration)
 
