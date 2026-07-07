@@ -15,8 +15,8 @@ _SCRIPTS_DIR = Path(__file__).resolve().parent.parent / "scripts"
 if str(_SCRIPTS_DIR) not in sys.path:
     sys.path.insert(0, str(_SCRIPTS_DIR))
 
-from fix_models import FixSuggestion
-from fix_regression import (
+from fix_models import FixSuggestion  # noqa: E402
+from fix_regression import (  # noqa: E402
     generate_regression_test,
     write_regression_tests,
 )
@@ -61,9 +61,10 @@ def _make_finding(finding_id: str, severity: str = "CRITICAL") -> dict:
 # ---------------------------------------------------------------------------
 
 class TestKnownVulnGenerators:
-    @pytest.mark.parametrize("vuln_id", ["VULN-01", "VULN-02", "VULN-03",
-                                          "VULN-04", "VULN-05", "VULN-06",
-                                          "VULN-07", "VULN-09"])
+    @pytest.mark.parametrize("vuln_id", [
+        "VULN-01", "VULN-02", "VULN-03", "VULN-04", "VULN-05", "VULN-06",
+        "VULN-07", "VULN-09",
+    ])
     def test_known_vuln_produces_code(self, vuln_id: str) -> None:
         """Each known VULN pattern should produce usable Rust test code."""
         finding = _make_finding(vuln_id)
@@ -173,7 +174,7 @@ class TestWriteRegressionTests:
     def test_generates_combined_runner(self, tmp_path: Path) -> None:
         findings = [_make_finding("VULN-01")]
         suggestions = [_make_suggestion("VULN-01", "Rule 8")]
-        written = write_regression_tests(findings, suggestions, tmp_path)
+        write_regression_tests(findings, suggestions, tmp_path)
         combined = tmp_path / "test_all_regressions.rs"
         assert combined.exists()
         assert "COMBINED REGRESSION TEST RUNNER" in combined.read_text()

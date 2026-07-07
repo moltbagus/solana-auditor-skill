@@ -15,7 +15,7 @@ _SCRIPTS_DIR = Path(__file__).resolve().parent.parent / "scripts"
 if str(_SCRIPTS_DIR) not in sys.path:
     sys.path.insert(0, str(_SCRIPTS_DIR))
 
-from fix_templates import FixTemplate, get_fix_template
+from fix_templates import FixTemplate, get_fix_template  # noqa: E402
 
 _ALL_RULES = [f"Rule {i}" for i in range(1, 27)]
 
@@ -53,7 +53,7 @@ class TestGetFixTemplateKnownRules:
     @pytest.mark.parametrize("rule_id", _ALL_RULES)
     def test_before_code_differs_from_after(self, rule_id: str) -> None:
         """Each fix template should have different before/after (unless fallback)."""
-        t = get_fix_template(rule_id, "TEST-002")
+        t = get_fix_template(rule_id, "TEST-002")  # noqa: F841
         # The fallback template has identical before/after ("// Review this code..." vs "// Apply...")
         # Check they're different for actual rule templates
         if rule_id not in ("Rule 0",):

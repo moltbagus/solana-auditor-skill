@@ -15,7 +15,7 @@ _SCRIPTS_DIR = Path(__file__).resolve().parent.parent / "scripts"
 if str(_SCRIPTS_DIR) not in sys.path:
     sys.path.insert(0, str(_SCRIPTS_DIR))
 
-from fix_confidence import (
+from fix_confidence import (  # noqa: E402  # noqa: E402
     compute_confidence,
     determine_tier,
     estimate_cvss_after,
@@ -27,7 +27,7 @@ from fix_confidence import (
     get_fix_type,
     get_poker_risk,
 )
-from fix_models import FixSuggestion
+from fix_models import FixSuggestion  # noqa: E402
 
 
 # ---------------------------------------------------------------------------
