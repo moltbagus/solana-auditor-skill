@@ -6,7 +6,7 @@
 # Compatible with bash 3.2+ (macOS default)
 # =============================================================================
 
-set -uo pipefail
+set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
@@ -129,7 +129,7 @@ if [ -f "$INVOKE_TMP" ]; then
         prog_target="${program_id:-unknown}"
         EDGES=$(echo "$EDGES" | jq --arg type "$call_type" --arg f "$short_file" \
             --arg l "$line" --arg func "$function" --arg prog "$prog_target" \
-            '. + [{source: "program", target: $prog, call_type: $type, file: $f, line: ($l | tonumber), function: $func, signer: ($type == "INVOKE_SIGNED")}]')
+            '. + [{source: "program", target: $prog, call_type: $type, file: $f, line: ($l | tonumber), function: $func, signer: ($type == "INVOKE_SIGNED")}]' 2>/dev/null || echo "$EDGES")
         [ -n "$program_id" ] && [ "$program_id" != "unknown" ] && add_program "$program_id"
     done < "$INVOKE_TMP"
 fi
@@ -142,7 +142,7 @@ if [ -f "$INVOKE_SIGNED_TMP" ]; then
         prog_target="${program_id:-unknown}"
         EDGES=$(echo "$EDGES" | jq --arg type "$call_type" --arg f "$short_file" \
             --arg l "$line" --arg func "$function" --arg prog "$prog_target" \
-            '. + [{source: "program", target: $prog, call_type: $type, file: $f, line: ($l | tonumber), function: $func, signer: true}]')
+            '. + [{source: "program", target: $prog, call_type: $type, file: $f, line: ($l | tonumber), function: $func, signer: true}]' 2>/dev/null || echo "$EDGES")
         [ -n "$program_id" ] && [ "$program_id" != "unknown" ] && add_program "$program_id"
     done < "$INVOKE_SIGNED_TMP"
 fi
@@ -154,15 +154,15 @@ echo "$DISCOVERED_PROGRAMS" | while IFS= read -r pubkey; do
     [ -z "$prog_type" ] && prog_type="custom"
     prog_name=$(get_program_name "$pubkey")
     NODES=$(echo "$NODES" | jq --arg id "$prog_name" --arg label "$pubkey" --arg type "$prog_type" \
-        '. + [{id: $id, label: $label, type: $type}]')
+        '. + [{id: $id, label: $label, type: $type}]' 2>/dev/null || echo "$NODES")
 done
 
 # Add main node
-NODES=$(echo "$NODES" | jq '. + [{id: "program", label: "target_program", type: "target"}]')
+NODES=$(echo "$NODES" | jq '. + [{id: "program", label: "target_program", type: "target"}]' 2>/dev/null || echo "$NODES")
 
 # Count totals
-total_programs=$(echo "$NODES" | jq 'length')
-total_cpi_calls=$(echo "$EDGES" | jq 'length')
+total_programs=$(echo "$NODES" | jq 'length' 2>/dev/null || echo 0)
+total_cpi_calls=$(echo "$EDGES" | jq 'length' 2>/dev/null || echo 0)
 TIMESTAMP=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
 
 # Generate output

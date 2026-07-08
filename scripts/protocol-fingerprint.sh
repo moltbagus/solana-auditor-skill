@@ -34,6 +34,12 @@ PROJECT_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
 VULN_DB="${PROJECT_ROOT}/data/protocols/known-vulns.json"
 SIG_DB="${PROJECT_ROOT}/data/protocols/protocol-signatures.json"
 
+# Ensure required tools are available
+if ! command -v jq >/dev/null 2>&1; then
+    echo "[ERROR] jq is required but not installed. Install it with: brew install jq (macOS) or apt-get install jq (Linux)" >&2
+    exit 3
+fi
+
 # Default confidence thresholds
 readonly HIGH_CONFIDENCE_THRESHOLD=80
 readonly MEDIUM_CONFIDENCE_THRESHOLD=50

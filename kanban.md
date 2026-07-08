@@ -237,12 +237,14 @@ Before: 425 total lines, 90% duplicated. After: ~320 total lines, 0 duplication.
 All 7 MAINT items completed. Sprint 56 fully done.
 
 **Remaining post-sprint backlog (from spec.md maintainability table):**
-| # | Item | Priority | Effort |
-|---|---|---|---|
-| 7 | `scripts/protocol-fingerprint.sh` — 400+ line shell with heavy jq | P3 | S |
-| 8 | `scripts/generate-cpi-graph.sh` — `set -uo pipefail` with silent jq failures | P3 | S |
-| 10 | `tests/test-skill-integrity.sh` — modularized: shared functions → `tests/skill-integrity-lib.sh`, Python json.load for VULN IDs | P2 | M | ✅ v1.15.2 |
-| 11 | `commands/*.md` frontmatter — `agent_type: command` removed from audit-pr.md & audit-history.md. All 9 consistent. | P3 | S | ✅ v1.15.2 |
+| # | Item | Priority | Effort | Status |
+|---|------|----------|--------|--------|
+| 7 | `scripts/protocol-fingerprint.sh` — added `command -v jq` presence check | P3 | S | ✅ v1.15.3 |
+| 8 | `scripts/generate-cpi-graph.sh` — `set -euo pipefail` + jq error guards on all 6 calls | P3 | S | ✅ v1.15.3 |
+| 10 | tests/test-skill-integrity.sh → skill-integrity-lib.sh modularization | P2 | M | ✅ v1.15.2 |
+| 11 | commands/*.md frontmatter — consistent name+description only | P3 | S | ✅ v1.15.2 |
+
+**All 11 maintainability items resolved.** Zero backlog remaining. 🎉
 
 ### Sprint 52 — Contest Polish Sprint (Done: 2026-06-29)
 - [x] G1/G2/G3 quick wins: SKILL.md agents (9→10), phases (6→12), rules breakdown; threat-modeler.md YAML frontmatter; README stale counts (173/159/47→161)

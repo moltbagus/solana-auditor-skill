@@ -710,11 +710,13 @@ Added `bc` dependency check and replaced bash 4.x syntax with bash 3.2-compatibl
 2. **`bc` is not preinstalled on minimal systems** — Docker images, CI runners, and fresh macOS installs may lack `bc`. A `command -v` guard prevents hard-to-diagnose failures. Install hint makes self-healing easy.
 
 ### Current state
-- `run-sast.py`: dynamic loading ✅, 0 flake8 ✅, 26 patterns from JSON, 52% coverage awareness
-- `pre-commit-audit.sh`: crash-safe temp cleanup ✅
-- `fix-verification.sh`: bc guard ✅, bash 3.2 compat ✅
-- `pyproject.toml`: mypy `python_version` → "3.9" to match black min target ✅
-- **All 7 MAINT items completed + 2 more closed** — backlog reduced from 11 to 2 remaining items (protocol-fingerprint.sh, generate-cpi-graph.sh)
+- **v1.15.3** — All backlog items resolved. 11/11 maintainability items, 11/11 SPEC items all ✅.
+- `protocol-fingerprint.sh`: Added `command -v jq` presence check ✅
+- `generate-cpi-graph.sh`: `set -euo pipefail` + jq error guards on all 6 calls ✅
+- `audit.yml`: `audit-pr` job removed (was redundant), unused `pr` input removed ✅
+- `audit-on-push.yml`: Hardcoded clone replaced with `cp -r .` from checkout ✅
+- SPEC-003: No-op (no Node version references in project) ✅
+- Full test suite: 165/165 integrity, 22/22 fuzz, 551/551 Python tests all green ✅
 
 ---
 

@@ -9,11 +9,6 @@ on:
   push:
     branches: [main]
   workflow_dispatch:
-    inputs:
-      pr:
-        description: 'PR number to audit (used by audit-pr job)'
-        required: false
-        type: string
 
 jobs:
   audit-tier1:
@@ -24,51 +19,7 @@ jobs:
       - uses: actions/checkout@v4
       - name: Run SAST audit
         run: |
-          # Install ripgrep for pattern matching
-          # Run pre-commit hook
           bash scripts/pre-commit-audit.sh || echo "SAST: warnings only"
-
-  audit-pr:
-    name: PR Diff Audit
-    runs-on: ubuntu-latest
-    # Only run on PR events — running on push would recursively trigger
-    # the audit workflow (gh workflow run audit.yml) with no PR context.
-    if: github.event_name == 'pull_request'
-    permissions:
-      contents: read
-      pull-requests: write
-    steps:
-      - uses: actions/checkout@v4
-      # No explicit gh auth needed — GITHUB_TOKEN is already in the env and gh
-      # auto-uses it. The previous `gh auth login --hostname github.com`
-      # command fails because the GH_TOKEN is already set and the login
-      # subcommand rejects that mode.
-      - name: Run PR audit
-        run: |
-          # PR_NUMBER resolves from either the live PR event or the
-          # workflow_dispatch `pr` input — both paths now declared.
-          PR_NUMBER="${PR_NUMBER:-${{ github.event.pull_request.number }}}"
-          PR_NUMBER="${PR_NUMBER:-${{ inputs.pr }}}"
-          gh workflow run audit.yml -f pr="$PR_NUMBER" || true
-      - name: Comment findings on PR
-        uses: actions/github-script@v7
-        with:
-          script: |
-            // Read findings and post as PR comment — guard against missing file
-            const fs = require('fs');
-            if (!fs.existsSync('findings-pr.json')) {
-              console.log('No findings-pr.json — nothing to comment on.');
-              return;
-            }
-            const findings = JSON.parse(fs.readFileSync('findings-pr.json'));
-            if (findings.summary.critical + findings.summary.high > 0) {
-              github.rest.issues.createComment({
-                issue_number: context.payload.pull_request.number,
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                body: `## 🔴 Security Audit Results\n\nFound ${findings.summary.critical} CRITICAL, ${findings.summary.high} HIGH findings. Please review before merging.`
-              });
-            }
 
   cargo-audit:
     name: Dependency Audit

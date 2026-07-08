@@ -789,9 +789,9 @@ Each audit-phase script implements this interface:
 | ID | Item | Priority | Effort |
 |---|---|---|---|
 | SPEC-001 | Wire smoke tests into `test.yml` skill-integrity job | P1 | XS | ✅ v1.15.2 |
-| SPEC-002 | Decide fate of `audit-pr` job post-guard | P2 | S |
-| SPEC-003 | Migrate Node 20 → 24 across all setup-python/setup-node steps | P2 | XS |
-| SPEC-004 | Replace hardcoded `moltbagus/solana-auditor-skill` clone with skill-dir copy | P3 | M |
+| SPEC-002 | Decide fate of `audit-pr` job post-guard | P2 | S | ✅ v1.15.3 — removed redundant job |
+| SPEC-003 | Migrate Node 20 → 24 across all setup-python/setup-node steps | P2 | XS | ✅ v1.15.3 — no-op (no Node version references exist) |
+| SPEC-004 | Replace hardcoded `moltbagus/solana-auditor-skill` clone with skill-dir copy | P3 | M | ✅ v1.15.3 — replaced with `cp -r .` |
 | SPEC-005 | Fix Check 10 coverage gap: all 5 fixtures now verified (was 3). See learnings.md v1.15.1 | P1 | ✅ |
 | SPEC-006 | Split `scripts/audit-fix-suggestions.py` (>120KB) into modules | P1 | M | ✅ v1.15.2 |
 | SPEC-007 | Deduplicate SARIF exporters: `export-sarif.py` ↔ `findings-to-sarif.py` | P1 | S | ✅ v1.15.2 |
@@ -810,8 +810,8 @@ Each audit-phase script implements this interface:
 | 4 | `scripts/dashboard.py` | Dead code removed. Named positionals (`input`, `second`, `compare_output`). Added `--version`. 0 flake8. | MEDIUM | ✅ v1.15.2 |
 | 5 | `scripts/pre-commit-audit.sh` | Temp files now use `${TMPDIR:-/tmp}` prefix. `trap cleanup EXIT INT TERM` for crash-safe cleanup. | LOW | ✅ v1.15.2 |
 | 6 | `scripts/fix-verification.sh` | Added `command -v bc` guard. Replaced `${finding_id,,}` with `tr` for bash 3.2 compat. | LOW | ✅ v1.15.2 |
-| 7 | `scripts/protocol-fingerprint.sh` | 400+ line shell script with heavy `jq` usage. Complex shell is brittle. | LOW | TODO |
-| 8 | `scripts/generate-cpi-graph.sh` | `set -uo pipefail` but references variables computed via `jq` that may silently fail. | LOW | TODO |
+| 7 | `scripts/protocol-fingerprint.sh` | Added `command -v jq` presence check at startup with platform-specific install instructions. | LOW | ✅ v1.15.3 |
+| 8 | `scripts/generate-cpi-graph.sh` | Changed `set -uo pipefail` → `set -euo pipefail`. All 6 `jq` calls now have `2>/dev/null || echo` guards to prevent silent failures. | LOW | ✅ v1.15.3 |
 | 9 | `pyproject.toml` | Black targets py39, mypy had python_version="3.10". Fixed: mypy → "3.9" to match black minimum. | LOW | ✅ v1.15.2 |
 | 10 | `tests/test-skill-integrity.sh` | 850+ lines → sourced from `tests/skill-integrity-lib.sh`. Shared functions extracted. Python json.load used for reliable VULN ID extraction. 165/165 integrity. | MEDIUM | ✅ v1.15.2 |
 | 11 | `commands/*.md` frontmatter | Removed `agent_type: command` from `audit-pr.md` and `audit-history.md`. All 9 commands now have consistent `name:` + `description:` only. | LOW | ✅ v1.15.2 |
