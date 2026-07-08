@@ -66,7 +66,6 @@ add_program() {
 INVOKE_TMP=$(mktemp)
 INVOKE_SIGNED_TMP=$(mktemp)
 CONTEXT_TMP=$(mktemp)
-NODES_TMP=$(mktemp)
 
 # Process each file
 while IFS= read -r file; do
