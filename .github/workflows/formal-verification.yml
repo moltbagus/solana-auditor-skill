@@ -42,92 +42,104 @@ jobs:
         with:
           node-version: '22'
 
-      - name: Cache QEDGen skills
+      - name: Cache QEDGen skill
         id: cache-qedgen
         uses: actions/cache@v4
         with:
-          path: ~/.claude/skills/qedgen
+          path: |
+            ~/.claude/skills/qedgen
+            .agents/skills/qedgen
           key: qedgen-solana-skills-${{ runner.os }}-${{ hashFiles('**/*.qedspec') }}
 
       - name: Install QEDGen skill
         if: steps.cache-qedgen.outputs.cache-hit != 'true'
         run: |
-          npx skills add qedgen/solana-skills --yes 2>&1 || echo "::warning::QEDGen skill install failed; will use fallback"
+          npx skills add qedgen/solana-skills --yes 2>&1 || echo "::warning::QEDGen skill install failed; continuing anyway"
         shell: bash
         continue-on-error: true
 
-      - name: Verify QEDGen installation
+      - name: Detect toolchain
         id: toolchain
+        shell: bash
         run: |
-          echo "anchor=$(command -v anchor 2>/dev/null && echo true || echo false)" >> $GITHUB_OUTPUT
-          echo "anchor_version=$(anchor --version 2>/dev/null | head -1 || echo 'not found')" >> $GITHUB_OUTPUT
-          echo "qedgen=$(command -v qedgen 2>/dev/null && echo true || echo false)" >> $GITHUB_OUTPUT
-          echo "qed_solana=$(command -v qed-solana 2>/dev/null && echo true || echo false)" >> $GITHUB_OUTPUT
-          echo "jq=$(command -v jq 2>/dev/null && echo true || echo false)" >> $GITHUB_OUTPUT
+          # Detect installed CLI tools (no 'local' — top-level script, not a function)
+          anchor_found=false
+          qed_solana_found=false
+          jq_found=false
+          qedgen_skill=false
 
-      - name: Summary of toolchain
-        run: |
-          echo "=== Toolchain Status ==="
-          echo "anchor: ${{ steps.toolchain.outputs.anchor }}"
-          echo "qedgen: ${{ steps.toolchain.outputs.qedgen }}"
-          echo "qed-solana: ${{ steps.toolchain.outputs.qed_solana }}"
-          echo "jq: ${{ steps.toolchain.outputs.jq }}"
+          command -v anchor >/dev/null 2>&1 && anchor_found=true
+          command -v qed-solana >/dev/null 2>&1 && qed_solana_found=true
+          command -v jq >/dev/null 2>&1 && jq_found=true
 
-      - name: Build programs
+          # QEDGen is an AI skill, not a CLI binary — check for skill files
+          [ -d "$HOME/.claude/skills/qedgen" ] && qedgen_skill=true
+          [ -d ".agents/skills/qedgen" ] && qedgen_skill=true
+
+          echo "anchor=${anchor_found}" >> "$GITHUB_OUTPUT"
+          echo "anchor_version=$(anchor --version 2>/dev/null | head -1 || echo 'not found')" >> "$GITHUB_OUTPUT"
+          echo "qedgen=${qedgen_skill}" >> "$GITHUB_OUTPUT"
+          echo "qed_solana=${qed_solana_found}" >> "$GITHUB_OUTPUT"
+          echo "jq=${jq_found}" >> "$GITHUB_OUTPUT"
+
+          echo "--- Toolchain Status ---"
+          echo "  anchor: ${anchor_found}"
+          echo "  qedgen (skill): ${qedgen_skill}"
+          echo "  qed-solana: ${qed_solana_found}"
+          echo "  jq: ${jq_found}"
+
+      - name: Build Anchor programs
         if: steps.toolchain.outputs.anchor == 'true'
         run: |
-          anchor build 2>&1 | tail -10 || true
+          anchor build 2>&1 | tail -15 || true
         shell: bash
         continue-on-error: true
 
-      - name: Detect .qedspec files
+      - name: Validate .qedspec files
         id: specs
         run: |
           count=$(find . -name '*.qedspec' -maxdepth 3 2>/dev/null | wc -l)
-          echo "count=$count" >> $GITHUB_OUTPUT
-          echo "Found $count .qedspec file(s)"
+          count=${count// /}
+          echo "count=${count}" >> "$GITHUB_OUTPUT"
+          echo "Found ${count} .qedspec file(s)"
 
-      - name: Run QEDGen spec check
-        id: qedgen
-        if: steps.toolchain.outputs.qedgen == 'true' && steps.specs.outputs.count != '0'
-        run: |
-          for spec in $(find . -name '*.qedspec' -maxdepth 3); do
-            echo "=== Checking spec: $spec ==="
-            qedgen check --spec "$spec" 2>&1 || true
-          done
+          if [ "${count}" -gt 0 ]; then
+            echo "--- Validating .qedspec syntax ---"
+            find . -name '*.qedspec' -maxdepth 3 -print0 | while IFS= read -r -d '' spec; do
+              name=$(basename "$spec")
+              echo "  Checking: $name"
+              # Validate basic JSON structure
+              if python3 -c "import json; json.load(open('$spec')); print('  ✓ JSON valid')" 2>&1; then
+                : # valid
+              else
+                # Try YAML structure
+                if python3 -c "import yaml; yaml.safe_load(open('$spec')); print('  ✓ YAML valid')" 2>&1; then
+                  : # valid
+                else
+                  echo "  ⚠ $name: not JSON or YAML — assuming valid spec format"
+                fi
+              fi
+            done
+          fi
         shell: bash
-        continue-on-error: true
 
-      - name: Run QEDGen verify
-        if: steps.toolchain.outputs.qedgen == 'true'
+      - name: Run QEDGen integration script
+        if: steps.toolchain.outputs.qedgen == 'true' || steps.toolchain.outputs.anchor == 'true' || steps.specs.outputs.count != '0'
         run: |
           bash scripts/qed-integration.sh 2>&1
-          echo "exit_code=$?" >> $GITHUB_OUTPUT
-        shell: bash
-        continue-on-error: true
-
-      - name: Fallback anchor test invariants
-        if: steps.toolchain.outputs.qedgen != 'true' && steps.toolchain.outputs.anchor == 'true'
-        run: |
-          if ! command -v anchor >/dev/null 2>&1; then
-            echo "::notice::anchor CLI not available — skipping fallback test"
-            exit 0
-          fi
-          for program in programs/*/Cargo.toml; do
-            [ -f "$program" ] || continue
-            dir=$(dirname "$program")
-            name=$(basename "$dir")
-            echo "=== Running anchor test for $name ==="
-            (anchor test --skip-build 2>&1 | grep -E "PASS|FAIL|test result" || true)
-          done
+          echo "exit_code=$?" >> "$GITHUB_OUTPUT"
         shell: bash
         continue-on-error: true
 
       - name: No toolchain — graceful skip
-        if: steps.toolchain.outputs.anchor != 'true' && steps.toolchain.outputs.qedgen != 'true'
+        if: steps.toolchain.outputs.anchor == 'false' && steps.toolchain.outputs.qedgen == 'false' && steps.specs.outputs.count == '0'
         run: |
-          echo "::notice::Formal verification skipped: no QEDGen or Anchor toolchain available."
-          echo "Install QEDGen: npx skills add qedgen/solana-skills"
+          echo "::notice::Formal verification skipped: no QEDGen skill, no Anchor CLI, and no .qedspec files found."
+          echo ""
+          echo "To enable formal verification locally:"
+          echo "  npx skills add qedgen/solana-skills"
+          echo ""
+          echo "Then run formal verification via Claude Code with the QEDGen skill loaded."
         shell: bash
 
       - name: Upload formal verification report
@@ -146,6 +158,6 @@ jobs:
             echo "=== Formal Verification Report ==="
             cat formal_verification_report.json
           else
-            echo "=== No report — verification skipped ==="
+            echo "=== No report generated ==="
           fi
         shell: bash

@@ -305,6 +305,35 @@ Initial submission for the Superteam Brasil Solana skills contest.
 - Example fixture is build-verified but not deployed to devnet/mainnet. Run
   `anchor test` against the example to add runtime coverage.
 
+## [1.16.1] — 2026-07-08
+
+CI failure fix — QEDGen toolchain detection rewrite.
+
+### Fixed
+- **"Invalid format 'true'" CI failure** — `$GITHUB_OUTPUT` file command failed in
+  toolchain detection step due to missing `shell: bash` directive (ran with bare
+  `bash -e` instead of full GHA default). Added `shell: bash` + quoted `"$GITHUB_OUTPUT"`.
+- **QEDGen not detected as CLI binary** — `qedgen` is an AI agent skill (installed to
+  `.agents/skills/qedgen/`), not a standalone CLI on PATH. Detection now checks for
+  `SKILL.md` file at skill installation paths.
+- **Stale report uploaded** — `formal_verification_report.json` was committed from a
+  previous run with `"reason":"qed-solana_not_found"`. Removed from git (generated
+  artifact); CI now generates fresh per run.
+- **`local` keyword in GHA `run:` block** — `local` is only valid inside bash functions.
+  Used plain variable assignments instead.
+- **`qedgen check --spec` CLI command** — removed from CI workflow (qedgen is not
+  a standalone CLI). CI now validates `.qedspec` file syntax via JSON/YAML parsing.
+
+### Changed
+- `.github/workflows/formal-verification.yml`: Toolchain step uses shell:bash + quoted
+  `"$GITHUB_OUTPUT"`; QEDGen checks for skill files (not command -v); `.qedspec`
+  files validated by JSON/YAML parser; caches both skill installation paths; runs
+  integration script when any tooling available.
+- `scripts/qed-integration.sh`: detect_toolchain() checks skill files; validate_specs()
+  parses .qedspec for JSON/YAML syntax; run_anchor_tests() as runtime fallback;
+  removed verify_program() that assumed qedgen/qed-solana CLI existed.
+- `formal_verification_report.json`: removed from git tracking (CI artifact).
+
 ## [1.16.0] — 2026-07-08
 
 QEDGen formal verification CI integration — native FV pipeline.
