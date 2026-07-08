@@ -199,7 +199,6 @@ scan_file() {
     fi
 
     local findings=()
-    local line_num=0
 
     # Use awk for multi-line pattern matching (bash 3.2 compatible)
     while IFS='~' read -r desc severity pattern; do

@@ -170,7 +170,6 @@ detect_by_program_id() {
 detect_by_instructions() {
     local idl_content="$1"
     local matched_protocol=""
-    local match_score=0
     local best_protocol=""
     local best_score=0
 

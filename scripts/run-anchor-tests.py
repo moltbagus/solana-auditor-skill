@@ -15,7 +15,6 @@ from __future__ import annotations
 
 import argparse
 import json
-import os
 import re
 import subprocess
 import sys
@@ -23,7 +22,6 @@ import time
 from dataclasses import asdict, dataclass
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Optional
 
 # Vulnerability class → test file patterns
 VULN_TEST_PATTERNS: dict[str, list[str]] = {

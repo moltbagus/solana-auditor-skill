@@ -33,7 +33,6 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
 AUDIT_OUTPUT="${PROJECT_ROOT}/audit-output"
 FINDINGS_JSON="${AUDIT_OUTPUT}/findings.json"
-FIX_SUGGESTIONS_JSON="${AUDIT_OUTPUT}/fix_suggestions.json"
 
 # Default options
 RUN_BUILD=false
