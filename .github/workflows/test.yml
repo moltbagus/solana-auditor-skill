@@ -54,19 +54,19 @@ jobs:
       - name: Run unit + smoke tests (529 Python tests)
         run: |
           python3 -c "
-import pytest
-import sys
-sys.exit(pytest.main(['-x', '--tb=short', '-q',
-    'tests/test_scripts_smoke.py',
-    'tests/test_sarif_core.py',
-    'tests/test_fix_constants.py',
-    'tests/test_fix_models.py',
-    'tests/test_fix_confidence.py',
-    'tests/test_fix_templates.py',
-    'tests/test_fix_regression.py',
-    'tests/test_fix_exploit.py',
-    'tests/test_fix_orchestrator.py',
-]))"
+          import pytest
+          import sys
+          sys.exit(pytest.main(['-x', '--tb=short', '-q',
+              'tests/test_scripts_smoke.py',
+              'tests/test_sarif_core.py',
+              'tests/test_fix_constants.py',
+              'tests/test_fix_models.py',
+              'tests/test_fix_confidence.py',
+              'tests/test_fix_templates.py',
+              'tests/test_fix_regression.py',
+              'tests/test_fix_exploit.py',
+              'tests/test_fix_orchestrator.py',
+          ]))"
 
       - name: Run markdown integrity checks
         run: |
