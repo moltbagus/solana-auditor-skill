@@ -305,6 +305,122 @@ Initial submission for the Superteam Brasil Solana skills contest.
 - Example fixture is build-verified but not deployed to devnet/mainnet. Run
   `anchor test` against the example to add runtime coverage.
 
+## [1.15.3] — 2026-07-08
+
+Final maintenance — CI YAML fix, dead code removal, spec backlog cleared.
+
+### Fixed
+- **CI workflow YAML syntax error** — `test.yml` literal block scalar had inconsistent
+  indentation in the "Run unit + smoke tests" step (first line at 10 spaces, subsequent
+  lines at 0), causing `while scanning a simple key` error. All lines now consistently
+  indented at 10 spaces.
+- **spec #7**: Added `command -v jq` presence check to `scripts/protocol-fingerprint.sh`
+  with platform-specific install instructions.
+- **spec #8**: Fixed `scripts/generate-cpi-graph.sh` — `set -euo pipefail` (was `-uo`),
+  added `2>/dev/null || echo` guards to all 6 jq calls to prevent silent failures.
+- **SPEC-002**: Removed redundant `audit-pr` job from `audit.yml` and orphaned `pr` input.
+- **SPEC-004**: Replaced hardcoded `git clone` in `audit-on-push.yml` with `cp -r .` from
+  checkout directory. Removed `|| true` to surface errors.
+- **Dead code removal (5 findings)**:
+  - `run-anchor-tests.py`: Removed unused `import os` and `from typing import Optional` (F401)
+  - `fix-verification.sh`: Removed unused `FIX_SUGGESTIONS_JSON` variable
+  - `pre-commit-audit.sh`: Removed unused `local line_num=0`
+  - `protocol-fingerprint.sh`: Removed unused `local match_score=0`
+  - `generate-ext-symlinks.sh`: Removed unused `RED` color variable
+
+### Verified
+- 165/165 integrity checks, 22/22 fuzz tests, all CI jobs green
+- 0 flake8 F401/F841/F811 warnings across all scripts
+
+## [1.15.2] — 2026-07-08
+
+Maintainability sprint — integrity lib modularization, Python test CI wiring, flake8 cleanup.
+
+### Changed
+- **MAINT-003**: Fixed `scripts/dashboard.py` dead code paths
+- **MAINT-004**: Dynamic SAST rule loading from `rules/audit.rules`
+- **MAINT-005**: Temp file cleanup in `generate-cpi-graph.sh`
+- **MAINT-006**: Backward compatibility helpers for old findings format
+- **MAINT-007**: Resolved `pyproject.toml` version conflicts (black pin 24.10.0)
+- **MAINT-008/009**: Modularized integrity library — broke monolithic checks into
+  composable verification modules
+- **529 Python tests wired into CI** — all smoke + unit tests run in workflow
+- SDD docs synced to v1.15.2 (spec.md, kanban.md, learnings.md)
+
+### Verified
+- 165 integrity checks (up from 161)
+- All CI jobs green across 4 workflow jobs
+- 0 flake8 warnings on all new/fixed modules
+
+## [1.15.1] — 2026-07-07
+
+Maintainability audit and documentation sync.
+
+### Changed
+- Updated PRD, spec, kanban, learnings to reflect v1.15.1 CI stabilization state
+- Stop tracking `kanban.md` and `learnings.md` in git (maintainer-only session files)
+
+## [1.15.0] — 2026-07-06
+
+CI stabilization sprint — resolved multi-round pipeline failures.
+
+### Fixed
+- **Round 3**: Black pin (24.10.0), pnpm guard, SARIF ignore, SDD advisory addressed
+- **Round 4**: Check 30 advisory, PR diff findings guard added
+- **Round 5**: SARIF input handling, flake8 unused imports cleaned
+- **Round 7**: SARIF exporter + workflow guard hardening
+- **Round 8**: CI workflow audit findings resolved
+- **CVSS score corrections**: KAM-001, SOLEND-02, SOLEND-03 scores recomputed
+- Check 10 coverage expansion for wider edge-case validation
+
+### Added
+- **3 missing audit scripts** implemented and wired into scheduled workflow
+
+## [1.14.3] — 2026-07-04
+
+Minor maintenance — broken file references, script permissions, stale cleanup.
+
+### Fixed
+- Broken file references in documentation
+- Script permission inconsistencies
+- Stale artifacts and directory cleanup
+
+## [1.14.2] — 2026-06-30
+
+Sprint 52 — economic security, --live-demo, global rename.
+
+### Added
+- **`--live-demo` mode** — SAST scan any public Solana repo from demo.sh
+- **Economic security module** (Phase 1C) — MEV, tokenomics, economic invariant violations
+- **Global rename**: "Solana Auditor Shiba Skill" → "Solana Auditor Skill"
+
+### Changed
+- SDD docs synced to v1.14.2
+- Cross-program agent CPI chain analysis improved
+
+## [1.14.1] — 2026-06-29
+
+Sprint 51 — verified checks, documentation polish, roadmap migration.
+
+### Changed
+- SDD docs synced to v1.14.1
+- Roadmap migration and PR audit filter added
+- Documentation polish pass
+
+## [1.14.0] — 2026-06-28
+
+Fixture expansion — added AMM/DEX, staking pool, and NFT/candy machine fixtures.
+
+### Added
+- **AMM/DEX fixture** — `examples/dex-amm/` with 14 VULN tags
+- **Staking pool fixture** — `examples/staking-pool/` with 14 VULN tags
+- **NFT/candy machine fixture** — `examples/nft-candy-machine/` with 14 VULN tags
+- AuditViz dashboard foundation in `scripts/dashboard.py`
+
+### Changed
+- Total fixtures: 3 → 6
+- Total VULN tags across all fixtures: 10 → 52
+
 ## [1.13.0] — 2026-06-28
 
 ### Fixed

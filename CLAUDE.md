@@ -4,9 +4,9 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 # Solana Auditor Skill (Shiba)
 
-World-class Solana security auditor — 7-phase lifecycle, 50 path-scoped rules (auto-activate), 10 specialist agents, 9 commands, compile-verified fixture, 161 integrity checks, 22 fuzz tests.
+World-class Solana security auditor — 7-phase lifecycle, 50 path-scoped rules (auto-activate), 10 specialist agents, 9 commands, compile-verified fixture, 165 integrity checks, 22 fuzz tests.
 
-**Version**: v1.14.2 | **Contest**: Superteam Brasil Solana Skills (July 8, 2026)
+**Version**: v1.15.3 | **Contest**: Superteam Brasil Solana Skills (July 8, 2026)
 
 ---
 
@@ -19,7 +19,7 @@ World-class Solana security auditor — 7-phase lifecycle, 50 path-scoped rules 
 # Demo — zero setup, no Solana toolchain needed
 bash demo.sh
 
-# Integrity checks (161 verification points — all must pass before push)
+# Integrity checks (165 verification points — all must pass before push)
 bash tests/test-skill-integrity.sh
 
 # Single category

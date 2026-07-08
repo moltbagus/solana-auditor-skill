@@ -1,6 +1,6 @@
 # Solana Auditor Skill
 
-**World-class Solana security auditor for Claude Code** — 7-phase audit lifecycle (Phase 0 Safety Guard + Phases 1–6), 45 Solana security rules + 5 agent safety rules (50 total), 9 slash commands, 10 specialist agents, 6 compile-verified example fixtures, 161 integrity checks passing, 22 fuzz tests, two-tier execution (SAST + runtime), pre-commit hook, PR auditing, audit history, and inline fix suggestions.
+**World-class Solana security auditor for Claude Code** — 7-phase audit lifecycle (Phase 0 Safety Guard + Phases 1–6), 45 Solana security rules + 5 agent safety rules (50 total), 9 slash commands, 10 specialist agents, 6 compile-verified example fixtures, 165 integrity checks passing, 22 fuzz tests, two-tier execution (SAST + runtime), pre-commit hook, PR auditing, audit history, and inline fix suggestions.
 
 [![CI](https://github.com/moltbagus/solana-auditor-skill/actions/workflows/test.yml/badge.svg)](https://github.com/moltbagus/solana-auditor-skill/actions/workflows/test.yml)
 [![Anchor 0.31.1](https://img.shields.io/badge/anchor-0.31.1-blueviolet)](https://www.anchor-lang.com/)
@@ -9,7 +9,7 @@
 [![Brazil Contest](https://img.shields.io/badge/Superteam-Brasil-009739)](https://superteam.com.br/)
 [![Property-Based Tests](https://img.shields.io/badge/fuzz-22%20tests-8A2BE2)](tests/fuzz/)
 [![45+5=50](https://img.shields.io/badge/rules-45%2B5%3D50-FF4500)](rules/audit.rules)
-[![Agents](https://img.shields.io/badge/agents-9-blue)](agents/)
+[![Agents](https://img.shields.io/badge/agents-10-blue)](agents/)
 [![SDD](https://img.shields.io/badge/spec--driven%20development-PRD%2FSpec%2FKanban-FF6B35)](PRD.md)
 
 > :brazil: [Guia de auditoria em Portugues Brasileiro](guides/pt-BR/AUDITORIA_GUIA.md)
@@ -35,7 +35,7 @@ bash demo.sh --live-demo
 # 2. Run the full demo — fixture-based verification (always works)
 bash demo.sh
 
-# 3. Verify integrity — 161 integrity checks, all should pass
+# 3. Verify integrity — 165 integrity checks, all should pass
 bash tests/test-skill-integrity.sh
 
 # 4. Run fuzz tests — 22 Hypothesis strategies
@@ -305,7 +305,7 @@ This skill is submitted to the **Superteam Brasil Solana Skills Contest**. For j
 # Live demo — SAST scan any public Solana repo (press Enter for built-in fixture)
 bash demo.sh --live-demo
 
-# Full demo — all fixtures, 161 checks, 22 fuzz tests
+# Full demo — all fixtures, 165 checks, 22 fuzz tests
 bash demo.sh
 ```
 
@@ -318,7 +318,7 @@ bash demo.sh
 > and correctly recalled KAM-002/003/004 after source verification showed they were
 > already fixed or not findings.
 
-The demo script runs structure verification, 161 integrity checks, and 22 property-based
+The demo script runs structure verification, 165 integrity checks, and 22 property-based
 fuzz tests in under 30 seconds.
 
 ### Live Audit #2: Solend Governance Flash Loan (August 2022)
@@ -347,7 +347,7 @@ See [`examples/solend-governance-audit/`](examples/solend-governance-audit/) for
 |---|---|---|---|
 | **Usefulness** | Does it solve a real problem builders face? | `/audit-quick` catches bugs before mainnet. `/audit-fix` generates fixes. `/audit-pr` reviews PRs automatically. | solhint finds style; we find logic bugs that drain vaults |
 | **Novelty** | Is it filling a genuine gap? | Only full lifecycle: Phase 0 consent → Phase 6 remediation. Only Phase 1C economic security (MEV, tokenomics, invariant violations). | safe-solana-builder is pre-build only. QEDGen is spec/verify only. Trail of Bits is point-in-time scanners. |
-| **Quality** | Production-grade, tested, documented? | 161 integrity checks + 22 fuzz tests + CVSS math mathematically verified + 6 compile-verified fixtures + live bug submissions to Immunefi. | Only skill with bugs actually filed against real programs (Kamino Finance, Solend, Raydium CLMM) |
+| **Quality** | Production-grade, tested, documented? | 165 integrity checks + 22 fuzz tests + CVSS math mathematically verified + 6 compile-verified fixtures + live bug submissions to Immunefi. | Only skill with bugs actually filed against real programs (Kamino Finance, Solend, Raydium CLMM) |
 | **Fit** | Does it slot into the standard kit? | Matches solana-game-skill structure exactly. MIT licensed. Progressive SKILL.md routing. No external dependencies. `bash install.sh` works. | Drop-in submodule ready |
 
 **We win on novelty because no competitor has a complete audit lifecycle.** The ecosystem has pre-build hardening (safe-solana-builder), formal verification only (QEDGen), and point scanners (Trail of Bits). None cover Phase 0 consent → Recon → SAST → Threat Model → Economic Security → Formal Verification → CVSS Triage → Report → Remediation in one coherent pipeline. We do.
@@ -357,7 +357,7 @@ See [`examples/solend-governance-audit/`](examples/solend-governance-audit/) for
 - **Property-Based Testing** — 22 fuzz tests verifying CVSS math & invariants
 - **Bilingual security glossary (EN + PT-BR)** — `skill/00-terminology.md`
 - **CVSS Math Verification** — All scores recomputed from vectors (not hand-entered)
-- **161 Integrity Checks** — shell checks + fuzz tests (22) + CVSS math + fixture assertions + PT-BR + SDD docs + demo script
+- **165 Integrity Checks** — shell checks + fuzz tests (22) + CVSS math + fixture assertions + PT-BR + SDD docs + demo script
 - **Demo Script** — `bash demo.sh` for fixture demo; `bash demo.sh --live-demo` to SAST scan any public repo
 
 ### Tested Against Real Solana Vulnerabilities
@@ -414,7 +414,7 @@ This skill ships with a working CI pipeline and an example fixture for testing.
 
 Every push to `main` runs:
 
-1. **`skill-integrity`** — 161 integrity checks (`tests/test-skill-integrity.sh`)
+1. **`skill-integrity`** — 165 integrity checks (`tests/test-skill-integrity.sh`)
 2. **`anchor-build`** — builds the example fixture under anchor 0.31.1 (via `cargo check`)
 3. **`lint-install`** — verifies `install.sh` syntax + dry-run deploys the skill to `~/.claude/skills/solana-auditor-skill/`
 

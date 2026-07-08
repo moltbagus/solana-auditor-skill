@@ -4,30 +4,30 @@ Durable lessons from the multi-loop build of this skill. Read this before
 touching the repo again. These are the things future-me will wish past-me
 had written down.
 
-## Current state (v1.14.2 — Contest Submission)
+## Current state (v1.15.3 — Post-Contest)
 
 **Contest**: Superteam Brasil Solana Skills (July 8, 2026)
 **Submission**: https://github.com/moltbagus/solana-auditor-skill (PR to https://github.com/solanabr/solana-ai-kit)
 
-- **161 integrity checks**: all green
+- **165 integrity checks**: all green
 - **22 fuzz tests**: all green
 - **10 agents**: orchestrator, auditor, safety-guard, architecture-reviewer, economic-security-analyst, threat-modeler, formal-verifier, report-writer, cross-program-agent + AUDIT.md (auto-generated)
 - **9 commands**: /audit, /audit-quick, /audit-resume, /audit-report, /audit-poc, /audit-findings, /audit-fix, /audit-history, /audit-pr
 - **50 rules**: Rules 1-26 Anchor Core, 27-35 Token-2022 Transfer Hook, 36-45 Pinocchio/Native Solana, 46-50 AI Agent Safety
 - **12 phases**: 00-safety-guard, 00-terminology, 01-recon, 01B-architecture-review, 01C-economic-security, 02-static-analysis, 02-threat-modeling, 02B-runtime-testing, 03-formal-verification, 04-findings-triage, 05-report-generation, 06-remediation
 - **6 fixtures**: vault (10 VULN), token-2022-real (14 VULN), dex-amm (14 VULN), staking-pool (14 VULN), nft-candy-machine (14 VULN), live audits (Kamino, Raydium, Solend)
-- **demo.sh**: zero toolchain, < 60s, shows commands box, 161 checks + 22 fuzz
+- **demo.sh**: zero toolchain, < 60s, shows commands box, 165 checks + 22 fuzz
 - **install.sh**: idempotent, explicit error on cp failure, per-file counts
-- **git tag**: v1.14.2
+- **git tag**: v1.15.3
 
 ## Contest submission checklist
 
 Before pushing, verify ALL of these:
-- [ ] `bash demo.sh` runs clean (161/161 + 22/22)
-- [ ] `git describe --tags` returns v1.14.2 (if not, `git tag -a v1.14.2`)
-- [ ] SKILL.md version = v1.14.2
-- [ ] CLAUDE.md version = v1.14.2
-- [ ] PRD.md header = v1.14.2
+- [ ] `bash demo.sh` runs clean (165/165 + 22/22)
+- [ ] `git describe --tags` returns v1.15.3 (if not, `git tag -a v1.15.3`)
+- [ ] SKILL.md version = v1.15.3
+- [ ] CLAUDE.md version = v1.15.3
+- [ ] PRD.md header = v1.15.3
 - [ ] No `02A-static-analysis.md` references (should be `02-threat-modeling.md`)
 - [ ] No `safety-anchor.md` references (should be `safety-guard.md`)
 - [ ] No "8-phase" claims (should be "7-phase": Phase 0 + Phases 1-6)

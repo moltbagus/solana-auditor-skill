@@ -16,7 +16,7 @@ bash demo.sh
 
 ---
 
-## Step 2: Integrity Checks — 159 checks (45 seconds)
+## Step 2: Integrity Checks — 165 checks (45 seconds)
 
 ```bash
 bash tests/test-skill-integrity.sh
@@ -24,7 +24,7 @@ bash tests/test-skill-integrity.sh
 
 **What it proves:** Skill is internally consistent — no broken cross-references, no drifted VULN-ID counts, no malformed CWE URLs, CVSS math is verified, fixtures are complete, agent YAML frontmatter is valid.
 
-**Pass:** `PASS: 159` / `FAIL: 0` at the bottom.
+**Pass:** `PASS: 165` / `FAIL: 0` at the bottom.
 
 ---
 
@@ -83,7 +83,7 @@ anchor build
 | Step | Command | Pass Criteria |
 |------|---------|---------------|
 | Demo | `bash demo.sh` | Exit 0, no FAIL (8/8 steps pass) |
-| Integrity | `bash tests/test-skill-integrity.sh` | PASS: 159, FAIL: 0 |
+| Integrity | `bash tests/test-skill-integrity.sh` | PASS: 165, FAIL: 0 |
 | Fuzz | `python3 -c "import pytest; pytest.main(['-v', 'tests/fuzz/test_properties.py'])"` | 22 passed |
 | Fixture | `cat examples/.../findings.json` | Valid JSON, all required fields |
 | CVSS math | `python3 tests/severity_counts.py check-cvss-math ...` | Exit 0 |
@@ -97,11 +97,11 @@ anchor build
 
 | What to verify | File |
 |----------------|------|
-| 159 integrity checks | `tests/test-skill-integrity.sh` |
+| 165 integrity checks | `tests/test-skill-integrity.sh` |
 | 22 fuzz tests | `tests/fuzz/test_properties.py` |
 | CVSS formula | `tests/cvss.py` |
 | Example findings | `examples/sample-vulnerable-program/audit-output/findings.json` |
 | Example report | `examples/sample-vulnerable-program/audit-output/AUDIT_REPORT.md` |
 | 50 audit rules (45 security + 5 agent safety) | `rules/audit.rules` |
 | 9 slash commands | `commands/` |
-| 9 specialist agents | `agents/` |
+| 10 specialist agents | `agents/` |
