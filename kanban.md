@@ -241,8 +241,8 @@ All 7 MAINT items completed. Sprint 56 fully done.
 |---|---|---|---|
 | 7 | `scripts/protocol-fingerprint.sh` — 400+ line shell with heavy jq | P3 | S |
 | 8 | `scripts/generate-cpi-graph.sh` — `set -uo pipefail` with silent jq failures | P3 | S |
-| 10 | `tests/test-skill-integrity.sh` — 850+ lines, growing without modularization | P2 | M |
-| 11 | `commands/*.md` frontmatter — inconsistent YAML across 9 files | P3 | S |
+| 10 | `tests/test-skill-integrity.sh` — modularized: shared functions → `tests/skill-integrity-lib.sh`, Python json.load for VULN IDs | P2 | M | ✅ v1.15.2 |
+| 11 | `commands/*.md` frontmatter — `agent_type: command` removed from audit-pr.md & audit-history.md. All 9 consistent. | P3 | S | ✅ v1.15.2 |
 
 ### Sprint 52 — Contest Polish Sprint (Done: 2026-06-29)
 - [x] G1/G2/G3 quick wins: SKILL.md agents (9→10), phases (6→12), rules breakdown; threat-modeler.md YAML frontmatter; README stale counts (173/159/47→161)

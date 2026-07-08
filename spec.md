@@ -813,8 +813,8 @@ Each audit-phase script implements this interface:
 | 7 | `scripts/protocol-fingerprint.sh` | 400+ line shell script with heavy `jq` usage. Complex shell is brittle. | LOW | TODO |
 | 8 | `scripts/generate-cpi-graph.sh` | `set -uo pipefail` but references variables computed via `jq` that may silently fail. | LOW | TODO |
 | 9 | `pyproject.toml` | Black targets py39, mypy had python_version="3.10". Fixed: mypy → "3.9" to match black minimum. | LOW | ✅ v1.15.2 |
-| 10 | `tests/test-skill-integrity.sh` | 850+ lines, growing without modularization. Many inline checks remain despite shared functions. | MEDIUM | TODO |
-| 11 | `commands/*.md` frontmatter | Inconsistent YAML frontmatter across 9 command files. | LOW | TODO |
+| 10 | `tests/test-skill-integrity.sh` | 850+ lines → sourced from `tests/skill-integrity-lib.sh`. Shared functions extracted. Python json.load used for reliable VULN ID extraction. 165/165 integrity. | MEDIUM | ✅ v1.15.2 |
+| 11 | `commands/*.md` frontmatter | Removed `agent_type: command` from `audit-pr.md` and `audit-history.md`. All 9 commands now have consistent `name:` + `description:` only. | LOW | ✅ v1.15.2 |
 
 ### 4.4 New Modules (v1.15.2)
 

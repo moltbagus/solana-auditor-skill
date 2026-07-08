@@ -714,7 +714,7 @@ Added `bc` dependency check and replaced bash 4.x syntax with bash 3.2-compatibl
 - `pre-commit-audit.sh`: crash-safe temp cleanup ✅
 - `fix-verification.sh`: bc guard ✅, bash 3.2 compat ✅
 - `pyproject.toml`: mypy `python_version` → "3.9" to match black min target ✅
-- **All 7 MAINT items completed** — backlog reduced from 11 to 4 remaining items (protocol-fingerprint.sh, generate-cpi-graph.sh, test-skill-integrity.sh, commands/*.md)
+- **All 7 MAINT items completed + 2 more closed** — backlog reduced from 11 to 2 remaining items (protocol-fingerprint.sh, generate-cpi-graph.sh)
 
 ---
 
@@ -736,3 +736,26 @@ Fixed the mismatch between `tool.black.target-version = ["py39", ...]` and `tool
 ### Key lessons
 1. **Config version drift is silent** — There's no CI check validating that `tool.mypy.python_version` matches `tool.black.target-version`. A mismatch doesn't fail builds, just misleads tooling.
 2. **Minimum Python compat is a project-level decision** — Aligning black and mypy on "3.9" makes the project's minimum clear. If Python 3.10+ features are ever needed, both should be bumped together.
+
+---
+
+## 2026-07-08 — v1.15.2 Sprint Extension: integrity lib + commands frontmatter
+
+### What we did
+Two backlog items closed in this extended session:
+
+**MAINT-008 (spec #10): Modularize `tests/test-skill-integrity.sh`**
+- Extracted 5 shared functions and 9 fixture path variables into `tests/skill-integrity-lib.sh`
+- Replaced fragile `rg`-based VULN ID extraction from JSON with Python `json.load()` — the rg regex had a subtle double-backslash escaping bug that didn't match actual JSON content
+- Created `run_line_number_check_for_fixtures()` wrapper following the same pattern as existing `run_*_check_for_fixtures` functions
+- Added `SCRIPT_DIR` parameter to runner functions for reliable path resolution when sourced
+- Result: main script shrunk by ~100 LOC. 165/165 integrity checks pass. ✅
+
+**MAINT-009 (spec #11): Fix commands/*.md frontmatter**
+- `agent_type: command` removed from `commands/audit-pr.md` and `commands/audit-history.md`
+- All 9 command files now have consistent `name:` + `description:` frontmatter only ✅
+
+### Key lessons
+1. **Bash regex escaping through tool calls is treacherous** — The `write_file` tool's JSON escaping doubled backslashes in the rg pattern, silently breaking VULN ID extraction. Python-based JSON parsing is simpler and provably correct.
+2. **Always verify with stash-before/after comparison** — The initial 3 failures were mistakenly attributed to pre-existing fixture issues. Running the original script via `git stash` revealed they were regressions, saving hours of misdirected debugging.
+3. **WC counts matter** — `wc -l` on empty output returns 1 (trailing newline). `wc -w` returns 0. When counting extracted IDs, `wc -w` avoids off-by-one errors on empty results.
