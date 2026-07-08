@@ -305,6 +305,28 @@ Initial submission for the Superteam Brasil Solana skills contest.
 - Example fixture is build-verified but not deployed to devnet/mainnet. Run
   `anchor test` against the example to add runtime coverage.
 
+## [1.16.0] — 2026-07-08
+
+QEDGen formal verification CI integration — native FV pipeline.
+
+### Added
+- **QEDGen CI integration** — `.github/workflows/formal-verification.yml` now installs
+  QEDGen via `npx skills add qedgen/solana-skills` and runs spec-check + verify steps
+  when `.qedspec` files are present. Cached for performance.
+- **Dual-toolchain support** — `scripts/qed-integration.sh` detects and dispatches to
+  either `qedgen` (new, primary) or `qed-solana` (legacy fallback).
+- **Node.js setup in FV workflow** — `actions/setup-node@v4` with Node 22 for npx support
+- **QEDGen install caching** — skill installation cached by runner OS + spec file hash
+- **QEDGen documentation** — `skill/03-formal-verification.md` updated with correct
+  QEDGen CLI commands (`check`, `codegen`, `verify`) and install instructions
+
+### Changed
+- `scripts/run-formal-verification.py`: `_detect_qed()` checks both `qedgen` and
+  `qed-solana` in priority order
+- `scripts/qed-integration.sh`: supports both tools, 60s→120s timeout per invariant
+- `skill/03-formal-verification.md`: "QED 2A" → "QEDGen" throughout, CI Integration
+  section expanded from 5 to 7 steps
+
 ## [1.15.3] — 2026-07-08
 
 Final maintenance — CI YAML fix, dead code removal, spec backlog cleared.

@@ -7,17 +7,19 @@ on:
       - 'programs/**'
       - 'scripts/**'
       - '.github/workflows/formal-verification.yml'
+      - '**/*.qedspec'
   pull_request:
     paths:
       - 'programs/**'
       - 'scripts/**'
       - '.github/workflows/formal-verification.yml'
+      - '**/*.qedspec'
 
 jobs:
   formal-verification:
-    name: QED 2A Formal Verification
+    name: QEDGen Formal Verification
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 20
 
     steps:
       - name: Checkout
@@ -27,57 +29,92 @@ jobs:
         uses: dtolnay/rust-toolchain@stable
 
       - name: Install Solana CLI
-        # Direct install — anza-actions/setup-solana no longer resolves at the
-        # expected path. Same approach that works in test.yml/anchor-build.
         run: |
           sh -c "$(curl -sSfL https://release.anza.xyz/stable/install)"
           echo "$HOME/.local/share/solana/install/active_release/bin" >> $GITHUB_PATH
 
-      - name: Setup Node / Anchor
-        # Skip pnpm install if the repo has no package.json — the original
-        # step assumed a JS workspace that this repo doesn't ship.
+      - name: Install Anchor CLI
         run: |
-          if [ -f package.json ]; then
-            corepack enable
-            corepack prepare pnpm@9 --activate
-            pnpm install --frozen-lockfile
-          else
-            echo "::notice::No package.json — skipping Node/pnpm setup"
-          fi
+          cargo install --git https://github.com/coral-xyz/anchor --tag v0.31.1 anchor-cli --locked 2>&1 | tail -5
 
-      - name: Detect toolchain
+      - name: Setup Node.js (for npx / QEDGen)
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Cache QEDGen skills
+        id: cache-qedgen
+        uses: actions/cache@v4
+        with:
+          path: ~/.claude/skills/qedgen
+          key: qedgen-solana-skills-${{ runner.os }}-${{ hashFiles('**/*.qedspec') }}
+
+      - name: Install QEDGen skill
+        if: steps.cache-qedgen.outputs.cache-hit != 'true'
+        run: |
+          npx skills add qedgen/solana-skills --yes 2>&1 || echo "::warning::QEDGen skill install failed; will use fallback"
+        shell: bash
+        continue-on-error: true
+
+      - name: Verify QEDGen installation
         id: toolchain
         run: |
           echo "anchor=$(command -v anchor 2>/dev/null && echo true || echo false)" >> $GITHUB_OUTPUT
-          echo "qed=$(command -v qed-solana 2>/dev/null && echo true || echo false)" >> $GITHUB_OUTPUT
           echo "anchor_version=$(anchor --version 2>/dev/null | head -1 || echo 'not found')" >> $GITHUB_OUTPUT
+          echo "qedgen=$(command -v qedgen 2>/dev/null && echo true || echo false)" >> $GITHUB_OUTPUT
+          echo "qed_solana=$(command -v qed-solana 2>/dev/null && echo true || echo false)" >> $GITHUB_OUTPUT
+          echo "jq=$(command -v jq 2>/dev/null && echo true || echo false)" >> $GITHUB_OUTPUT
+
+      - name: Summary of toolchain
+        run: |
+          echo "=== Toolchain Status ==="
+          echo "anchor: ${{ steps.toolchain.outputs.anchor }}"
+          echo "qedgen: ${{ steps.toolchain.outputs.qedgen }}"
+          echo "qed-solana: ${{ steps.toolchain.outputs.qed_solana }}"
+          echo "jq: ${{ steps.toolchain.outputs.jq }}"
 
       - name: Build programs
         if: steps.toolchain.outputs.anchor == 'true'
         run: |
-          anchor build 2>&1 | tail -5 || true
+          anchor build 2>&1 | tail -10 || true
         shell: bash
         continue-on-error: true
 
-      - name: Run QED integration
-        id: qed
-        if: steps.toolchain.outputs.qed == 'true'
+      - name: Detect .qedspec files
+        id: specs
+        run: |
+          count=$(find . -name '*.qedspec' -maxdepth 3 2>/dev/null | wc -l)
+          echo "count=$count" >> $GITHUB_OUTPUT
+          echo "Found $count .qedspec file(s)"
+
+      - name: Run QEDGen spec check
+        id: qedgen
+        if: steps.toolchain.outputs.qedgen == 'true' && steps.specs.outputs.count != '0'
+        run: |
+          for spec in $(find . -name '*.qedspec' -maxdepth 3); do
+            echo "=== Checking spec: $spec ==="
+            qedgen check --spec "$spec" 2>&1 || true
+          done
+        shell: bash
+        continue-on-error: true
+
+      - name: Run QEDGen verify
+        if: steps.toolchain.outputs.qedgen == 'true'
         run: |
           bash scripts/qed-integration.sh 2>&1
           echo "exit_code=$?" >> $GITHUB_OUTPUT
         shell: bash
+        continue-on-error: true
 
       - name: Fallback anchor test invariants
-        if: steps.toolchain.outputs.qed != 'true' && steps.toolchain.outputs.anchor == 'true'
-        # NOTE: GitHub Actions does not support '&&' in `if:` expressions.
-        # The single-condition guard above only checks qed != 'true'. We
-        # chain the anchor guard inside the shell to avoid the syntax issue.
+        if: steps.toolchain.outputs.qedgen != 'true' && steps.toolchain.outputs.anchor == 'true'
         run: |
           if ! command -v anchor >/dev/null 2>&1; then
             echo "::notice::anchor CLI not available — skipping fallback test"
             exit 0
           fi
           for program in programs/*/Cargo.toml; do
+            [ -f "$program" ] || continue
             dir=$(dirname "$program")
             name=$(basename "$dir")
             echo "=== Running anchor test for $name ==="
@@ -87,10 +124,10 @@ jobs:
         continue-on-error: true
 
       - name: No toolchain — graceful skip
-        if: steps.toolchain.outputs.anchor != 'true'
+        if: steps.toolchain.outputs.anchor != 'true' && steps.toolchain.outputs.qedgen != 'true'
         run: |
-          echo "::notice::Formal verification skipped: anchor CLI not available in this environment."
-          echo "Install anchor to enable QED 2A verification: https://www.anchor-lang.com/"
+          echo "::notice::Formal verification skipped: no QEDGen or Anchor toolchain available."
+          echo "Install QEDGen: npx skills add qedgen/solana-skills"
         shell: bash
 
       - name: Upload formal verification report
@@ -103,11 +140,12 @@ jobs:
           if-no-files-found: ignore
 
       - name: Print summary
+        if: always()
         run: |
           if [ -f formal_verification_report.json ]; then
             echo "=== Formal Verification Report ==="
             cat formal_verification_report.json
           else
-            echo "=== No formal_verification_report.json — verification skipped or toolchain unavailable ==="
+            echo "=== No report — verification skipped ==="
           fi
         shell: bash

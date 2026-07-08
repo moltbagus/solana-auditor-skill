@@ -82,21 +82,23 @@ def _which(cmd: str) -> Optional[str]:
 
 
 def _detect_qed() -> tuple[Optional[str], Optional[str]]:
-    """Detect QED installation. Returns (binary_path, version_string)."""
-    qed_bin = _which("qed-solana")
-    if not qed_bin:
-        return None, None
-    try:
-        result = subprocess.run(
-            [qed_bin, "--version"],
-            capture_output=True,
-            text=True,
-            timeout=10,
-        )
-        version = (result.stdout or result.stderr or "").strip().splitlines()[0:1]
-        return qed_bin, version[0] if version else "unknown"
-    except (OSError, subprocess.TimeoutExpired, subprocess.SubprocessError):
-        return qed_bin, "unknown"
+    """Detect QED installation. Checks qedgen (new) then qed-solana (legacy).
+    Returns (binary_path, version_string)."""
+    for candidate in ("qedgen", "qed-solana"):
+        qed_bin = _which(candidate)
+        if qed_bin:
+            try:
+                result = subprocess.run(
+                    [qed_bin, "--version"],
+                    capture_output=True,
+                    text=True,
+                    timeout=10,
+                )
+                version = (result.stdout or result.stderr or "").strip().splitlines()[0:1]
+                return qed_bin, version[0] if version else "unknown"
+            except (OSError, subprocess.TimeoutExpired, subprocess.SubprocessError):
+                return qed_bin, "unknown"
+    return None, None
 
 
 def _detect_anchor() -> tuple[Optional[str], Optional[str]]:
@@ -363,13 +365,13 @@ def main(argv: list[str] | None = None) -> int:
 
     notes: list[str] = []
 
-    # Prefer QED via existing integration script
+    # Prefer QED via existing integration script (handles qedgen + qed-solana)
     if qed_script.exists():
         result = run_via_qed_script(qed_script, repo_root, args.timeout)
         if result.status != "error":
             return _finalize(result, args, output)
 
-    # Otherwise try qed-solana CLI directly
+    # Otherwise try detected QED CLI directly
     if qed_bin:
         result = run_via_qed_cli(qed_bin, qed_version or "unknown", repo_root, args.timeout)
         if result.status != "error":

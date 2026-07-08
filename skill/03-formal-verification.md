@@ -6,19 +6,31 @@
 
 ## Solana Formal Verification Tools
 
-### QED 2A (Primary)
-QED's automated verification tool for Solana programs:
-- Website: https://qeda.app (or https://github.com/QEDGen/solana-qed)
-- Proves invariants without manual Coq/Lean proofs
+### QEDGen (Primary)
+[QEDGen](https://github.com/QEDGen/solana-skills) is the official formal verification
+framework for Solana programs:
+- Website: https://qedgen.dev
+- Proves invariants via property tests, Kani harnesses, and Lean 4 proofs
+- Supports Anchor, Quasar, and Pinocchio programs
 - Best for: Token programs, AMMs, staking programs
 
 ```bash
-# Install QED 2A
-cargo install qed-solana 2>/dev/null || \
-  git clone https://github.com/QEDGen/solana-qed.git && cd solana-qed && cargo build --release
+# Install QEDGen (as an agent skill)
+npx skills add qedgen/solana-skills
 
-# Run verification
-qed-solana verify --program target/deploy/PROGRAM.so --idl target/idl/PROGRAM.json
+# Or install via cargo (if published)
+cargo install qedgen 2>/dev/null || true
+
+# Define invariants in a .qedspec file, then:
+qedgen check --spec my_program.qedspec    # lint + coverage
+qedgen codegen --all                       # generate harnesses + tests
+qedgen verify                              # run verification backends
+```
+
+### Legacy: qed-solana
+Older QED 2A tooling (may be removed in future):
+```bash
+qed-solana verify --program target/deploy/PROGRAM.so --output json
 ```
 
 ## Key Invariants to Verify
@@ -129,11 +141,16 @@ anchor test 2>&1
 anchor test tests/invariants.rs 2>&1
 ```
 
-### Step 3: Run QED 2A
+### Step 3: Run QEDGen
 ```bash
+# Requires a .qedspec file defining invariants
+qedgen check --spec my_program.qedspec
+qedgen codegen --all
+qedgen verify
+
+# Or use the legacy qed-solana CLI
 qed-solana verify \
   --program target/deploy/PROGRAM.so \
-  --invariants tests/invariants/ \
   --timeout 300
 ```
 
@@ -221,11 +238,13 @@ This exercises the QED-equivalent invariant checks via `anchor test` against the
 
 Formal verification runs automatically in CI via `.github/workflows/formal-verification.yml`. The workflow:
 
-1. **Detects toolchain** — checks for `anchor` CLI and `qed-solana` binary
-2. **Builds programs** — `anchor build` for programs with Cargo.toml
-3. **Runs QED 2A** — via `scripts/qed-integration.sh` (timeout 60s per invariant)
-4. **Falls back to anchor test** — if QED unavailable but anchor is present
-5. **Graceful skip** — if neither tool available, exits 0 with notice
+1. **Installs toolchain** — Rust, Solana CLI, Anchor CLI, Node.js (for npx)
+2. **Installs QEDGen** — via `npx skills add qedgen/solana-skills`
+3. **Detects tools** — checks for `qedgen`, `qed-solana`, and `anchor` CLI
+4. **Builds programs** — `anchor build` for programs with Cargo.toml
+5. **Runs QEDGen** — via `scripts/qed-integration.sh` (supports both qedgen and qed-solana, timeout 120s per invariant)
+6. **Falls back to anchor test** — if QED unavailable but anchor is present
+7. **Graceful skip** — if no toolchain available, exits 0 with notice
 
 ### CI Exit Codes
 
@@ -233,7 +252,7 @@ Formal verification runs automatically in CI via `.github/workflows/formal-verif
 |------|---------|
 | `0` | Success (all invariants proved or findings generated) |
 | `1` | Tool error |
-| `2` | Skip (no toolchain) |
+| `2` | Skip (no toolchain available) |
 
 ### CI Report
 
@@ -246,6 +265,9 @@ Results are written to `formal_verification_report.json` and uploaded as a GitHu
 ### Running locally
 
 ```bash
+# Install QEDGen
+npx skills add qedgen/solana-skills
+
 # Full QED verification
 bash scripts/qed-integration.sh
 
